@@ -1,0 +1,24 @@
+# Local credentials and recovery material must never enter Git history.
+.credentials.json
+.backup-key
+*recovery-key*
+.env
+.env.*
+!.env.example
+# Raw data is preserved only in authenticated encrypted backups.
+*.sqlite3*
+!data/public.sqlite3
+csv/
+!data/csv/
+!data/csv/**
+status.json
+!data/status.json
+runs.jsonl
+.sync.lock
+*.log
+__pycache__/
+*.py[cod]
+.venv/
+work/
+.private/
+.DS_Store

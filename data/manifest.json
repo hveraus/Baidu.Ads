@@ -1,0 +1,164 @@
+{
+  "publication": "public",
+  "ip_addresses": "omitted; invalid clicks aggregated by date/campaign/device",
+  "report_counts": {
+    "account": 34,
+    "account_hour": 53,
+    "adgroup": 302,
+    "campaign": 34,
+    "channels": 34,
+    "creative": 484,
+    "keyword": 794,
+    "keyword_competition": 794,
+    "keyword_conversion": 794,
+    "keyword_device": 922,
+    "keyword_hour": 837,
+    "keyword_match": 1024,
+    "keyword_region": 4806,
+    "landing_page": 326,
+    "search_terms": 332,
+    "invalid_clicks": 46
+  },
+  "coverage": [
+    [
+      "account",
+      "2026-10-22",
+      "2026-10-28"
+    ],
+    [
+      "campaign",
+      "2026-10-22",
+      "2026-10-28"
+    ],
+    [
+      "adgroup",
+      "2026-10-22",
+      "2026-10-28"
+    ],
+    [
+      "keyword",
+      "2026-10-22",
+      "2026-10-28"
+    ],
+    [
+      "search_terms",
+      "2026-10-22",
+      "2026-10-28"
+    ],
+    [
+      "creative",
+      "2026-10-22",
+      "2026-10-28"
+    ],
+    [
+      "keyword_device",
+      "2026-10-22",
+      "2026-10-28"
+    ],
+    [
+      "keyword_region",
+      "2026-10-22",
+      "2026-10-28"
+    ],
+    [
+      "keyword_match",
+      "2026-10-22",
+      "2026-10-28"
+    ],
+    [
+      "account_hour",
+      "2026-10-22",
+      "2026-10-28"
+    ],
+    [
+      "landing_page",
+      "2026-10-22",
+      "2026-10-28"
+    ],
+    [
+      "channels",
+      "2026-10-22",
+      "2026-10-28"
+    ],
+    [
+      "account",
+      "2026-07-31",
+      "2026-10-28"
+    ],
+    [
+      "campaign",
+      "2026-07-31",
+      "2026-10-28"
+    ],
+    [
+      "adgroup",
+      "2026-07-31",
+      "2026-10-28"
+    ],
+    [
+      "keyword",
+      "2026-07-31",
+      "2026-10-28"
+    ],
+    [
+      "search_terms",
+      "2026-07-31",
+      "2026-10-28"
+    ],
+    [
+      "creative",
+      "2026-07-31",
+      "2026-10-28"
+    ],
+    [
+      "keyword_device",
+      "2026-07-31",
+      "2026-10-28"
+    ],
+    [
+      "keyword_region",
+      "2026-07-31",
+      "2026-10-28"
+    ],
+    [
+      "keyword_match",
+      "2026-07-31",
+      "2026-10-28"
+    ],
+    [
+      "account_hour",
+      "2026-07-31",
+      "2026-10-28"
+    ],
+    [
+      "landing_page",
+      "2026-07-31",
+      "2026-10-28"
+    ],
+    [
+      "channels",
+      "2026-07-31",
+      "2026-10-28"
+    ],
+    [
+      "keyword_conversion",
+      "2026-07-31",
+      "2026-10-28"
+    ],
+    [
+      "keyword_competition",
+      "2026-07-31",
+      "2026-10-28"
+    ],
+    [
+      "keyword_hour",
+      "2026-07-31",
+      "2026-10-28"
+    ],
+    [
+      "invalid_clicks",
+      "2026-07-31",
+      "2026-10-28"
+    ]
+  ]
+}

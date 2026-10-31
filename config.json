@@ -1,0 +1,320 @@
+{
+  "timezone": "Asia/Shanghai",
+  "backfill_days": 90,
+  "refresh_days": 7,
+  "page_size": 1000,
+  "reports": {
+    "account": {
+      "report_type": 2208157,
+      "time_unit": "DAY",
+      "columns": [
+        "userId",
+        "userName",
+        "date",
+        "impression",
+        "click",
+        "cost",
+        "ctr",
+        "cpc",
+        "conversion",
+        "bridgeConversion"
+      ]
+    },
+    "campaign": {
+      "report_type": 2290316,
+      "time_unit": "DAY",
+      "columns": [
+        "campaignId",
+        "campaignName",
+        "date",
+        "impression",
+        "click",
+        "cost",
+        "ctr",
+        "cpc",
+        "conversion",
+        "bridgeConversion"
+      ]
+    },
+    "adgroup": {
+      "report_type": 2284618,
+      "time_unit": "DAY",
+      "columns": [
+        "campaignId",
+        "campaignName",
+        "adGroupId",
+        "adGroupName",
+        "date",
+        "impression",
+        "click",
+        "cost",
+        "ctr",
+        "cpc",
+        "conversion",
+        "bridgeConversion"
+      ]
+    },
+    "keyword": {
+      "report_type": 2602783,
+      "time_unit": "DAY",
+      "columns": [
+        "campaignId",
+        "campaignName",
+        "adGroupId",
+        "adGroupName",
+        "wInfoId",
+        "wInfoNameStatus",
+        "bidNew",
+        "qualityEnum",
+        "mixWmatchEnum",
+        "estimatedClickRate",
+        "businessRelationship",
+        "landPageExperience",
+        "avgRank",
+        "date",
+        "impression",
+        "click",
+        "cost",
+        "ctr",
+        "cpc",
+        "conversion",
+        "bridgeConversion"
+      ]
+    },
+    "search_terms": {
+      "report_type": 2307838,
+      "time_unit": "DAY",
+      "columns": [
+        "campaignId",
+        "campaignName",
+        "adGroupId",
+        "adGroupName",
+        "wInfoNameStatus",
+        "queryWord",
+        "queryStatusName",
+        "wMatchId",
+        "ideaInfo",
+        "date",
+        "impression",
+        "click",
+        "cost",
+        "ctr",
+        "cpc",
+        "conversion",
+        "bridgeConversion"
+      ]
+    },
+    "creative": {
+      "report_type": 2665235,
+      "time_unit": "DAY",
+      "columns": [
+        "campaignId",
+        "campaignName",
+        "adGroupId",
+        "adGroupName",
+        "ideaId",
+        "ideaInfo",
+        "date",
+        "impression",
+        "click",
+        "cost",
+        "ctr",
+        "cpc",
+        "conversion",
+        "bridgeConversion"
+      ]
+    },
+    "keyword_device": {
+      "report_type": 2602783,
+      "time_unit": "DAY",
+      "columns": [
+        "campaignId",
+        "adGroupId",
+        "wInfoId",
+        "wInfoNameStatus",
+        "device",
+        "date",
+        "impression",
+        "click",
+        "cost",
+        "ctr",
+        "cpc",
+        "conversion",
+        "bridgeConversion"
+      ]
+    },
+    "keyword_region": {
+      "report_type": 2602783,
+      "time_unit": "DAY",
+      "columns": [
+        "campaignId",
+        "adGroupId",
+        "wInfoId",
+        "wInfoNameStatus",
+        "provinceName",
+        "provinceCityName",
+        "date",
+        "impression",
+        "click",
+        "cost",
+        "ctr",
+        "cpc",
+        "conversion",
+        "bridgeConversion"
+      ]
+    },
+    "keyword_match": {
+      "report_type": 2602783,
+      "time_unit": "DAY",
+      "columns": [
+        "campaignId",
+        "adGroupId",
+        "wInfoId",
+        "wInfoNameStatus",
+        "wMatchId",
+        "date",
+        "impression",
+        "click",
+        "cost",
+        "ctr",
+        "cpc",
+        "conversion",
+        "bridgeConversion"
+      ]
+    },
+    "account_hour": {
+      "report_type": 2208157,
+      "time_unit": "HOUR",
+      "columns": [
+        "userId",
+        "date",
+        "impression",
+        "click",
+        "cost",
+        "ctr",
+        "cpc",
+        "conversion",
+        "bridgeConversion"
+      ]
+    },
+    "landing_page": {
+      "report_type": 5381679,
+      "time_unit": "DAY",
+      "columns": [
+        "date",
+        "campaignId",
+        "campaignNameStatus",
+        "adGroupId",
+        "adGroupNameStatus",
+        "wInfoNameStatus",
+        "queryWord",
+        "landingPageUrl",
+        "device",
+        "click",
+        "cost",
+        "cpc",
+        "ocpcConversionsDetail1",
+        "ocpcConversionsDetail5",
+        "ocpcConversionsDetail2",
+        "ocpcConversionsDetail35"
+      ]
+    },
+    "channels": {
+      "report_type": 1783967,
+      "time_unit": "DAY",
+      "columns": [
+        "date",
+        "product",
+        "userId",
+        "userName",
+        "impression",
+        "click",
+        "cost",
+        "ctr",
+        "cpc"
+      ]
+    },
+    "keyword_conversion": {
+      "report_type": 2602783,
+      "time_unit": "DAY",
+      "columns": [
+        "date",
+        "campaignId",
+        "campaignName",
+        "adGroupId",
+        "adGroupName",
+        "wInfoId",
+        "wInfoNameStatus",
+        "impression",
+        "click",
+        "cost",
+        "conversion",
+        "bridgeConversion",
+        "ocpcConversionsDetail1",
+        "ocpcConversionsDetail5",
+        "ocpcConversionsDetail2",
+        "ocpcConversionsDetail35",
+        "ctOCPCConversionsDetail3",
+        "ctOCPCConversionsDetail18",
+        "ctOCPCConversionsDetail30"
+      ]
+    },
+    "keyword_competition": {
+      "report_type": 2602783,
+      "time_unit": "DAY",
+      "columns": [
+        "date",
+        "campaignId",
+        "campaignName",
+        "adGroupId",
+        "adGroupName",
+        "wInfoId",
+        "wInfoNameStatus",
+        "impression",
+        "click",
+        "cost",
+        "topPageViews",
+        "topPClicks",
+        "topPvWinA",
+        "topPvWinP",
+        "avgRank"
+      ]
+    },
+    "keyword_hour": {
+      "report_type": 2602783,
+      "time_unit": "HOUR",
+      "columns": [
+        "date",
+        "campaignId",
+        "campaignName",
+        "adGroupId",
+        "adGroupName",
+        "wInfoId",
+        "wInfoNameStatus",
+        "impression",
+        "click",
+        "cost",
+        "ctr",
+        "cpc"
+      ]
+    },
+    "invalid_clicks": {
+      "report_type": 107181,
+      "time_unit": "DAY",
+      "columns": [
+        "date",
+        "formatIP",
+        "campaignId",
+        "campaignName",
+        "device",
+        "sumClicks",
+        "sumCost",
+        "freeClicks",
+        "freeCost",
+        "validClicks",
+        "validCost",
+        "wordName"
+      ]
+    }
+  }
+}

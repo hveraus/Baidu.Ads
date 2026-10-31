@@ -1,0 +1,14 @@
+{
+  "checked_at": "2026-10-29",
+  "url": "https://www.tinacms.com.cn/",
+  "positioning": "TinaCMS 可视化网站内容管理、Git 驱动；TinaDocs 文档站模板",
+  "observed_form_count": 0,
+  "observed_input_count": 0,
+  "contact_types": [
+    "mailto",
+    "tel"
+  ],
+  "primary_action": "复制 npx create-tina-app@latest",
+  "scope": "仅核对当前公开首页；没有测试发信、拨号、真实线索提交或后端转化配置",
+  "interpretation": "付费访问用户的商业询盘入口可能不够直接，属于待验证的优化假设"
+}
