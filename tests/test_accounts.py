@@ -22,6 +22,15 @@ class AccountUITests(unittest.TestCase):
    self.assertIn('>TinaCMS</option>',rendered)
    self.assertIn('selected>YakShaver</option>',rendered)
    self.assertNotIn('智鹏瑞尔 ·',rendered)
+ def test_ssw_switch_links_and_advice_are_account_specific(self):
+  source=(ROOT/'dashboard.template.html').read_text()
+  rendered=account_template(source,{'slug':'ssw','name':'SSW','user_name':'智鹏瑞尔-2'},'zh')
+  self.assertIn('value="../ssw/index.html" selected>SSW</option>',rendered)
+  self.assertIn('value="../yakshaver/index.html">YakShaver</option>',rendered)
+  self.assertIn('智鹏瑞尔-2 · 搜索推广',rendered)
+  self.assertIn('按服务需求做小规模测试',rendered)
+  self.assertNotIn('TinaDocs',rendered)
+  self.assertNotIn('智鹏瑞尔-1',rendered)
  def test_tina_advice_is_preserved_and_data_not_renamed(self):
   source=(ROOT/'dashboard.template.html').read_text()
   rendered=account_template(source,{'slug':'tinacms','name':'TinaCMS'},'zh')

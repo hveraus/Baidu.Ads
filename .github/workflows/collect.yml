@@ -33,12 +33,14 @@ jobs:
           BAIDU_CREDENTIALS_JSON: ${{ secrets.BAIDU_CREDENTIALS_JSON }}
           DATA_BACKUP_KEY: ${{ secrets.DATA_BACKUP_KEY }}
           BAIDU_YAKSHAVER_CREDENTIALS_JSON: ${{ secrets.BAIDU_YAKSHAVER_CREDENTIALS_JSON }}
+          BAIDU_SSW_CREDENTIALS_JSON: ${{ secrets.BAIDU_SSW_CREDENTIALS_JSON }}
         run: |
           python tracker.py
           python scripts/verify_data.py
           python scripts/publish_data.py
           python dashboard.py --public
-          python scripts/accounts.py collect
+          python scripts/accounts.py collect --account yakshaver
+          python scripts/accounts.py collect --account ssw
           python scripts/vault.py backup
           python scripts/vault.py verify
           python scripts/check_public.py
@@ -57,12 +59,13 @@ jobs:
           python - <<'PY'
           import json,os
           from pathlib import Path
-          s=json.loads(Path('status.json').read_text())
+          accounts = {'TinaCMS':'data/status.json', 'YakShaver':'accounts/yakshaver/data/status.json', 'SSW':'accounts/ssw/data/status.json'}
           with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
-              f.write('## Baidu Ads collection\n')
-              f.write('Reports: '+str(len(s['reports']))+'\n\n')
-              f.write('Token expiry shown by Baidu: '+s['token_expires']+'\n\n')
-              if s.get('warning'): f.write('**Authorisation renewal required soon.**\n')
+              f.write('## Baidu Ads collection\n\n')
+              for name, path in accounts.items():
+                  s=json.loads(Path(path).read_text())
+                  f.write(f"- **{name}**: {len(s['reports'])} reports, through {s['end']}; token expiry {s['token_expires']}\n")
+                  if s.get('warning'): f.write('  - **Authorisation renewal required soon.**\n')
           PY
   publish:
     needs: collect

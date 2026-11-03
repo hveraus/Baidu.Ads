@@ -113,7 +113,7 @@ python -m unittest discover -s tests -v
 
 ## 多网站独立账户
 
-页面顶部可在 TinaCMS 和 YakShaver 之间切换，每个账户拥有独立的关键词、消费、历史数据和建议。原始关键词与广告文案保留原文。YakShaver 的建议不沿用 TinaCMS 的文档管理意图判断或预算分组。
+左上角标题下拉可在 TinaCMS、YakShaver 和 SSW 之间切换，每个账户拥有独立的关键词、消费、历史数据和建议。原始关键词与广告文案保留原文。YakShaver 的建议不沿用 TinaCMS 的文档管理意图判断或预算分组。
 
 - TinaCMS 继续使用根目录原有数据及 `BAIDU_CREDENTIALS_JSON` Secret。
 - YakShaver 账户 ID 为 `91119162`，推广账户名 `智鹏瑞尔-1`，使用 `BAIDU_YAKSHAVER_CREDENTIALS_JSON` Secret。
@@ -129,4 +129,13 @@ python scripts/accounts.py collect --account yakshaver --backfill
 python scripts/accounts.py configure-github --account yakshaver
 ```
 
-新电脑仅查看时运行 `scripts/accounts.py build`；恢复完整数据时先按照上方说明设置 `DATA_BACKUP_KEY` 或将私有恢复密钥保存为根目录 `.backup-key`，再执行 `restore`。如需重新授权，可把新凭据安全保存到 `.private/yakshaver/.credentials.json`，字段格式参考 `.credentials.example.json`，并更新对应 GitHub Secret。云端每天先采集 TinaCMS，再采集 YakShaver，全部对账通过后发布。任何账户失败时保留上一版线上报告，不发布部分更新；不会修改广告。
+新电脑仅查看时运行 `scripts/accounts.py build`；恢复完整数据时先按照上方说明设置 `DATA_BACKUP_KEY` 或将私有恢复密钥保存为根目录 `.backup-key`，再执行 `restore`。如需重新授权，可把新凭据安全保存到 `.private/yakshaver/.credentials.json`，字段格式参考 `.credentials.example.json`，并更新对应 GitHub Secret。云端每天依次采集 TinaCMS、YakShaver 和 SSW，全部对账通过后发布。任何账户失败时保留上一版线上报告，不发布部分更新；不会修改广告。
+
+### SSW 独立账户
+
+- 应用 `ssw` 已生效，推广账户 `智鹏瑞尔-2`（ID `91119163`）。回调字段登记官网 `https://ssw.cn`，采集使用自授权，不依赖 OAuth 回调。
+- 令牌登记有效期 **2027-02-01**。GitHub 使用独立 Secret `BAIDU_SSW_CREDENTIALS_JSON`。
+- 私有数据在 `.private/ssw/`，去 IP 的公开数据在 `accounts/ssw/data/`，完整加密备份在 `accounts/ssw/backups/private-data.enc`。
+- 在线页面：[SSW 百度投流分析](https://hveraus.github.io/Baidu.Ads/ssw/)。下拉切换账户时保留语言和栏目。
+
+恢复、回补和更新 Secret 的命令与 YakShaver 相同，把参数改为 `--account ssw` 即可。复用原有私人恢复密钥，各账户数据分别恢复与对账。
