@@ -31,10 +31,12 @@ def build_dashboard(public=False):
  # Script-safe serialization: account-supplied names cannot break out of the JSON block.
  packed=json.dumps(data,ensure_ascii=False,separators=(',',':')).replace('<','\\u003c').replace('>','\\u003e').replace('&','\\u0026')
  output=ROOT/'report'/'index.html'; output.parent.mkdir(exist_ok=True)
- output.write_text(template.replace('/*__DATA__*/',packed))
+ from account_ui import account_template
+ profile=json.loads((ROOT/'profile.json').read_text()) if (ROOT/'profile.json').exists() else {'slug':'tinacms','name':'TinaCMS'}
+ output.write_text(account_template(template,profile,'zh').replace('/*__DATA__*/',packed))
  output.chmod(0o600)
  english=output.with_name('en.html')
- english.write_text(english_template(template).replace('/*__DATA__*/',packed))
+ english.write_text(account_template(english_template(template),profile,'en').replace('/*__DATA__*/',packed))
  english.chmod(0o600)
  return output
 if __name__=='__main__':

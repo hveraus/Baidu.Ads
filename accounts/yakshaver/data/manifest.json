@@ -1,0 +1,104 @@
+{
+  "publication": "public",
+  "ip_addresses": "omitted; invalid clicks aggregated by date/campaign/device",
+  "report_counts": {
+    "account": 20,
+    "account_hour": 246,
+    "adgroup": 208,
+    "campaign": 120,
+    "channels": 20,
+    "creative": 402,
+    "keyword": 710,
+    "keyword_competition": 710,
+    "keyword_conversion": 710,
+    "keyword_device": 850,
+    "keyword_hour": 2640,
+    "keyword_match": 1028,
+    "keyword_region": 10876,
+    "landing_page": 387,
+    "search_terms": 398,
+    "invalid_clicks": 132
+  },
+  "coverage": [
+    [
+      "account",
+      "2026-08-05",
+      "2026-11-02"
+    ],
+    [
+      "campaign",
+      "2026-08-05",
+      "2026-11-02"
+    ],
+    [
+      "adgroup",
+      "2026-08-05",
+      "2026-11-02"
+    ],
+    [
+      "keyword",
+      "2026-08-05",
+      "2026-11-02"
+    ],
+    [
+      "search_terms",
+      "2026-08-05",
+      "2026-11-02"
+    ],
+    [
+      "creative",
+      "2026-08-05",
+      "2026-11-02"
+    ],
+    [
+      "keyword_device",
+      "2026-08-05",
+      "2026-11-02"
+    ],
+    [
+      "keyword_region",
+      "2026-08-05",
+      "2026-11-02"
+    ],
+    [
+      "keyword_match",
+      "2026-08-05",
+      "2026-11-02"
+    ],
+    [
+      "account_hour",
+      "2026-08-05",
+      "2026-11-02"
+    ],
+    [
+      "landing_page",
+      "2026-08-05",
+      "2026-11-02"
+    ],
+    [
+      "channels",
+      "2026-08-05",
+      "2026-11-02"
+    ],
+    [
+      "keyword_conversion",
+      "2026-08-05",
+      "2026-11-02"
+    ],
+    [
+      "keyword_competition",
+      "2026-08-05",
+      "2026-11-02"
+    ],
+    [
+      "keyword_hour",
+      "2026-08-05",
+      "2026-11-02"
+    ],
+    [
+      "invalid_clicks",
+      "2026-08-05",
+      "2026-11-02"
+    ]
+  ]
+}

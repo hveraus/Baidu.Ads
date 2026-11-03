@@ -22,3 +22,9 @@ __pycache__/
 work/
 .private/
 .DS_Store
+
+# Public output of additional isolated accounts.
+!accounts/*/data/public.sqlite3
+!accounts/*/data/status.json
+!accounts/*/data/csv/
+!accounts/*/data/csv/**

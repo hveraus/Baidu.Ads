@@ -32,11 +32,13 @@ jobs:
         env:
           BAIDU_CREDENTIALS_JSON: ${{ secrets.BAIDU_CREDENTIALS_JSON }}
           DATA_BACKUP_KEY: ${{ secrets.DATA_BACKUP_KEY }}
+          BAIDU_YAKSHAVER_CREDENTIALS_JSON: ${{ secrets.BAIDU_YAKSHAVER_CREDENTIALS_JSON }}
         run: |
           python tracker.py
           python scripts/verify_data.py
           python scripts/publish_data.py
           python dashboard.py --public
+          python scripts/accounts.py collect
           python scripts/vault.py backup
           python scripts/vault.py verify
           python scripts/check_public.py
@@ -44,7 +46,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data backups/private-data.enc report
+          git add data accounts backups/private-data.enc report
           if ! git diff --cached --quiet; then
             git commit -m "Update Baidu Ads data and reports"
             git pull --rebase origin main

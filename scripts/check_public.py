@@ -6,7 +6,12 @@ ROOT=Path(__file__).resolve().parents[1]
 JWT=re.compile(rb'eyJ[A-Za-z0-9_-]{15,}\.[A-Za-z0-9_-]{15,}\.[A-Za-z0-9_-]{15,}')
 FORBIDDEN={'.credentials.json','.backup-key','baidu.sqlite3','status.json','runs.jsonl'}
 def check():
- root=ROOT;db=root/'data/public.sqlite3'
+ root=ROOT
+ for db in [root/'data/public.sqlite3',*root.glob('accounts/*/data/public.sqlite3')]:
+  check_database(db)
+ check_files(root)
+ print('Public data and tracked-file checks passed')
+def check_database(db):
  if db.exists():
   c=sqlite3.connect(db)
   assert c.execute('PRAGMA integrity_check').fetchone()==('ok',)
@@ -14,13 +19,13 @@ def check():
    assert not re.search(r'"(?:formatIP|accessToken|refreshToken|secretKey|authCode|password)"\s*:',payload,re.I),'Sensitive public field'
    assert not JWT.search(payload.encode()),'Token-shaped public value'
   c.close()
- paths=list((root/'report').glob('*.html'))+list((root/'data').rglob('*'))
+def check_files(root):
+ paths=list((root/'report').rglob('*.html'))+list((root/'data').rglob('*'))+list((root/'accounts').rglob('*'))
  for p in paths:
-  if p.is_file():assert not JWT.search(p.read_bytes()),'Token-shaped value in '+str(p.relative_to(root))
+  if p.is_file() and p.suffix!='.enc':assert not JWT.search(p.read_bytes()),'Token-shaped value in '+str(p.relative_to(root))
  if (root/'.git').exists():
   files=subprocess.check_output(['git','ls-files','-z'],cwd=root).decode().split('\0')
   for name in filter(None,files):
-   assert name not in FORBIDDEN and not name.startswith(('csv/','work/','.venv/','.private/')),'Private tracked file: '+name
+   assert (Path(name).name not in FORBIDDEN or '/data/' in '/'+name) and not name.startswith(('csv/','work/','.venv/','.private/')),'Private tracked file: '+name
    if not name.endswith('.enc'):assert not JWT.search((root/name).read_bytes()),'Token-shaped tracked value: '+name
- print('Public data and tracked-file checks passed')
 if __name__=='__main__':check()
