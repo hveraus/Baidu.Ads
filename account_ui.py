@@ -7,7 +7,7 @@ def account_template(template,profile,lang):
  base='../' if slug!='tinacms' else './'
  label='Switch website' if en else '切换网站'
  options=''.join(f'<option value="{url}"'+(' selected' if current==slug else '')+f'>{title}</option>' for current,title,url in [('tinacms','TinaCMS',base+page),('yakshaver','YakShaver',base+'yakshaver/'+page)])
- selector=f'<select id="account-switch" aria-label="{label}" onchange="const u=new URL(this.value,location.href);u.hash=location.hash;location.assign(u.href)">{options}</select>'
+ selector=f'<select id="account-switch" aria-label="{label}" onchange="window.location.assign(this.value+window.location.hash)">{options}</select>'
  def header(source):
   source,n=re.subn(r'(<div class="brand">)[^<]+(?= <span>)',lambda m:m[1]+selector,source,count=1)
   if n!=1:raise ValueError('Header title structure changed')
