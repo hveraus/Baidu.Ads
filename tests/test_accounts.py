@@ -19,7 +19,8 @@ class AccountUITests(unittest.TestCase):
    self.assertIn('/*__DATA__*/',rendered)
    self.assertIn('account-evidence',rendered)
    self.assertIn('../yakshaver/',rendered)
-   self.assertIn('>TinaCMS</a>',rendered)
+   self.assertIn('>TinaCMS</option>',rendered)
+   self.assertIn('selected>YakShaver</option>',rendered)
    self.assertNotIn('智鹏瑞尔 ·',rendered)
  def test_tina_advice_is_preserved_and_data_not_renamed(self):
   source=(ROOT/'dashboard.template.html').read_text()
