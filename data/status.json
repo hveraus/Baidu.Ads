@@ -1,128 +1,128 @@
 {
-  "run_at": "2026-11-04T15:15:55.385132+08:00",
-  "start": "2026-10-28",
-  "end": "2026-11-03",
+  "run_at": "2026-11-06T15:41:16.293789+08:00",
+  "start": "2026-10-30",
+  "end": "2026-11-05",
   "token_expires": "2027-01-25",
-  "token_days_remaining": 82,
+  "token_days_remaining": 80,
   "reports": {
     "account": {
       "ok": true,
       "fetched_rows": 1,
-      "updated_at": "2026-11-04T15:15:55.385132+08:00",
-      "start": "2026-10-27",
-      "end": "2026-11-03"
+      "updated_at": "2026-11-06T15:41:16.293789+08:00",
+      "start": "2026-10-28",
+      "end": "2026-11-05"
     },
     "campaign": {
       "ok": true,
       "fetched_rows": 1,
-      "updated_at": "2026-11-04T15:15:55.385132+08:00",
-      "start": "2026-10-27",
-      "end": "2026-11-03"
+      "updated_at": "2026-11-06T15:41:16.293789+08:00",
+      "start": "2026-10-28",
+      "end": "2026-11-05"
     },
     "adgroup": {
       "ok": true,
       "fetched_rows": 9,
-      "updated_at": "2026-11-04T15:15:55.385132+08:00",
-      "start": "2026-10-27",
-      "end": "2026-11-03"
+      "updated_at": "2026-11-06T15:41:16.293789+08:00",
+      "start": "2026-10-28",
+      "end": "2026-11-05"
     },
     "keyword": {
       "ok": true,
       "fetched_rows": 22,
-      "updated_at": "2026-11-04T15:15:55.385132+08:00",
-      "start": "2026-10-27",
-      "end": "2026-11-03"
+      "updated_at": "2026-11-06T15:41:16.293789+08:00",
+      "start": "2026-10-28",
+      "end": "2026-11-05"
     },
     "search_terms": {
       "ok": true,
       "fetched_rows": 5,
-      "updated_at": "2026-11-04T15:15:55.385132+08:00",
-      "start": "2026-10-27",
-      "end": "2026-11-03"
+      "updated_at": "2026-11-06T15:41:16.293789+08:00",
+      "start": "2026-10-28",
+      "end": "2026-11-05"
     },
     "creative": {
       "ok": true,
       "fetched_rows": 13,
-      "updated_at": "2026-11-04T15:15:55.385132+08:00",
-      "start": "2026-10-27",
-      "end": "2026-11-03"
+      "updated_at": "2026-11-06T15:41:16.293789+08:00",
+      "start": "2026-10-28",
+      "end": "2026-11-05"
     },
     "keyword_device": {
       "ok": true,
       "fetched_rows": 25,
-      "updated_at": "2026-11-04T15:15:55.385132+08:00",
-      "start": "2026-10-27",
-      "end": "2026-11-03"
+      "updated_at": "2026-11-06T15:41:16.293789+08:00",
+      "start": "2026-10-28",
+      "end": "2026-11-05"
     },
     "keyword_region": {
       "ok": true,
       "fetched_rows": 67,
-      "updated_at": "2026-11-04T15:15:55.385132+08:00",
-      "start": "2026-10-27",
-      "end": "2026-11-03"
+      "updated_at": "2026-11-06T15:41:16.293789+08:00",
+      "start": "2026-10-28",
+      "end": "2026-11-05"
     },
     "keyword_match": {
       "ok": true,
       "fetched_rows": 26,
-      "updated_at": "2026-11-04T15:15:55.385132+08:00",
-      "start": "2026-10-27",
-      "end": "2026-11-03"
+      "updated_at": "2026-11-06T15:41:16.293789+08:00",
+      "start": "2026-10-28",
+      "end": "2026-11-05"
     },
     "account_hour": {
       "ok": true,
       "fetched_rows": 2,
-      "updated_at": "2026-11-04T15:15:55.385132+08:00",
-      "start": "2026-10-27",
-      "end": "2026-11-03"
+      "updated_at": "2026-11-06T15:41:16.293789+08:00",
+      "start": "2026-10-28",
+      "end": "2026-11-05"
     },
     "landing_page": {
       "ok": true,
       "fetched_rows": 5,
-      "updated_at": "2026-11-04T15:15:55.385132+08:00",
-      "start": "2026-10-27",
-      "end": "2026-11-03"
+      "updated_at": "2026-11-06T15:41:16.293789+08:00",
+      "start": "2026-10-28",
+      "end": "2026-11-05"
     },
     "channels": {
       "ok": true,
       "fetched_rows": 1,
-      "updated_at": "2026-11-04T15:15:55.385132+08:00",
-      "start": "2026-10-27",
-      "end": "2026-11-03"
+      "updated_at": "2026-11-06T15:41:16.293789+08:00",
+      "start": "2026-10-28",
+      "end": "2026-11-05"
     },
     "keyword_conversion": {
       "ok": true,
       "fetched_rows": 22,
-      "updated_at": "2026-11-04T15:15:55.385132+08:00",
-      "start": "2026-10-27",
-      "end": "2026-11-03"
+      "updated_at": "2026-11-06T15:41:16.293789+08:00",
+      "start": "2026-10-28",
+      "end": "2026-11-05"
     },
     "keyword_competition": {
       "ok": true,
       "fetched_rows": 22,
-      "updated_at": "2026-11-04T15:15:55.385132+08:00",
-      "start": "2026-10-27",
-      "end": "2026-11-03"
+      "updated_at": "2026-11-06T15:41:16.293789+08:00",
+      "start": "2026-10-28",
+      "end": "2026-11-05"
     },
     "keyword_hour": {
       "ok": true,
       "fetched_rows": 32,
-      "updated_at": "2026-11-04T15:15:55.385132+08:00",
-      "start": "2026-10-27",
-      "end": "2026-11-03"
+      "updated_at": "2026-11-06T15:41:16.293789+08:00",
+      "start": "2026-10-28",
+      "end": "2026-11-05"
     },
     "invalid_clicks": {
       "ok": true,
       "fetched_rows": 5,
-      "updated_at": "2026-11-04T15:15:55.385132+08:00",
-      "start": "2026-10-27",
-      "end": "2026-11-03"
+      "updated_at": "2026-11-06T15:41:16.293789+08:00",
+      "start": "2026-10-28",
+      "end": "2026-11-05"
     }
   },
   "errors": [],
   "keyword_summary": {
     "date_start": "2026-07-31",
-    "date_end": "2026-11-03",
-    "keywords_in_summary": 476,
+    "date_end": "2026-11-05",
+    "keywords_in_summary": 486,
     "keywords_with_report": 82,
     "impression": 5413.0,
     "click": 481.0,
@@ -131,12 +131,12 @@
   "inventory": {
     "campaign_inventory": 1,
     "adgroup_inventory": 36,
-    "keyword_inventory": 952
+    "keyword_inventory": 972
   },
   "inventory_current": {
     "campaign_inventory": 1,
     "adgroup_inventory": 18,
-    "keyword_inventory": 476
+    "keyword_inventory": 486
   },
   "ok": true
 }
