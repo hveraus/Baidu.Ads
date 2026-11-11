@@ -1,37 +1,37 @@
 ﻿单元ID,计划ID,单元名称,maxPrice,暂停,negativeWords,exactNegativeWords,状态代码,下线原因,adType,adgroupAutoTargetingStatus,pcFinalUrl,mobileFinalUrl,影子物料
-14444739718,2119879408,价格词-CMS费用,5.16,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
-14444739717,2119879408,长尾词-疑问词,5.16,False,[],"[""git""]",33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
-14444739716,2119879408,长尾词-选型对比,5.16,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
-14444739715,2119879408,出海词-海外官网,5.16,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
-14444739714,2119879408,出海词-品牌出海,5.16,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
-14444739713,2119879408,服务词-迁移与培训,5.16,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
-14444739712,2119879408,服务词-CMS定制,5.16,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
-14444739711,2119879408,技术词-Next.js/React,5.16,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
-14444739710,2119879408,产品词-可视化编辑,5.16,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
-14444739709,2119879408,技术词-Git/静态站,5.16,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
-14444739708,2119879408,技术词-Markdown/MDX,5.16,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
-14444739707,2119879408,品牌词-官方服务,5.16,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
-14444739706,2119879408,品牌词-TinaCMS核心,5.16,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
-14444739705,2119879408,产品词-无头CMS,5.16,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
-14444739704,2119879408,产品词-开源CMS,5.16,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
-14444739703,2119879408,场景词-官网建设,5.16,False,[],"[""网管管理系统"", ""网络管理系统""]",33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
-14444739702,2119879408,场景词-文档站,5.16,False,[],"[""编辑文档的软件"", ""文件 管理 软件"", ""在线文档怎么创建"", ""管理文件的软件"", ""文件管理软件系统"", ""edoc文档管理系统"", ""文件文档管理系统"", ""腾讯文档在线编辑怎么创建"", ""文档审批管理系统"", ""文件档案管理的系统"", ""如何转在线编辑文档"", ""md文件在线编辑"", ""文件,管理,软件"", ""腾讯文档在线编辑"", ""文件管理系统"", ""做文档的软件"", ""文档安全管理系统"", ""excel在线编辑文档创建"", ""怎么做在线文档"", ""文件管理系统软件"", ""文档文件管理软件"", ""文档在线生成"", ""文件档案管理系统"", ""文件管理软件"", ""word文档在线编辑"", ""免费word在线编辑"", ""文档档案管理系统"", ""档案文件管理系统""]",33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
-14444739701,2119879408,场景词-内容运营,5.16,False,[],"[""运营管理的主要内容是什么""]",33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
-14444739718,2119879408,价格词-CMS费用,5.16,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,,,1
-14444739717,2119879408,长尾词-疑问词,5.16,False,[],"[""git""]",33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,,,1
-14444739716,2119879408,长尾词-选型对比,5.16,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,,,1
-14444739715,2119879408,出海词-海外官网,5.16,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,,,1
-14444739714,2119879408,出海词-品牌出海,5.16,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,,,1
-14444739713,2119879408,服务词-迁移与培训,5.16,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,,,1
-14444739712,2119879408,服务词-CMS定制,5.16,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,,,1
-14444739711,2119879408,技术词-Next.js/React,5.16,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,,,1
-14444739710,2119879408,产品词-可视化编辑,5.16,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,,,1
-14444739709,2119879408,技术词-Git/静态站,5.16,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,,,1
-14444739708,2119879408,技术词-Markdown/MDX,5.16,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,,,1
-14444739707,2119879408,品牌词-官方服务,5.16,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,,,1
-14444739706,2119879408,品牌词-TinaCMS核心,5.16,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,,,1
-14444739705,2119879408,产品词-无头CMS,5.16,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,,,1
-14444739704,2119879408,产品词-开源CMS,5.16,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,,,1
-14444739703,2119879408,场景词-官网建设,5.16,False,[],"[""网管管理系统"", ""网络管理系统""]",33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,,,1
-14444739702,2119879408,场景词-文档站,5.16,False,[],"[""编辑文档的软件"", ""文件 管理 软件"", ""在线文档怎么创建"", ""管理文件的软件"", ""文件管理软件系统"", ""edoc文档管理系统"", ""文件文档管理系统"", ""腾讯文档在线编辑怎么创建"", ""文档审批管理系统"", ""文件档案管理的系统"", ""如何转在线编辑文档"", ""md文件在线编辑"", ""文件,管理,软件"", ""腾讯文档在线编辑"", ""文件管理系统"", ""做文档的软件"", ""文档安全管理系统"", ""excel在线编辑文档创建"", ""怎么做在线文档"", ""文件管理系统软件"", ""文档文件管理软件"", ""文档在线生成"", ""文件档案管理系统"", ""文件管理软件"", ""word文档在线编辑"", ""免费word在线编辑"", ""文档档案管理系统"", ""档案文件管理系统""]",33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,,,1
-14444739701,2119879408,场景词-内容运营,5.16,False,[],"[""运营管理的主要内容是什么""]",33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,,,1
+14444739718,2119879408,价格词-CMS费用,5.16,False,[],[],31,[],0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
+14444739717,2119879408,长尾词-疑问词,5.16,False,[],"[""git""]",31,[],0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
+14444739716,2119879408,长尾词-选型对比,5.16,False,[],[],31,[],0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
+14444739715,2119879408,出海词-海外官网,5.16,False,[],[],31,[],0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
+14444739714,2119879408,出海词-品牌出海,5.16,False,[],[],31,[],0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
+14444739713,2119879408,服务词-迁移与培训,5.16,False,[],[],31,[],0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
+14444739712,2119879408,服务词-CMS定制,5.16,False,[],[],31,[],0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
+14444739711,2119879408,技术词-Next.js/React,5.16,False,[],[],31,[],0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
+14444739710,2119879408,产品词-可视化编辑,5.16,False,[],[],31,[],0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
+14444739709,2119879408,技术词-Git/静态站,5.16,False,[],[],31,[],0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
+14444739708,2119879408,技术词-Markdown/MDX,5.16,False,[],[],31,[],0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
+14444739707,2119879408,品牌词-官方服务,5.16,False,[],[],31,[],0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
+14444739706,2119879408,品牌词-TinaCMS核心,5.16,False,[],[],31,[],0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
+14444739705,2119879408,产品词-无头CMS,5.16,False,[],[],31,[],0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
+14444739704,2119879408,产品词-开源CMS,5.16,False,[],[],31,[],0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
+14444739703,2119879408,场景词-官网建设,5.16,False,[],"[""网管管理系统"", ""网络管理系统""]",31,[],0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
+14444739702,2119879408,场景词-文档站,5.16,False,[],"[""编辑文档的软件"", ""文件 管理 软件"", ""在线文档怎么创建"", ""管理文件的软件"", ""文件管理软件系统"", ""edoc文档管理系统"", ""文件文档管理系统"", ""腾讯文档在线编辑怎么创建"", ""文档审批管理系统"", ""文件档案管理的系统"", ""如何转在线编辑文档"", ""md文件在线编辑"", ""文件,管理,软件"", ""腾讯文档在线编辑"", ""文件管理系统"", ""做文档的软件"", ""文档安全管理系统"", ""excel在线编辑文档创建"", ""怎么做在线文档"", ""文件管理系统软件"", ""文档文件管理软件"", ""文档在线生成"", ""文件档案管理系统"", ""文件管理软件"", ""word文档在线编辑"", ""免费word在线编辑"", ""文档档案管理系统"", ""档案文件管理系统""]",31,[],0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
+14444739701,2119879408,场景词-内容运营,5.16,False,[],"[""运营管理的主要内容是什么""]",31,[],0,False,https://tinacms.com.cn/,https://tinacms.com.cn/,0
+14444739718,2119879408,价格词-CMS费用,5.16,False,[],[],31,[],0,False,,,1
+14444739717,2119879408,长尾词-疑问词,5.16,False,[],"[""git""]",31,[],0,False,,,1
+14444739716,2119879408,长尾词-选型对比,5.16,False,[],[],31,[],0,False,,,1
+14444739715,2119879408,出海词-海外官网,5.16,False,[],[],31,[],0,False,,,1
+14444739714,2119879408,出海词-品牌出海,5.16,False,[],[],31,[],0,False,,,1
+14444739713,2119879408,服务词-迁移与培训,5.16,False,[],[],31,[],0,False,,,1
+14444739712,2119879408,服务词-CMS定制,5.16,False,[],[],31,[],0,False,,,1
+14444739711,2119879408,技术词-Next.js/React,5.16,False,[],[],31,[],0,False,,,1
+14444739710,2119879408,产品词-可视化编辑,5.16,False,[],[],31,[],0,False,,,1
+14444739709,2119879408,技术词-Git/静态站,5.16,False,[],[],31,[],0,False,,,1
+14444739708,2119879408,技术词-Markdown/MDX,5.16,False,[],[],31,[],0,False,,,1
+14444739707,2119879408,品牌词-官方服务,5.16,False,[],[],31,[],0,False,,,1
+14444739706,2119879408,品牌词-TinaCMS核心,5.16,False,[],[],31,[],0,False,,,1
+14444739705,2119879408,产品词-无头CMS,5.16,False,[],[],31,[],0,False,,,1
+14444739704,2119879408,产品词-开源CMS,5.16,False,[],[],31,[],0,False,,,1
+14444739703,2119879408,场景词-官网建设,5.16,False,[],"[""网管管理系统"", ""网络管理系统""]",31,[],0,False,,,1
+14444739702,2119879408,场景词-文档站,5.16,False,[],"[""编辑文档的软件"", ""文件 管理 软件"", ""在线文档怎么创建"", ""管理文件的软件"", ""文件管理软件系统"", ""edoc文档管理系统"", ""文件文档管理系统"", ""腾讯文档在线编辑怎么创建"", ""文档审批管理系统"", ""文件档案管理的系统"", ""如何转在线编辑文档"", ""md文件在线编辑"", ""文件,管理,软件"", ""腾讯文档在线编辑"", ""文件管理系统"", ""做文档的软件"", ""文档安全管理系统"", ""excel在线编辑文档创建"", ""怎么做在线文档"", ""文件管理系统软件"", ""文档文件管理软件"", ""文档在线生成"", ""文件档案管理系统"", ""文件管理软件"", ""word文档在线编辑"", ""免费word在线编辑"", ""文档档案管理系统"", ""档案文件管理系统""]",31,[],0,False,,,1
+14444739701,2119879408,场景词-内容运营,5.16,False,[],"[""运营管理的主要内容是什么""]",31,[],0,False,,,1
