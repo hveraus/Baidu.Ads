@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Pull or import daily TinaCMS website totals and publish only numeric aggregates."""
+"""Pull or import daily website totals and publish only numeric aggregates."""
 import argparse
 import csv
 import datetime as dt
@@ -12,12 +12,16 @@ from urllib.parse import urlsplit
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
-from website_conversions import FIELDS, FILENAME, METRICS, load_rows, validate_rows
+from website_conversions import FIELDS, FILENAME, SSW_FIELDS, load_rows, validate_rows
 from scripts.publish_data import export_website_conversions
 
 SECRET='BAIDU_TONGJI_CREDENTIALS_JSON'
+SSW_SITE_CONFIG='BAIDU_TONGJI_SSW_SITE_JSON'
 SERVICE='https://api.baidu.com/json/tongji/v1/ReportService/'
-HOSTS={'tinacms.com.cn','www.tinacms.com.cn'}
+SITES={
+ 'tinacms':('TinaCMS China',{'tinacms.com.cn','www.tinacms.com.cn'},FIELDS),
+ 'ssw':('SSW China',{'ssw.com.cn','www.ssw.com.cn'},SSW_FIELDS),
+}
 BEIJING=dt.timezone(dt.timedelta(hours=8))
 
 
@@ -65,19 +69,20 @@ def read_daily(result, metric, start, end):
  return days
 
 
-def fetch_rows(config, previous, *, end):
+def fetch_rows(config, previous, *, end, site_slug='tinacms'):
+ name,hosts,fields=SITES[site_slug]
  site=config['site_id']
- targets=[config[key] for key in ('install_copy_target','email_click_target')]
- if any(type(x) is not int or x<=0 for x in [site,*targets]) or len(set(targets))!=2:
-  raise ValueError('Configure the TinaCMS site ID and two distinct individual target IDs')
+ targets={field:config[field.removesuffix('_sessions')+'_target'] for field in fields[2:]}
+ if any(type(x) is not int or x<=0 for x in [site,*targets.values()]) or len(set(targets.values()))!=len(targets):
+  raise ValueError(f'Configure the {name} site ID and its distinct individual target IDs')
  first=dt.date.fromisoformat(config['start_date'])
  if first>end:
   return []
  sites=tongji(config,'getSiteList')['list']
  if not any(row.get('site_id')==site and row.get('status')==0 and
-            urlsplit(row['domain'] if '://' in row['domain'] else '//'+row['domain']).hostname in HOSTS
+            urlsplit(row['domain'] if '://' in row['domain'] else '//'+row['domain']).hostname in hosts
             for row in sites):
-  raise ValueError('The configured Baidu Tongji site is not an active TinaCMS China site')
+  raise ValueError(f'The configured Baidu Tongji site is not an active {name} site')
  latest=max((dt.date.fromisoformat(r['date']) for r in previous if r['date']<=end.isoformat()),default=first)
  start=max(first,latest-dt.timedelta(days=6))
  all_rows=[]
@@ -90,51 +95,58 @@ def fetch_rows(config, previous, *, end):
    report=tongji(config,'getData',{**base,**filters,'metrics':metric})['result']
    return read_daily(report,metric,start,stop)
   visits=get('visit_count')
-  copy,email=(get('trans_count',target) for target in targets)
-  all_rows.extend({'date':d.isoformat(),'sessions':count,
-                   'install_copy_sessions':copy.get(d),'email_click_sessions':email.get(d)}
+  goals={field:get('trans_count',target) for field,target in targets.items()}
+  all_rows.extend({'date':d.isoformat(),'sessions':count,**{field:days.get(d) for field,days in goals.items()}}
                   for d,count in visits.items() if count is not None)
   start=stop+dt.timedelta(days=1)
- return validate_rows(all_rows)
+ return validate_rows(all_rows,fields)
 
 
-def read_csv(path):
+def read_csv(path,fields=FIELDS):
  with path.open(encoding='utf-8-sig',newline='') as file:
   reader=csv.DictReader(file)
-  if tuple(reader.fieldnames or ())!=FIELDS:
+  if tuple(reader.fieldnames or ())!=fields:
    raise ValueError('CSV headers must match the four documented aggregate fields')
   rows=[]
   for row in reader:
-   if set(row)!=set(FIELDS) or any(v is None for v in row.values()):
+   if set(row)!=set(fields) or any(v is None for v in row.values()):
     raise ValueError('CSV row does not match its headers')
-   for metric in METRICS:
+   for metric in fields[1:]:
     raw=row[metric].strip()
     if raw and (not raw.isascii() or not raw.isdecimal()):
      raise ValueError('CSV counts must be integers or blank for unmeasured goals')
     row[metric]=int(raw) if raw else None
    rows.append(row)
- return validate_rows(rows)
+ return validate_rows(rows,fields)
 
 
 def main():
  parser=argparse.ArgumentParser(description=__doc__)
  parser.add_argument('--csv',type=Path,help='Import the documented daily aggregate CSV instead of querying Tongji')
+ parser.add_argument('--site',choices=SITES,default='tinacms')
  args=parser.parse_args()
- path=ROOT/'data'/FILENAME
+ name,_,fields=SITES[args.site]
+ data_root=ROOT if args.site=='tinacms' else ROOT/'accounts'/args.site
+ path=data_root/'data'/FILENAME
  secret=os.environ.get(SECRET)
- if not args.csv and not secret:
-  print('TinaCMS website statistics: no data source configured')
+ site_config=os.environ.get(SSW_SITE_CONFIG) if args.site=='ssw' else secret
+ if not args.csv and not (secret and site_config):
+  print(f'{name} website statistics: no data source configured')
   return
  try:
   if args.csv:
-   rows=read_csv(args.csv)
+   rows=read_csv(args.csv,fields)
   else:
    config=json.loads(secret)
-   rows=fetch_rows(config,load_rows(path),end=dt.datetime.now(BEIJING).date()-dt.timedelta(days=1))
-  export_website_conversions(path,rows)
+   if args.site=='ssw':
+    site_config=json.loads(site_config)
+    config={key:config[key] for key in ('user_name','access_token')}
+    config.update({key:site_config[key] for key in ('site_id','contact_click_target','start_date')})
+   rows=fetch_rows(config,load_rows(path,fields),end=dt.datetime.now(BEIJING).date()-dt.timedelta(days=1),site_slug=args.site)
+  export_website_conversions(path,rows,fields)
  except (ValueError, KeyError, IndexError, TypeError, OSError):
-  sys.exit('TinaCMS website statistics were not updated. Check site, date, goal IDs, access, and aggregate format.')
- print(f'TinaCMS website statistics: {len(rows)} daily aggregates received')
+  sys.exit(f'{name} website statistics were not updated. Check site, date, goal IDs, access, and aggregate format.')
+ print(f'{name} website statistics: {len(rows)} daily aggregates received')
 
 
 if __name__=='__main__':
