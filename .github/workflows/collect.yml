@@ -1,99 +1,45 @@
-name: Collect Baidu Ads data
+name: Verify SSW paid report
 on:
-  schedule:
-    - cron: '0 1 * * *'
-  workflow_dispatch:
+  push:
+    branches: [ssw-paid-only]
+    paths: [.github/workflows/collect.yml]
 permissions:
   contents: read
-  pages: write
-  id-token: write
-concurrency:
-  group: baidu-collection
-  cancel-in-progress: false
 jobs:
-  collect:
+  verify:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: main
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-          cache: pip
-      - run: 'pip install --only-binary=:all: -r requirements.txt'
-      - name: Restore encrypted history
-        env:
-          DATA_BACKUP_KEY: ${{ secrets.DATA_BACKUP_KEY }}
-        run: python scripts/vault.py restore
-      - name: Sync TinaCMS website conversions
-        env:
-          BAIDU_TONGJI_CREDENTIALS_JSON: ${{ secrets.BAIDU_TONGJI_CREDENTIALS_JSON }}
-        run: |
-          if ! python scripts/sync_website_conversions.py; then
-            echo '::warning::TinaCMS website analytics could not sync. The previous website totals were retained.'
-          fi
-      - name: Sync SSW website conversions
+      - name: Read SSW paid promotion report
         env:
           BAIDU_TONGJI_CREDENTIALS_JSON: ${{ secrets.BAIDU_TONGJI_CREDENTIALS_JSON }}
           BAIDU_TONGJI_SSW_SITE_JSON: ${{ vars.BAIDU_TONGJI_SSW_SITE_JSON }}
         run: |
-          if ! python scripts/sync_website_conversions.py --site ssw; then
-            echo '::warning::SSW website analytics could not sync. The previous website totals were retained.'
-          fi
-      - name: Sync encrypted Tina CLI totals
-        env:
-          POSTHOG_CLI_QUERY_KEY: ${{ secrets.POSTHOG_CLI_QUERY_KEY }}
-          POSTHOG_CLI_SNAPSHOT_KEY: ${{ secrets.POSTHOG_CLI_SNAPSHOT_KEY }}
-        run: |
-          if ! python scripts/sync_posthog_cli.py; then
-            echo '::warning::PostHog could not sync. The previous encrypted snapshot was retained.'
-          fi
-      - name: Collect, verify and prepare publication
-        env:
-          BAIDU_CREDENTIALS_JSON: ${{ secrets.BAIDU_CREDENTIALS_JSON }}
-          DATA_BACKUP_KEY: ${{ secrets.DATA_BACKUP_KEY }}
-          BAIDU_YAKSHAVER_CREDENTIALS_JSON: ${{ secrets.BAIDU_YAKSHAVER_CREDENTIALS_JSON }}
-          BAIDU_SSW_CREDENTIALS_JSON: ${{ secrets.BAIDU_SSW_CREDENTIALS_JSON }}
-        run: |
-          python tracker.py
-          python scripts/verify_data.py
-          python scripts/publish_data.py
-          python dashboard.py --public
-          python scripts/accounts.py collect --account yakshaver
-          python scripts/accounts.py collect --account ssw
-          python scripts/vault.py backup
-          python scripts/vault.py verify
-          python scripts/check_public.py
-      - name: Save updated data
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data accounts backups/private-data.enc report
-          if ! git diff --cached --quiet; then
-            git commit -m "Update Baidu Ads data and reports"
-            git pull --rebase origin main
-            git push origin HEAD:main
-          fi
-      - name: Summarise collection without credentials
-        run: |
-          python - <<'PY'
-          import json,os
-          from pathlib import Path
-          accounts = {'TinaCMS':'data/status.json', 'YakShaver':'accounts/yakshaver/data/status.json', 'SSW':'accounts/ssw/data/status.json'}
-          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
-              f.write('## Baidu Ads collection\n\n')
-              for name, path in accounts.items():
-                  s=json.loads(Path(path).read_text())
-                  f.write(f"- **{name}**: {len(s['reports'])} reports, through {s['end']}; token expiry {s['token_expires']}\n")
-                  if s.get('warning'): f.write('  - **Authorisation renewal required soon.**\n')
+          python3 - <<'PY'
+          import datetime as dt
+          import json
+          import os
+          from scripts.sync_website_conversions import BEIJING, fetch_paid_day, tongji
+
+          try:
+              config = json.loads(os.environ['BAIDU_TONGJI_CREDENTIALS_JSON'])
+              config.update(json.loads(os.environ['BAIDU_TONGJI_SSW_SITE_JSON']))
+              assert any(site.get('site_id') == config['site_id'] and site.get('status') == 0
+                         for site in tongji(config, 'getSiteList')['list'])
+              print('SSW site access confirmed.')
+              day = dt.datetime.now(BEIJING).date()
+              stamp = day.strftime('%Y%m%d')
+              for metric, extra in [('visit_count', {}), ('trans_count', {'target': config['contact_click_target']})]:
+                  result = tongji(config, 'getData', {
+                      'site_id': config['site_id'], 'method': 'pro/hour/a', 'adProduct': '0,0',
+                      'start_date': stamp, 'end_date': stamp, 'metrics': metric, **extra
+                  })['result']
+                  fields = result.get('fields', [])
+                  totals = result.get('sum')
+                  print(f'{metric}: expected fields={fields[1:] == [metric]}, '
+                        f'summary present={totals is not None}, empty report={result.get("total") == 0}.')
+              row = fetch_paid_day(config, day, config['contact_click_target'])
+              print(f'Paid report parsed successfully. Paid visits observed: {bool(row and row["paid_sessions"])}.')
+          except (AssertionError, ValueError, KeyError, TypeError, IndexError):
+              raise SystemExit('Could not validate the paid SSW report. Check access or response format.') from None
           PY
-  publish:
-    needs: collect
-    uses: ./.github/workflows/pages.yml
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
