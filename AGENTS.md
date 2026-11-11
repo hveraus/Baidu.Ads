@@ -21,6 +21,6 @@
 
 ## SSW China website conversions
 
-- The Baidu Tongji site **SSW 中国站** uses site ID `23684705` under 智鹏瑞尔. The **联系我们点击** goal uses ID `1557094` and counts visits to the virtual page `https://ssw.com.cn/__analytics/conversion/contact-click` once per session. The website source is `ZPREHZ/ssw.com.cn`. [Baidu Tongji goal settings](https://tongji.baidu.com/main/setting/90172887/home/trans/basicsetting?flag=page&siteId=23684705).
+- The Baidu Tongji site **SSW 中国站** uses site ID `23684705` under 智鹏瑞尔. The **联系我们点击** goal uses ID `1557094` and counts visits to the virtual path `/__analytics/conversion/contact-click` on both `ssw.com.cn` and `www.ssw.com.cn`, once per session. The website source is `ZPREHZ/ssw.com.cn`. [Baidu Tongji goal settings](https://tongji.baidu.com/main/setting/90172887/home/trans/basicsetting?flag=page&siteId=23684705).
 - The **Sync SSW website conversions** step reuses the Baidu Tongji read credentials from `BAIDU_TONGJI_CREDENTIALS_JSON`. The Actions repository variable `BAIDU_TONGJI_SSW_SITE_JSON` supplies `site_id`, `contact_click_target`, and `start_date` for SSW. The task runs at 09:00 Beijing time and queries through yesterday.
 - The SSW overview divides sessions with a contact click by all sessions on the same covered dates. It reads aggregate counts from `accounts/ssw/data/website-conversions.json`. Check the SSW collection step and the website conversion card after a production test click has reached Baidu Tongji. [SSW overview](https://hveraus.github.io/Baidu.Ads/ssw/).
