@@ -1,4 +1,13 @@
 {
+  "见总览的网站转化率": "See Website conversion rates in Overview",
+  "从独立的网站统计读取会话、安装命令复制成功和邮件咨询点击；未覆盖日期显示为缺失": "Website analytics supplies sessions, successful install-command copies and email enquiry clicks. Uncovered dates appear as missing.",
+  "网站转化率": "Website conversion rates",
+  "全站会话 · 按所选日期统计": "All site sessions · Selected dates",
+  "每项转化率＝触发该行为的会话数 ÷ 同一覆盖日期的网站会话数。同一会话每项只计一次。邮件咨询指点击邮件链接，不代表邮件已发送。全站数据不随推广计划筛选变化。": "Each rate divides sessions with the action by all website sessions on the same covered dates. Each action counts once per session. Email clicks do not confirm a message was sent. Campaign filters do not affect these site-wide figures.",
+  "安装命令复制成功": "Install command copied",
+  "邮件咨询点击": "Email enquiry clicks",
+  "所选日期没有已采集的转化数据": "No conversion data collected for the selected dates",
+  " · 覆盖 ${fmt(covered.length)} / ${fmt(days)} 天": " · ${fmt(covered.length)} / ${fmt(days)} days covered",
   "TinaCMS · 百度投流分析": "TinaCMS · Baidu Ads Analytics",
   "百度投流分析": "Baidu Ads Analytics",
   "刷新报表": "Refresh report",

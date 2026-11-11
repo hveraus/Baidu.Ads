@@ -28,6 +28,13 @@ jobs:
         env:
           DATA_BACKUP_KEY: ${{ secrets.DATA_BACKUP_KEY }}
         run: python scripts/vault.py restore
+      - name: Sync TinaCMS website conversions
+        env:
+          BAIDU_TONGJI_CREDENTIALS_JSON: ${{ secrets.BAIDU_TONGJI_CREDENTIALS_JSON }}
+        run: |
+          if ! python scripts/sync_website_conversions.py; then
+            echo '::warning::TinaCMS website analytics could not sync. The previous website totals were retained.'
+          fi
       - name: Collect, verify and prepare publication
         env:
           BAIDU_CREDENTIALS_JSON: ${{ secrets.BAIDU_CREDENTIALS_JSON }}

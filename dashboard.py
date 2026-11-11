@@ -2,6 +2,7 @@
 import datetime as dt,json,sqlite3
 from pathlib import Path
 from i18n import english_template
+from website_conversions import FILENAME, load_rows
 ROOT=Path(__file__).resolve().parent
 
 def build_dashboard(public=False):
@@ -23,7 +24,10 @@ def build_dashboard(public=False):
  coverage=[{'report':r,'start':s,'end':e} for r,s,e in c.execute('select report,min(start_date),max(end_date) from report_coverage group by report')]
  c.close()
  status=json.loads((ROOT/('data/status.json' if public else 'status.json')).read_text())
+ profile=json.loads((ROOT/'profile.json').read_text()) if (ROOT/'profile.json').exists() else {'slug':'tinacms','name':'TinaCMS'}
  data={'reports':reports,'inventory':inventory,'coverage':coverage,'status':status,'generated':dt.datetime.now().isoformat(),'record_counts':record_counts,'website':json.loads((ROOT/'website-audit.json').read_text()) if (ROOT/'website-audit.json').exists() else {}}
+ if profile['slug']=='tinacms':
+  data['website_conversions']=load_rows(ROOT/'data'/FILENAME)
  template=(ROOT/'dashboard.template.html').read_text()
  if public:
   from publication import public_template
@@ -32,7 +36,6 @@ def build_dashboard(public=False):
  packed=json.dumps(data,ensure_ascii=False,separators=(',',':')).replace('<','\\u003c').replace('>','\\u003e').replace('&','\\u0026')
  output=ROOT/'report'/'index.html'; output.parent.mkdir(exist_ok=True)
  from account_ui import account_template
- profile=json.loads((ROOT/'profile.json').read_text()) if (ROOT/'profile.json').exists() else {'slug':'tinacms','name':'TinaCMS'}
  output.write_text(account_template(template,profile,'zh').replace('/*__DATA__*/',packed))
  output.chmod(0o600)
  english=output.with_name('en.html')
