@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 """Fail closed if credentials, visitor IPs or local private files are staged or published."""
-import argparse,json,re,sqlite3,subprocess
+import argparse,json,re,sqlite3,subprocess,sys
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
+sys.path.insert(0,str(ROOT))
+from website_conversions import FILENAME, load_rows
 JWT=re.compile(rb'eyJ[A-Za-z0-9_-]{15,}\.[A-Za-z0-9_-]{15,}\.[A-Za-z0-9_-]{15,}')
 FORBIDDEN={'.credentials.json','.backup-key','baidu.sqlite3','status.json','runs.jsonl'}
 def check():
  root=ROOT
  for db in [root/'data/public.sqlite3',*root.glob('accounts/*/data/public.sqlite3')]:
   check_database(db)
+ load_rows(root/'data'/FILENAME)
  check_files(root)
  print('Public data and tracked-file checks passed')
 def check_database(db):

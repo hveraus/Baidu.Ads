@@ -8,7 +8,7 @@ from vault import encrypt,restore,key_bytes
 from verify_data import verify
 PROFILES={'yakshaver':{'slug':'yakshaver','name':'YakShaver','user_name':'智鹏瑞尔-1','user_id':91119162,'app_id':'94f6d7c3dc7ed96fc1984fd505d99666','website':'http://yakshaver.com.cn/','token_expires':'2027-02-01','secret':'BAIDU_YAKSHAVER_CREDENTIALS_JSON'}}
 PROFILES['ssw']={'slug':'ssw','name':'SSW','user_name':'智鹏瑞尔-2','user_id':91119163,'app_id':'301ac6829851c4cccb2d8363d17bd623','website':'https://ssw.cn','token_expires':'2027-02-01','secret':'BAIDU_SSW_CREDENTIALS_JSON'}
-FILES=['tracker.py','dashboard.py','dashboard.template.html','i18n.py','i18n.en.json','publication.py','account_ui.py','config.json']
+FILES=['tracker.py','dashboard.py','dashboard.template.html','i18n.py','i18n.en.json','publication.py','account_ui.py','config.json','website_conversions.py']
 def prepare(slug):
  profile=PROFILES[slug];runtime=ROOT/'.private'/slug;runtime.mkdir(parents=True,exist_ok=True,mode=0o700)
  for name in FILES:shutil.copy2(ROOT/name,runtime/name)

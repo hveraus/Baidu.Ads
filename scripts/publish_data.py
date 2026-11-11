@@ -1,10 +1,26 @@
 #!/usr/bin/env python3
 """Produce allowlisted public data from private collector output."""
-import argparse,datetime as dt,hashlib,importlib.util,json,re,sqlite3,sys
+import argparse,datetime as dt,hashlib,importlib.util,json,re,sqlite3,sys,tempfile
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT))
 from tracker import write_csv,summary
+from website_conversions import load_rows,validate_rows
 SENSITIVE={'formatip','ip','ipaddress','accesstoken','refreshtoken','secretkey','authcode','signature','password','authorization'}
+
+def export_website_conversions(path,rows):
+ previous=load_rows(path)
+ merged={row['date']:row for row in previous}
+ merged.update((row['date'],row) for row in validate_rows(rows))
+ clean=validate_rows(list(merged.values()))
+ if clean==previous:return
+ with tempfile.NamedTemporaryFile(mode='w',encoding='utf-8',dir=path.parent,delete=False) as file:
+  temp=Path(file.name)
+  try:
+   file.write(json.dumps(clean,indent=2)+'\n')
+   file.close()
+   temp.replace(path)
+  finally:
+   temp.unlink(missing_ok=True)
 
 def clean(value):
  if isinstance(value,dict):return {k:clean(v) for k,v in value.items() if re.sub('[^a-z]','',k.lower()) not in SENSITIVE}
