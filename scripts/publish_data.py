@@ -4,14 +4,14 @@ import argparse,datetime as dt,hashlib,importlib.util,json,re,sqlite3,sys,tempfi
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT))
 from tracker import write_csv,summary
-from website_conversions import load_rows,validate_rows
+from website_conversions import FIELDS,load_rows,validate_rows
 SENSITIVE={'formatip','ip','ipaddress','accesstoken','refreshtoken','secretkey','authcode','signature','password','authorization'}
 
-def export_website_conversions(path,rows):
- previous=load_rows(path)
+def export_website_conversions(path,rows,fields=FIELDS):
+ previous=load_rows(path,fields)
  merged={row['date']:row for row in previous}
- merged.update((row['date'],row) for row in validate_rows(rows))
- clean=validate_rows(list(merged.values()))
+ merged.update((row['date'],row) for row in validate_rows(rows,fields))
+ clean=validate_rows(list(merged.values()),fields)
  if clean==previous:return
  with tempfile.NamedTemporaryFile(mode='w',encoding='utf-8',dir=path.parent,delete=False) as file:
   temp=Path(file.name)

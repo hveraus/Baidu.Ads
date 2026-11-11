@@ -4,7 +4,7 @@ import argparse,json,re,sqlite3,subprocess,sys
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
-from website_conversions import FILENAME, load_rows
+from website_conversions import FILENAME, SSW_FIELDS, load_rows
 from scripts.sync_posthog_cli import ENCRYPTED_SNAPSHOT, read_encrypted_snapshot
 JWT=re.compile(rb'eyJ[A-Za-z0-9_-]{15,}\.[A-Za-z0-9_-]{15,}\.[A-Za-z0-9_-]{15,}')
 FORBIDDEN={'.credentials.json','.backup-key','baidu.sqlite3','status.json','runs.jsonl'}
@@ -13,6 +13,7 @@ def check():
  for db in [root/'data/public.sqlite3',*root.glob('accounts/*/data/public.sqlite3')]:
   check_database(db)
  load_rows(root/'data'/FILENAME)
+ load_rows(root/'accounts'/'ssw'/'data'/FILENAME,SSW_FIELDS)
  read_encrypted_snapshot(root/'data'/ENCRYPTED_SNAPSHOT)
  check_files(root)
  print('Public data and tracked-file checks passed')

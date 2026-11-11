@@ -6,6 +6,7 @@ ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT));sys.path.i
 from publish_data import export
 from vault import encrypt,restore,key_bytes
 from verify_data import verify
+from website_conversions import FILENAME
 PROFILES={'yakshaver':{'slug':'yakshaver','name':'YakShaver','user_name':'智鹏瑞尔-1','user_id':91119162,'app_id':'94f6d7c3dc7ed96fc1984fd505d99666','website':'http://yakshaver.com.cn/','token_expires':'2027-02-01','secret':'BAIDU_YAKSHAVER_CREDENTIALS_JSON'}}
 PROFILES['ssw']={'slug':'ssw','name':'SSW','user_name':'智鹏瑞尔-2','user_id':91119163,'app_id':'301ac6829851c4cccb2d8363d17bd623','website':'https://ssw.cn','token_expires':'2027-02-01','secret':'BAIDU_SSW_CREDENTIALS_JSON'}
 FILES=['tracker.py','dashboard.py','dashboard.template.html','i18n.py','i18n.en.json','publication.py','account_ui.py','config.json','website_conversions.py']
@@ -39,7 +40,7 @@ def collect(slug,backfill=False):
 def publish(slug):
  profile,runtime=prepare(slug);verify(runtime/'baidu.sqlite3');export(runtime)
  out=ROOT/'accounts'/slug/'data';out.parent.mkdir(parents=True,exist_ok=True)
- shutil.copytree(runtime/'data',out,dirs_exist_ok=True)
+ shutil.copytree(runtime/'data',out,dirs_exist_ok=True,ignore=shutil.ignore_patterns(FILENAME))
  build_one(slug)
 
 def build_one(slug):
