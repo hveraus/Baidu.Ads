@@ -1,5 +1,5 @@
 """Generate a standalone, offline analysis page from the local database."""
-import datetime as dt,json,sqlite3
+import base64,datetime as dt,json,sqlite3
 from pathlib import Path
 from i18n import english_template
 from website_conversions import FILENAME, load_rows
@@ -28,6 +28,11 @@ def build_dashboard(public=False):
  data={'reports':reports,'inventory':inventory,'coverage':coverage,'status':status,'generated':dt.datetime.now().isoformat(),'record_counts':record_counts,'website':json.loads((ROOT/'website-audit.json').read_text()) if (ROOT/'website-audit.json').exists() else {}}
  if profile['slug']=='tinacms':
   data['website_conversions']=load_rows(ROOT/'data'/FILENAME)
+  if public:
+   from scripts.sync_posthog_cli import ENCRYPTED_SNAPSHOT, read_encrypted_snapshot
+   encrypted=read_encrypted_snapshot(ROOT/'data'/ENCRYPTED_SNAPSHOT)
+   if encrypted:
+    data['encrypted_posthog_cli']=base64.b64encode(encrypted).decode('ascii')
  template=(ROOT/'dashboard.template.html').read_text()
  if public:
   from publication import public_template

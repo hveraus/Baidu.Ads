@@ -111,6 +111,10 @@ python -m unittest discover -s tests -v
 
 更多：[百度接入](docs/BAIDU_API.md) · [数据结构与口径](docs/DATA.md) · [GitHub 与恢复](docs/GITHUB.md)
 
+### 中国区 Tina CLI 数据
+
+采集任务按北京时间查询最近 90 个完整日期的中国区启动和完成次数。启用时，在仓库的 Actions Secrets 配置 `POSTHOG_CLI_QUERY_KEY`（TinaCloud 项目的 `Query: Read` 密钥）和 `POSTHOG_CLI_SNAPSHOT_KEY`（专用的随机 32 字节密钥，用 64 个十六进制字符表示）。将查看密钥保存在个人密码管理器。任务只提交 `data/posthog-cli.enc`；TinaCMS 总览在当前页面内解密，刷新后需要重新解锁。
+
 ## 多网站独立账户
 
 左上角标题下拉可在 TinaCMS、YakShaver 和 SSW 之间切换，每个账户拥有独立的关键词、消费、历史数据和建议。原始关键词与广告文案保留原文。YakShaver 的建议不沿用 TinaCMS 的文档管理意图判断或预算分组。
