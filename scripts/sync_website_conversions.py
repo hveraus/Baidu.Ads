@@ -12,7 +12,7 @@ from urllib.parse import urlsplit
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
-from website_conversions import FIELDS, FILENAME, SSW_FIELDS, load_rows, validate_rows
+from website_conversions import FIELDS, FILENAME, SSW_FIELDS, SSW_FILENAME, load_rows, validate_rows
 from scripts.publish_data import export_website_conversions
 
 SECRET='BAIDU_TONGJI_CREDENTIALS_JSON'
@@ -47,6 +47,14 @@ def tongji(config, method, body=None):
   raise ValueError(f'Baidu Tongji {method} failed; check access and configuration') from None
 
 
+def read_count(raw):
+ if raw is None or raw in ('--','—',''):
+  return None
+ if type(raw) is int or (isinstance(raw,str) and raw.isascii() and raw.isdecimal()):
+  return int(raw)
+ raise ValueError('Unexpected count in Baidu Tongji report')
+
+
 def read_daily(result, metric, start, end):
  fields=result['fields']
  if fields[1:]!=[metric]:
@@ -60,19 +68,36 @@ def read_daily(result, metric, start, end):
   if date in days or not start<=date<=end:
    raise ValueError('Unexpected date in Baidu Tongji report')
   raw,=value
-  if raw is None or raw in ('--','—',''):
-   days[date]=None
-  elif type(raw) is int or (isinstance(raw,str) and raw.isascii() and raw.isdecimal()):
-   days[date]=int(raw)
-  else:
-   raise ValueError('Unexpected count in Baidu Tongji report')
+  days[date]=read_count(raw)
  return days
+
+
+def fetch_paid_day(config, day, target):
+ date=day.strftime('%Y%m%d')
+ base={'site_id':config['site_id'],'method':'pro/hour/a','adProduct':'0,0',
+       'start_date':date,'end_date':date}
+
+ def total(metric, **filters):
+  report=tongji(config,'getData',{**base,**filters,'metrics':metric})['result']
+  if report['fields'][1:]!=[metric]:
+   raise ValueError('Unexpected metric in Baidu Tongji paid promotion report')
+  totals=report['sum']
+  if (not totals or not totals[0]) and report.get('total')==0:
+   return None
+  raw,=totals[0]
+  return read_count(raw)
+
+ visits=total('visit_count')
+ if visits is None:
+  return None
+ return {'date':day.isoformat(),'paid_sessions':visits,
+         'paid_contact_click_sessions':total('trans_count',target=target)}
 
 
 def fetch_rows(config, previous, *, end, site_slug='tinacms'):
  name,hosts,fields=SITES[site_slug]
  site=config['site_id']
- targets={field:config[field.removesuffix('_sessions')+'_target'] for field in fields[2:]}
+ targets={field:config[field.removeprefix('paid_').removesuffix('_sessions')+'_target'] for field in fields[2:]}
  if any(type(x) is not int or x<=0 for x in [site,*targets.values()]) or len(set(targets.values()))!=len(targets):
   raise ValueError(f'Configure the {name} site ID and its distinct individual target IDs')
  first=dt.date.fromisoformat(config['start_date'])
@@ -86,6 +111,12 @@ def fetch_rows(config, previous, *, end, site_slug='tinacms'):
  latest=max((dt.date.fromisoformat(r['date']) for r in previous if r['date']<=end.isoformat()),default=first)
  start=max(first,latest-dt.timedelta(days=6))
  all_rows=[]
+ if site_slug=='ssw':
+  for offset in range((end-start).days+1):
+   row=fetch_paid_day(config,start+dt.timedelta(days=offset),targets['paid_contact_click_sessions'])
+   if row is not None:
+    all_rows.append(row)
+  return validate_rows(all_rows,fields)
  while start<=end:
   stop=min(end,start+dt.timedelta(days=30))
   base={'site_id':site,'method':'trend/time/a','start_date':start.strftime('%Y%m%d'),
@@ -106,7 +137,7 @@ def read_csv(path,fields=FIELDS):
  with path.open(encoding='utf-8-sig',newline='') as file:
   reader=csv.DictReader(file)
   if tuple(reader.fieldnames or ())!=fields:
-   raise ValueError('CSV headers must match the four documented aggregate fields')
+   raise ValueError('CSV headers must match the selected site’s aggregate fields')
   rows=[]
   for row in reader:
    if set(row)!=set(fields) or any(v is None for v in row.values()):
@@ -127,7 +158,7 @@ def main():
  args=parser.parse_args()
  name,_,fields=SITES[args.site]
  data_root=ROOT if args.site=='tinacms' else ROOT/'accounts'/args.site
- path=data_root/'data'/FILENAME
+ path=data_root/'data'/(SSW_FILENAME if args.site=='ssw' else FILENAME)
  secret=os.environ.get(SECRET)
  site_config=os.environ.get(SSW_SITE_CONFIG) if args.site=='ssw' else secret
  if not args.csv and not (secret and site_config):

@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 from scripts.publish_data import export_website_conversions
 from scripts.sync_website_conversions import fetch_rows, read_csv
-from website_conversions import load_rows
+from website_conversions import SSW_FIELDS, load_rows
 
 
 class WebsiteConversionTests(unittest.TestCase):
@@ -45,18 +45,26 @@ class WebsiteConversionTests(unittest.TestCase):
    with self.assertRaisesRegex(ValueError,'not an active TinaCMS China site'):
     fetch_rows({**config,'site_id':2},[],end=dt.date(2026,10,2))
 
- def test_ssw_uses_only_its_contact_target(self):
+ def test_ssw_uses_paid_visits_and_its_contact_target(self):
   config={'site_id':12,'start_date':'2026-11-11','contact_click_target':34}
   date=dt.date(2026,11,11)
   sites={'list':[{'site_id':12,'domain':'ssw.com.cn','status':0}]}
   def result(metric,count):
-   return {'result':{'fields':['simple_date_title',metric],'items':[[['2026/11/11']],[[count]]]}}
+   return {'result':{'fields':['simple_date_title',metric],'sum':[[count],[]]}}
   with patch('scripts.sync_website_conversions.tongji',side_effect=[sites,result('visit_count',8),result('trans_count',1)]) as request:
    self.assertEqual(fetch_rows(config,[],end=date,site_slug='ssw'),[
-    {'date':'2026-11-11','sessions':8,'contact_click_sessions':1},
+    {'date':'2026-11-11','paid_sessions':8,'paid_contact_click_sessions':1},
    ])
    requests=[call.args[2] for call in request.call_args_list[1:]]
-   self.assertEqual([(body['site_id'],body.get('target')) for body in requests],[(12,None),(12,34)])
+   self.assertEqual(requests,[
+    {'site_id':12,'method':'pro/hour/a','adProduct':'0,0','start_date':'20261111','end_date':'20261111','metrics':'visit_count'},
+    {'site_id':12,'method':'pro/hour/a','adProduct':'0,0','start_date':'20261111','end_date':'20261111','metrics':'trans_count','target':34},
+   ])
+  with tempfile.TemporaryDirectory() as folder:
+   old=Path(folder)/'website-conversions.json'
+   old.write_text('[{"date":"2026-11-11","sessions":8,"contact_click_sessions":1}]')
+   with self.assertRaises(ValueError):
+    load_rows(old,SSW_FIELDS)
   with patch('scripts.sync_website_conversions.tongji',return_value=sites):
    with self.assertRaisesRegex(ValueError,'not an active TinaCMS China site'):
     fetch_rows({**config,'install_copy_target':10,'email_click_target':20},[],end=date)
