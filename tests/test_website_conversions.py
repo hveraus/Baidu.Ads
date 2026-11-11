@@ -44,3 +44,19 @@ class WebsiteConversionTests(unittest.TestCase):
    ])
    with self.assertRaisesRegex(ValueError,'not an active TinaCMS China site'):
     fetch_rows({**config,'site_id':2},[],end=dt.date(2026,10,2))
+
+ def test_ssw_uses_only_its_contact_target(self):
+  config={'site_id':12,'start_date':'2026-11-11','contact_click_target':34}
+  date=dt.date(2026,11,11)
+  sites={'list':[{'site_id':12,'domain':'ssw.com.cn','status':0}]}
+  def result(metric,count):
+   return {'result':{'fields':['simple_date_title',metric],'items':[[['2026/11/11']],[[count]]]}}
+  with patch('scripts.sync_website_conversions.tongji',side_effect=[sites,result('visit_count',8),result('trans_count',1)]) as request:
+   self.assertEqual(fetch_rows(config,[],end=date,site_slug='ssw'),[
+    {'date':'2026-11-11','sessions':8,'contact_click_sessions':1},
+   ])
+   requests=[call.args[2] for call in request.call_args_list[1:]]
+   self.assertEqual([(body['site_id'],body.get('target')) for body in requests],[(12,None),(12,34)])
+  with patch('scripts.sync_website_conversions.tongji',return_value=sites):
+   with self.assertRaisesRegex(ValueError,'not an active TinaCMS China site'):
+    fetch_rows({**config,'install_copy_target':10,'email_click_target':20},[],end=date)
