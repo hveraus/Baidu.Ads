@@ -2,7 +2,7 @@
 import base64,datetime as dt,json,sqlite3
 from pathlib import Path
 from i18n import english_template
-from website_conversions import FILENAME, SSW_FIELDS, load_rows
+from website_conversions import FILENAME, SSW_FIELDS, SSW_FILENAME, load_rows
 ROOT=Path(__file__).resolve().parent
 
 def build_dashboard(public=False):
@@ -34,7 +34,7 @@ def build_dashboard(public=False):
    if encrypted:
     data['encrypted_posthog_cli']=base64.b64encode(encrypted).decode('ascii')
  elif profile['slug']=='ssw':
-  data['ssw_website_conversions']=load_rows(ROOT/'data'/FILENAME,SSW_FIELDS)
+  data['ssw_paid_website_conversions']=load_rows(ROOT/'data'/SSW_FILENAME,SSW_FIELDS)
  template=(ROOT/'dashboard.template.html').read_text()
  if public:
   from publication import public_template
