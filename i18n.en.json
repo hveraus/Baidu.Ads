@@ -10,6 +10,8 @@
   "所选日期没有中国区 CLI 数据": "No China CLI data collected for the selected dates",
   "NPX 启动次数": "NPX starts",
   "NPX 完成次数": "NPX completions",
+  "NPX 每日趋势": "Daily NPX trend",
+  "中国区 NPX 每日启动和完成次数": "Daily NPX starts and completions in China",
   "见总览的网站转化率": "See Website conversion rates in Overview",
   "从独立的网站统计读取会话、安装命令复制成功和邮件咨询点击；未覆盖日期显示为缺失": "Website analytics supplies sessions, successful install-command copies and email enquiry clicks. Uncovered dates appear as missing.",
   "网站转化率": "Website conversion rates",
