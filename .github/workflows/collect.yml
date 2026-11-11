@@ -35,6 +35,14 @@ jobs:
           if ! python scripts/sync_website_conversions.py; then
             echo '::warning::TinaCMS website analytics could not sync. The previous website totals were retained.'
           fi
+      - name: Sync encrypted Tina CLI totals
+        env:
+          POSTHOG_CLI_QUERY_KEY: ${{ secrets.POSTHOG_CLI_QUERY_KEY }}
+          POSTHOG_CLI_SNAPSHOT_KEY: ${{ secrets.POSTHOG_CLI_SNAPSHOT_KEY }}
+        run: |
+          if ! python scripts/sync_posthog_cli.py; then
+            echo '::warning::PostHog could not sync. The previous encrypted snapshot was retained.'
+          fi
       - name: Collect, verify and prepare publication
         env:
           BAIDU_CREDENTIALS_JSON: ${{ secrets.BAIDU_CREDENTIALS_JSON }}
