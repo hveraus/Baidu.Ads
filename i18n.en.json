@@ -1,5 +1,11 @@
 {
   "中国区 Tina CLI": "Tina CLI in China",
+  "微信客服咨询": "WeChat Customer Service consultations",
+  "解锁客服数据": "Unlock consultation data",
+  "最近有数据的日期 ${latest}": "Latest reported date ${latest}",
+  "咨询客户人数（日累计）": "Consulting customers (sum of daily counts)",
+  "所选日期没有已采集的客服数据": "No consultation data for the selected dates",
+  "微信客服 · 北京时间 · 按天统计咨询客户人数。同一客户跨天咨询会分别计入，覆盖该客服账号的全部来源。": "WeChat Customer Service · Beijing time · Daily customer counts across all sources for this account. A customer can count on multiple days.",
   "查看密钥": "Viewing key",
   "解锁 CLI 数据": "Unlock CLI data",
   "请输入 64 位十六进制查看密钥": "Enter the 64-character hexadecimal viewing key",
