@@ -12,17 +12,19 @@ from urllib.parse import urlsplit
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
-from website_conversions import FIELDS, FILENAME, SSW_FIELDS, SSW_FILENAME, TINA_PAID_FIELDS, TINA_PAID_FILENAME, load_rows, validate_rows
+from website_conversions import FIELDS, FILENAME, SSW_FIELDS, SSW_FILENAME, SSW_HOMEPAGE_FIELDS, SSW_HOMEPAGE_FILENAME, TINA_PAID_FIELDS, TINA_PAID_FILENAME, load_rows, validate_rows
 from scripts.publish_data import export_website_conversions
 
 SECRET='BAIDU_TONGJI_CREDENTIALS_JSON'
 SSW_SITE_CONFIG='BAIDU_TONGJI_SSW_SITE_JSON'
 SERVICE='https://api.baidu.com/json/tongji/v1/ReportService/'
 TINA_HOSTS={'tinacms.com.cn','www.tinacms.com.cn'}
+SSW_HOSTS={'ssw.com.cn','www.ssw.com.cn'}
 SITES={
  'tinacms':('TinaCMS China',TINA_HOSTS,FIELDS,FILENAME),
  'tinacms-paid':('TinaCMS China paid',TINA_HOSTS,TINA_PAID_FIELDS,TINA_PAID_FILENAME),
- 'ssw':('SSW China',{'ssw.com.cn','www.ssw.com.cn'},SSW_FIELDS,SSW_FILENAME),
+ 'ssw':('SSW China',SSW_HOSTS,SSW_FIELDS,SSW_FILENAME),
+ 'ssw-homepage':('SSW China homepage',SSW_HOSTS,SSW_HOMEPAGE_FIELDS,SSW_HOMEPAGE_FILENAME),
 }
 BEIJING=dt.timezone(dt.timedelta(hours=8))
 
@@ -96,6 +98,35 @@ def fetch_paid_day(config, day, goal_field, target):
          goal_field:total('trans_count',target=target)}
 
 
+def fetch_homepage_day(config, day):
+ date=day.strftime('%Y%m%d')
+ report=tongji(config,'getData',{'site_id':config['site_id'],'method':'visit/toppage/a',
+                                'start_date':date,'end_date':date,'metrics':'pv_count','max_results':0})['result']
+ if report['fields'][1:]!=['pv_count']:
+  raise ValueError('Unexpected metric in Baidu Tongji visited pages report')
+ if report['total']==0:
+  return None
+ dimensions,values=report['items'][:2]
+ if len(dimensions)!=len(values) or len(dimensions)!=report['total']:
+  raise ValueError('Incomplete Baidu Tongji visited pages report')
+ views=0
+ for dimension,value in zip(dimensions,values):
+  page=dimension[0]
+  urls=(page.get('id'),page.get('name')) if isinstance(page,dict) else (page,)
+  for url in urls:
+   if not isinstance(url,str):
+    continue
+   parsed=urlsplit(url if '://' in url else '//'+url.removeprefix('//'))
+   if parsed.scheme in ('','http','https') and parsed.hostname in SSW_HOSTS and parsed.path in ('','/'):
+    raw,=value
+    count=read_count(raw)
+    if count is None:
+     return None
+    views+=count
+    break
+ return {'date':day.isoformat(),'homepage_views':views}
+
+
 def fetch_rows(config, previous, *, end, site_slug='tinacms'):
  name,hosts,fields,_=SITES[site_slug]
  site=config['site_id']
@@ -113,6 +144,12 @@ def fetch_rows(config, previous, *, end, site_slug='tinacms'):
  latest=max((dt.date.fromisoformat(r['date']) for r in previous if r['date']<=end.isoformat()),default=first)
  start=max(first,latest-dt.timedelta(days=6))
  all_rows=[]
+ if site_slug=='ssw-homepage':
+  for offset in range((end-start).days+1):
+   row=fetch_homepage_day(config,start+dt.timedelta(days=offset))
+   if row is not None:
+    all_rows.append(row)
+  return validate_rows(all_rows,fields)
  if fields[1]=='paid_sessions':
   goal_field,=targets
   for offset in range((end-start).days+1):
@@ -160,10 +197,11 @@ def main():
  parser.add_argument('--site',choices=SITES,default='tinacms')
  args=parser.parse_args()
  name,_,fields,filename=SITES[args.site]
- data_root=ROOT/'accounts'/'ssw' if args.site=='ssw' else ROOT
+ ssw=args.site in ('ssw','ssw-homepage')
+ data_root=ROOT/'accounts'/'ssw' if ssw else ROOT
  path=data_root/'data'/filename
  secret=os.environ.get(SECRET)
- site_config=os.environ.get(SSW_SITE_CONFIG) if args.site=='ssw' else secret
+ site_config=os.environ.get(SSW_SITE_CONFIG) if ssw else secret
  if not args.csv and not (secret and site_config):
   print(f'{name} website statistics: no data source configured')
   return
@@ -172,10 +210,12 @@ def main():
    rows=read_csv(args.csv,fields)
   else:
    config=json.loads(secret)
-   if args.site=='ssw':
+   if ssw:
     site_config=json.loads(site_config)
     config={key:config[key] for key in ('user_name','access_token')}
-    config.update({key:site_config[key] for key in ('site_id','contact_click_target','start_date')})
+    config.update({key:site_config[key] for key in ('site_id','start_date')})
+    if args.site=='ssw':
+     config['contact_click_target']=site_config['contact_click_target']
    rows=fetch_rows(config,load_rows(path,fields),end=dt.datetime.now(BEIJING).date()-dt.timedelta(days=1),site_slug=args.site)
   export_website_conversions(path,rows,fields)
  except (ValueError, KeyError, IndexError, TypeError, OSError):

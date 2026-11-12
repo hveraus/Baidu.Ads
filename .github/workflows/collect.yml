@@ -50,6 +50,14 @@ jobs:
           if ! python scripts/sync_website_conversions.py --site ssw; then
             echo '::warning::SSW website analytics could not sync. The previous website totals were retained.'
           fi
+      - name: Sync SSW homepage views
+        env:
+          BAIDU_TONGJI_CREDENTIALS_JSON: ${{ secrets.BAIDU_TONGJI_CREDENTIALS_JSON }}
+          BAIDU_TONGJI_SSW_SITE_JSON: ${{ vars.BAIDU_TONGJI_SSW_SITE_JSON }}
+        run: |
+          if ! python scripts/sync_website_conversions.py --site ssw-homepage; then
+            echo '::warning::SSW homepage views could not sync. The previous totals were retained.'
+          fi
       - name: Sync encrypted Tina CLI totals
         env:
           POSTHOG_CLI_QUERY_KEY: ${{ secrets.POSTHOG_CLI_QUERY_KEY }}

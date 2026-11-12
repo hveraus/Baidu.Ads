@@ -9,6 +9,8 @@ TINA_PAID_FILENAME='website-paid-email-clicks.json'
 TINA_PAID_FIELDS=('date','paid_sessions','paid_email_click_sessions')
 SSW_FILENAME='website-paid-conversions.json'
 SSW_FIELDS=('date','paid_sessions','paid_contact_click_sessions')
+SSW_HOMEPAGE_FILENAME='homepage-views.json'
+SSW_HOMEPAGE_FIELDS=('date','homepage_views')
 
 
 def validate_rows(rows,fields=FIELDS):
@@ -22,12 +24,12 @@ def validate_rows(rows,fields=FIELDS):
   if not isinstance(date,str) or dt.date.fromisoformat(date).isoformat()!=date or date in dates:
    raise ValueError('Website conversion dates must be unique ISO dates')
   dates.add(date)
-  sessions=row[fields[1]]
-  if type(sessions) is not int or not 0<=sessions<=1_000_000_000:
-   raise ValueError('Website sessions must be a non-negative integer')
+  total=row[fields[1]]
+  if type(total) is not int or not 0<=total<=1_000_000_000:
+   raise ValueError('Website totals must be non-negative integers')
   for metric in fields[2:]:
    value=row[metric]
-   if value is not None and (type(value) is not int or not 0<=value<=sessions):
+   if value is not None and (type(value) is not int or not 0<=value<=total):
     raise ValueError('Converted sessions must be between zero and total sessions')
  return sorted(rows,key=lambda row:row['date'])
 
