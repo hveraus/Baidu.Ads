@@ -226,6 +226,7 @@
   "；临近到期会提醒，需在百度后台续期并更新本机凭据。页面仅包含报表数据，不包含令牌。CSV、SQLite、程序与本页都保存在 Baidu.Ads 文件夹。": ". Renew it in Baidu and update the local credentials when reminded. This page contains reports only, not the token. CSV files, SQLite, scripts and this page are stored in the Baidu.Ads folder.",
   "API 转化记录": "API conversion records",
   "百度推广邮件咨询点击": "Email enquiry clicks from Baidu Ads",
+  "百度推广联系我们点击": "Contact us clicks from Baidu Ads",
   "所有推广计划 · 覆盖": "All campaigns · Coverage",
   "所有推广计划 · 所选日期暂无数据": "All campaigns · No data for the selected dates",
   "每天的消费与点击": "Daily spend and clicks",
