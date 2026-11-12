@@ -39,7 +39,7 @@ class PortabilityTests(unittest.TestCase):
    self.assertNotIn('formatIP',rows[0]);self.assertNotIn(b'192.0.2.',(root/'data/public.sqlite3').read_bytes())
  def test_publication_text_and_english_data_logic(self):
   from publication import public_template
-  source=(ROOT/'dashboard.template.html').read_text();public=public_template(source);english=english_template(public)
+  source=(ROOT/'dashboard.template.html').read_text(encoding='utf-8');public=public_template(source);english=english_template(public)
   self.assertIn('本页及所展示统计数据可公开访问',public)
   self.assertNotIn('数据与分析均保存在本机',public)
   self.assertIn("x.name==='文档管理系统'",english)
