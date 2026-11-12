@@ -1,6 +1,6 @@
 # Baidu.Ads 看板登录
 
-登录入口为 `https://ads.ssw.com.cn/`。HTTPS 已启用，登录服务等待配置 GitHub OAuth。完成下列上线核对前，原 Pages 继续提供静态报表。上线后，TinaCMS、YakShaver、SSW 的中英文页面共用一个 GitHub 登录会话，允许 GitHub 用户 `hveraus`（用户 ID `4745861`）查看。会话有效期 7 天，可以从页头退出。
+登录入口为 `https://ads.ssw.com.cn/`。HTTPS 和 OAuth 配置已完成。阿里云服务器到 `github.com:443` 的 TCP 连接超时，GitHub 回调暂时无法换取令牌。完成下列上线核对前，原 Pages 继续提供静态报表。上线后，TinaCMS、YakShaver、SSW 的中英文页面共用一个 GitHub 登录会话，允许 GitHub 用户 `hveraus`（用户 ID `4745861`）查看。会话有效期 7 天，可以从页头退出。
 
 服务端在登录通过后通过 Git 定期拉取主分支，读取广告报表与加密快照，在内存中解密中国区 Tina CLI 和 SSW 微信客服汇总。采集任务继续沿用现有的 GitHub Actions 和阿里云 Windows 任务。GitHub 仓库及历史中的广告汇总仍公开，PostHog 和微信客服快照仍以密文保存。
 
