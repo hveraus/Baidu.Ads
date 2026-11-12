@@ -28,6 +28,8 @@ Git 刷新按三分钟窗口检查，连接中断时读取最近一次成功拉�
 
 最后一个密码框输入当前 Windows 账户的密码。脚本以该账号注册并启动任务 `baidu-ads-dashboard-login`，开机自动运行。可分别用 `-Initialize` 更新看板密码，或用 `-InstallTask` 注册并启动任务。更新密码后重启任务。以 `Host: ads.ssw.com.cn` 请求 `http://127.0.0.1:8765/health`，确认返回 `OK`。服务只监听回环地址。
 
+如果 Tina CLI 密钥与快照不匹配，运行 `.\scripts\run_dashboard_login.ps1 -UpdatePostHogKey`。在密码框输入 Keeper 中「Baidu.Ads PostHog 查看密钥」记录的 64 位十六进制密钥。脚本先验证快照能解密，再保存密钥并重启任务。看板账号、密码和会话签名密钥继续使用当前值。
+
 ## HTTPS
 
 阿里云服务器的 Nginx 安装目录为 `C:\SSW\Nginx`。以管理员身份运行 `.\scripts\deploy_dashboard_proxy.ps1 -ReloadAsSystem` 启用子域独立的 ACME HTTP 验证入口。在 Certify Certificate Manager 为 `ads.ssw.com.cn` 新建证书，使用 HTTP-01 和站点根目录 `C:\SSW\Nginx\acme`。将完整证书链与私钥导出到 `C:\SSW\Certificate\BaiduAds\fullchain.pem` 和 `C:\SSW\Certificate\BaiduAds\private.pem`，并在续期导出后重载 Nginx。将证书目录及私钥的访问权限限制在 SYSTEM 和 Administrators。Certify 的重载任务运行 `C:/SSW/Nginx/nginx.exe`，参数为 `-p C:/SSW/Nginx/ -s reload`。任务放在 PEM 导出之后，仅在成功时运行。
