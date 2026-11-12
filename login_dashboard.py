@@ -172,11 +172,14 @@ def render_report(slug, lang, keys, csrf):
     label = 'Sign out' if lang == 'en' else '退出登录'
     form = ('<form method="post" action="/logout">'
             f'<input type="hidden" name="csrf" value="{html.escape(csrf, quote=True)}">'
-            f'<button type="submit">{label}</button></form>')
+            f'<button class="header-icon" type="submit" aria-label="{label}" title="{label}">'
+            '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+            'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+            '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>'
+            '</svg></button></form>')
     template, handler_policy = report_template(slug, lang)
     nonce = secrets.token_urlsafe(18)
-    template = template.replace('<script', f'<script nonce="{nonce}"').replace('<div class="header-right">',
-        '<div class="header-right">' + form, 1)
+    template = template.replace('<script', f'<script nonce="{nonce}"').replace('<!-- dashboard-signout -->', form, 1)
     template = (template.replace('本页及所展示统计数据可公开访问', '已登录')
                 .replace('This page and its advertising statistics are publicly accessible', 'Signed in'))
     return template.replace('/*__DATA__*/', packed, 1), f"'nonce-{nonce}' 'unsafe-hashes' {handler_policy}"
