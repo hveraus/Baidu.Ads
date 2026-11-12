@@ -29,12 +29,13 @@ SSW 看板使用微信客服统计接口 `kf/get_corp_statistic` 的 `customer_c
 
 ## 每日更新
 
-在 Windows 任务计划程序中为上述 Windows 账号创建任务，建议北京时间每天 08:30 执行。配置绝对路径，启用漏跑后补跑、失败重试以及已有实例运行时跳过重复启动。
+阿里云 Windows 服务器的生产检出目录为 `%USERPROFILE%\baidu-ads-wecom`。计划任务名为 `baidu-ads-ssw-wecom`，北京时间每天 08:30 运行。重建任务时，用保存过 DPAPI 配置的同一 Windows 账号，选择可在退出远程桌面后运行的登录方式，并使用脚本绝对路径。
 
 | 项目 | 值 |
 |---|---|
 | 程序 | `powershell.exe` |
-| 参数 | `-NoProfile -File "<检出目录>\scripts\run_wecom_consultations.ps1"` |
-| 起始于 | 检出目录 |
+| 参数 | `-NoProfile -NonInteractive -File "<检出目录>\scripts\run_wecom_consultations.ps1"` |
+
+使用 `schtasks /query /tn baidu-ads-ssw-wecom /fo list /v` 核对最近运行结果和下次运行时间。成功时 `Last Result` 为 `0`，随后可在 GitHub 检查加密快照提交和 Pages 工作流。
 
 采集器查询最近 90 个可用的完整北京时间日期，只发布按日聚合加密快照。API 失败或完全没有返回计数时，上一份快照继续可用。GitHub 令牌到期或需要更换凭据时，使用同一 Windows 账号重新运行 `-Initialize`。
