@@ -3,6 +3,7 @@
 import argparse
 import base64
 import datetime as dt
+import http.client
 import json
 import os
 from pathlib import Path
@@ -50,6 +51,10 @@ def wecom(endpoint, **kwargs):
         raise RuntimeError(f'WeCom {endpoint}: HTTP {error.code}') from None
     except urllib.error.URLError:
         raise RuntimeError(f'Could not reach WeCom {endpoint}') from None
+    except (OSError, http.client.HTTPException, json.JSONDecodeError) as error:
+        raise RuntimeError(f'WeCom {endpoint}: {type(error).__name__}') from None
+    if not isinstance(response, dict):
+        raise RuntimeError(f'WeCom {endpoint}: expected a response object')
     if response.get('errcode') != 0:
         code = response.get('errcode')
         raise RuntimeError(f'WeCom {endpoint}: errcode={code if type(code) is int else "unknown"}')
@@ -71,7 +76,10 @@ def normalize_rows(results, start, end):
         day = dt.datetime.fromtimestamp(stat_time, BEIJING).date()
         if not start <= day <= end or stat_time != timestamp(day) or day in counts:
             raise ValueError('WeCom returned an unexpected or repeated date')
-        count = row['statistic'].get('customer_cnt')
+        statistic = row.get('statistic')
+        if statistic is not None and not isinstance(statistic, dict):
+            raise ValueError('WeCom statistic must be an object')
+        count = (statistic or {}).get('customer_cnt')
         if count is not None and (type(count) is not int or not 0 <= count < 2**53):
             raise ValueError('WeCom returned an invalid consultation count')
         counts[day] = count
@@ -87,7 +95,11 @@ def fetch_rows(token, account, through):
         end = min(start + dt.timedelta(days=30), through)
         response = wecom('kf/get_corp_statistic', method='POST', query={'access_token': token},
                          payload={'open_kfid': account, 'start_time': timestamp(start), 'end_time': timestamp(end)})
-        rows.extend(normalize_rows(response['statistic_list'], start, end))
+        results = response.get('statistic_list')
+        try:
+            rows.extend(normalize_rows([] if results is None else results, start, end))
+        except (AttributeError, KeyError, OSError, OverflowError, TypeError, ValueError) as error:
+            raise RuntimeError(f'WeCom statistics format for {start} to {end}: {type(error).__name__}') from None
     return rows
 
 
@@ -136,7 +148,9 @@ def main():
         github_token = config('WECOM_GITHUB_TOKEN') if args.publish else None
         now = dt.datetime.now(BEIJING)
         through = now.date() - dt.timedelta(days=1 if now.hour >= 6 else 2)
-        access = wecom('gettoken', query={'corpid': corp, 'corpsecret': secret})['access_token']
+        access = wecom('gettoken', query={'corpid': corp, 'corpsecret': secret}).get('access_token')
+        if not isinstance(access, str) or not access:
+            raise RuntimeError('WeCom gettoken did not return an access token')
         rows = fetch_rows(access, account, through)
         if args.check:
             latest = rows[-1]['date'] if rows else 'none'
@@ -161,8 +175,8 @@ def main():
         if str(error).startswith('Missing WECOM_'):
             parser.exit(1, f'{error}\n')
         parser.exit(1, 'Invalid WeCom response or snapshot key.\n')
-    except (AttributeError, KeyError, OSError, OverflowError, TypeError):
-        parser.exit(1, 'WeCom sync could not complete. Check the configuration and API response.\n')
+    except (AttributeError, KeyError, OSError, OverflowError, TypeError) as error:
+        parser.exit(1, f'WeCom sync could not complete ({type(error).__name__}).\n')
 
 
 if __name__ == '__main__':

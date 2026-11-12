@@ -16,9 +16,10 @@ class WeComConsultationTests(unittest.TestCase):
         day = dt.date(2026, 11, 12)
         first = day - dt.timedelta(days=1)
         rows = normalize_rows([
+            {'stat_time': timestamp(first - dt.timedelta(days=1))},
             {'stat_time': timestamp(first), 'statistic': {}},
             {'stat_time': timestamp(day), 'statistic': {'customer_cnt': 0, 'session_cnt': 2}},
-        ], first, day)
+        ], first - dt.timedelta(days=1), day)
         self.assertEqual(rows, [{'date': day.isoformat(), 'customers': 0}])
         key = bytes(range(32))
         snapshot = encrypt_snapshot(rows, day, key.hex())
@@ -27,7 +28,7 @@ class WeComConsultationTests(unittest.TestCase):
         data = AESGCM(key).decrypt(snapshot[offset:offset + 12], snapshot[offset + 12:], HEADER)
         self.assertEqual(json.loads(data), {'through': day.isoformat(), 'rows': rows})
 
-    @patch('sync_wecom_consultations.wecom', return_value={'statistic_list': []})
+    @patch('sync_wecom_consultations.wecom', return_value={'errcode': 0})
     def test_90_days_are_requested_in_disjoint_inclusive_windows_for_one_account(self, api):
         through = dt.date(2026, 11, 12)
         first = through - dt.timedelta(days=89)
