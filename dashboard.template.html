@@ -140,12 +140,15 @@ $('posthog-cli-unlock').onsubmit=async event=>{
  }
 };
 function overviewConversionMetric(apiConversions){
- const paid=DATA.tina_paid_website_conversions;
+ const sswPaid=DATA.ssw_paid_website_conversions;
+ const paid=sswPaid??DATA.tina_paid_website_conversions;
  if(!paid)return metric('API 转化记录',fmt(apiConversions),'不等同于已核实的有效线索');
- const covered=paid.filter(row=>row.date>=state.start&&row.date<=state.end&&row.paid_email_click_sessions!=null);
+ const field=sswPaid?'paid_contact_click_sessions':'paid_email_click_sessions';
+ const label=sswPaid?'百度推广联系我们点击':'百度推广邮件咨询点击';
+ const covered=paid.filter(row=>row.date>=state.start&&row.date<=state.end&&row[field]!=null);
  const days=(Date.parse(state.end)-Date.parse(state.start))/86400000+1;
  const note=covered.length?`所有推广计划 · 覆盖 ${fmt(covered.length)} / ${fmt(days)} 天`:'所有推广计划 · 所选日期暂无数据';
- return metric('百度推广邮件咨询点击',covered.length?fmt(sum(covered,'paid_email_click_sessions')):'—',note);
+ return metric(label,covered.length?fmt(sum(covered,field)):'—',note);
 }
 function overview(){const r=filtered('keyword'),cost=sum(r,'cost'),imp=sum(r,'impression'),click=sum(r,'click'),conv=sum(r,'conversion');const top=state.words.filter(x=>x.records).sort((a,b)=>b.cost-a.cost);$('metrics').innerHTML=metric('总消费',money(cost),'所选日期内的实际消费')+metric('展现次数',fmt(imp),'广告被展示的次数')+metric('点击次数',fmt(click),`点击率 ${imp?pct(click/imp):'—'}`)+metric('平均点击价格',click?money(cost/click):'—','每次点击平均花费')+overviewConversionMetric(conv);let topWord=top[0],noReport=state.words.filter(x=>!x.records).length;let latest=filtered('keyword').map(x=>x.date).sort().at(-1);$('insights').innerHTML=`<div class="insight"><h3>预算花在哪里</h3><p>${topWord?`「<b>${esc(topWord.name)}</b>」消费 ${money(topWord.cost)}，占总消费 <b>${pct(topWord.cost/cost)}</b>。先检查这个词触发的搜索词是否贴合业务。`:'当前区间没有消费记录，可扩大日期范围查看。'}</p></div><div class="insight amber"><h3>${conv?'结合线索质量判断效果':'先确认转化是否被记录'}</h3><p>${conv?`当前区间记录 ${fmt(conv)} 次转化，请进一步核对有效线索质量。`:'当前转化记录为 <b>0</b>。先核对追踪配置与真实询盘，再决定是否调整出价或停词。'}</p></div><div class="insight"><h3>流量覆盖情况</h3><p>当前可查看 <b>${fmt(state.words.length)}</b> 个关键词，其中 <b>${fmt(noReport)}</b> 个在所选区间无报告记录。${latest?`最近有关键词表现记录的日期是 <b>${esc(latest)}</b>。`:''}</p></div>`;lineChart('daily-chart',r);bars('top-keywords',top.slice(0,5),cost,x=>openKeyword(x.key));let priority=top.filter(x=>x.cost>=100&&x.click>=10&&!x.conversion);$('priority-table').innerHTML=priority.length?`<div class="table-wrap"><table><thead><tr><th>关键词</th><th>消费</th><th>点击</th><th>平均点击价格</th><th>转化记录</th><th class="left">建议先看</th></tr></thead><tbody>${priority.map(x=>`<tr><td><button class="kw" data-kw="${x.key}">${esc(x.name)}</button></td><td class="num-strong">${money(x.cost)}</td><td>${fmt(x.click)}</td><td>${money(x.cpc)}</td><td>${fmt(x.conversion)}</td><td class="left"><span class="pill amber">搜索词相关性与转化追踪</span></td></tr>`).join('')}</tbody></table></div>`:empty('当前筛选下，没有符合优先检查规则的关键词');bindKeywords($('priority-table'))}
 function empty(message){return `<div class="empty">${esc(message)}</div>`}
