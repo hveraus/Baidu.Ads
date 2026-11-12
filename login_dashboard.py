@@ -50,7 +50,7 @@ REPORT_PAGES = {
 }
 SNAPSHOTS = {
     'tinacms': ('data/posthog-cli.enc', POSTHOG_HEADER, 'private_posthog_cli', ('started', 'finished')),
-    'ssw': ('accounts/ssw/data/wecom-consultations.enc', WECOM_HEADER, 'private_wecom_consultations', ('customers',)),
+    'ssw': ('accounts/ssw/data/wecom-consultations.enc', WECOM_HEADER, 'private_wecom_consultations', ('customers', 'messages')),
 }
 
 
@@ -127,13 +127,14 @@ def decrypt_snapshot(packed, key, header, fields):
     dates = [dt.date.fromisoformat(row['date']) for row in rows]
     if sorted(set(dates)) != dates or any(not 0 <= (through - day).days < 90 for day in dates):
         raise ValueError('Unexpected snapshot coverage')
-    for row in rows:
-        if any(type(row[field]) is not int or not 0 <= row[field] < 2**53 for field in fields):
+    clean = []
+    for day, row in zip(dates, rows, strict=True):
+        counts = {field: row[field] for field in fields if field in row}
+        if (not counts or (header != WECOM_HEADER and len(counts) != len(fields))
+                or any(type(count) is not int or not 0 <= count < 2**53 for count in counts.values())):
             raise ValueError('Unexpected snapshot counts')
-    return {'through': through.isoformat(), 'rows': [
-        {'date': day.isoformat(), **{field: row[field] for field in fields}}
-        for day, row in zip(dates, rows, strict=True)
-    ]}
+        clean.append({'date': day.isoformat(), **counts})
+    return {'through': through.isoformat(), 'rows': clean}
 
 
 @lru_cache(maxsize=6)

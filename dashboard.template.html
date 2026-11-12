@@ -12,7 +12,7 @@
 <div class="section-head"><h2>微信客服咨询</h2><small id="wecom-consultations-coverage"></small></div>
 <form id="wecom-consultations-unlock" hidden><label>查看密钥 <input id="wecom-consultations-key" type="password" autocomplete="off" spellcheck="false" required></label> <button type="submit">解锁客服数据</button> <span id="wecom-consultations-error" role="status"></span></form>
 <div class="metrics website-metrics" id="wecom-consultations-metrics"></div>
-<p class="footnote">微信客服 · 北京时间 · 按天统计咨询客户人数。同一客户跨天咨询会分别计入，覆盖该客服账号的全部来源。</p>
+<p class="footnote">微信客服 · 北京时间 · 覆盖该客服账号的全部来源。同一客户跨天咨询会分别计入。消息数仅统计客户发来的消息。</p>
 </div><div id="insights" class="insights"></div><div class="two"><div class="section"><div class="section-head"><h2>每天花了多少，带来多少点击</h2><div class="legend"><span><i style="background:var(--green)"></i>消费</span><span><i style="background:#91a8c6"></i>点击</span></div></div><div id="daily-chart"></div><p class="footnote">左右两轴分别为消费（元）与点击（次）；鼠标移到日期位置可查看当日数值</p></div><div class="section"><div class="section-head"><h2>花费最多的关键词</h2><button class="text-button" onclick="go('keywords')">查看全部 →</button></div><div id="top-keywords" class="bars"></div></div></div><div class="section"><div class="section-head"><h2>优先检查这些关键词</h2><small>消费 ≥ ¥100 且点击 ≥ 10，API 转化记录为 0</small></div><div id="priority-table"></div><p class="footnote">这是排查顺序，不能据此认定流量无效。先确认转化追踪是否正常，再结合真实询盘质量决定是否调整</p></div></section>
 <section class="view" id="keywords" hidden><div class="section"><div class="section-head"><div><h2>每个关键词的表现</h2><p class="subtitle" style="margin-top:8px">点击关键词，可查看每日表现与触发的实际搜索词</p></div><button class="export" id="export-keywords">导出当前结果 ↓</button></div><div class="table-tools"><div id="keyword-tabs" class="tabs"></div><div><label class="sr-only" for="keyword-search">搜索关键词或单元</label><input class="search" id="keyword-search" placeholder="搜索关键词、单元名称…"></div></div><div id="keyword-table"></div><p class="footnote">“无报告记录”表示关键词存在于当前清单，但所选日期内接口没有返回表现记录；数值显示为 —。质量度与状态来自最新清单，不代表历史状态。点击率、平均点击价格由合计重新计算</p></div></section>
 <section class="view" id="queries" hidden><div class="section"><div class="section-head"><div><h2>用户真正搜索了什么</h2><p class="subtitle" style="margin-top:8px">“投放关键词”是你买的词，“搜索词”是用户实际输入的词</p></div><button class="export" id="export-queries">导出当前结果 ↓</button></div><div class="table-tools"><p class="subtitle" id="query-count"></p><input class="search" id="query-search" aria-label="搜索用户搜索词" placeholder="搜索用户输入的词…"></div><div id="query-table"></div></div></section>
@@ -185,12 +185,21 @@ function wecomConsultations(){
  $('wecom-consultations-coverage').textContent=`最近有数据的日期 ${latest}`;
  const days=(Date.parse(state.end)-Date.parse(state.start))/86400000+1;
  const rows=snapshot.rows.filter(row=>row.date>=state.start&&row.date<=state.end);
- const note=rows.length?`覆盖 ${fmt(rows.length)} / ${fmt(days)} 天`:'所选日期没有已采集的客服数据';
- $('wecom-consultations-metrics').innerHTML=metric('咨询客户人数（日累计）',rows.length?fmt(sum(rows,'customers')):'—',note);
+ $('wecom-consultations-metrics').innerHTML=[
+  ['customers','咨询客户人数（日累计）'],
+  ['messages','客户发送消息数'],
+ ].map(([field,label])=>{
+  const covered=rows.filter(row=>isCount(row[field]));
+  const note=covered.length?`覆盖 ${fmt(covered.length)} / ${fmt(days)} 天`:'所选日期没有已采集的客服数据';
+  return metric(label,covered.length?fmt(sum(covered,field)):'—',note);
+ }).join('');
 }
 bindSnapshotUnlock('wecom-consultations',DATA.encrypted_wecom_consultations,'BAIDU-ADS-WECOM-v1\n',snapshot=>{
  const earliest=Date.parse(snapshot.through)-89*86400000;
- if(!snapshot.rows.length||!snapshot.rows.every((row,index,rows)=>isIsoDate(row.date)&&Date.parse(row.date)>=earliest&&row.date<=snapshot.through&&(!index||row.date>rows[index-1].date)&&isCount(row.customers)))throw Error('WeCom schema');
+ if(!snapshot.rows.length||!snapshot.rows.every((row,index,rows)=>isIsoDate(row.date)&&Date.parse(row.date)>=earliest&&row.date<=snapshot.through&&(!index||row.date>rows[index-1].date)&&
+   (isCount(row.customers)||isCount(row.messages))&&
+   (row.customers===undefined||isCount(row.customers))&&
+   (row.messages===undefined||isCount(row.messages))))throw Error('WeCom schema');
  wecomSnapshot=snapshot;
  wecomConsultations();
 });

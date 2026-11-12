@@ -1,6 +1,6 @@
 # SSW 微信客服咨询统计
 
-SSW 看板使用微信客服统计接口 `kf/get_corp_statistic` 的 `customer_cnt`。数据按北京时间和指定客服账号读取。选定多天时将各天人数相加，同一客户在多天咨询会分别计入。一个日期只有在接口返回人数时才算已覆盖。看板在收到首份加密快照后显示微信客服卡片。
+SSW 看板使用微信客服统计接口 `kf/get_corp_statistic` 的 `customer_cnt`（咨询客户人数）和 `customer_msg_cnt`（客户发送消息数）。数据按北京时间和指定客服账号读取。看板按所选日期分别累加两项指标。同一客户跨天咨询会分别计入。每项指标单独计算覆盖天数，接口未返回该指标的日期不计为零。
 
 ## 首次设置
 
@@ -25,7 +25,7 @@ SSW 看板使用微信客服统计接口 `kf/get_corp_statistic` 的 `customer_c
    powershell.exe -NoProfile -File .\scripts\run_wecom_consultations.ps1
    ```
 
-   成功后确认 `main` 上的 `accounts/ssw/data/wecom-consultations.enc` 有更新，且 **Publish GitHub Pages** 工作流已部署。打开 SSW 总览，使用独立查看密钥解锁，选择同一北京时间日期和客服账号，与企业微信后台 **Data Statistics → Number of Customers Asking for Consultations** 对账。刷新页面后需再次解锁。
+   成功后确认 `main` 上的 `accounts/ssw/data/wecom-consultations.enc` 有更新，且 **Publish GitHub Pages** 工作流已部署。登录 SSW 总览，选择同一北京时间日期和客服账号，与企业微信后台 **Data Statistics** 的 **Number of Customers Asking for Consultations** 和 **Number of Messages** 对账。
 
 ## 每日更新
 

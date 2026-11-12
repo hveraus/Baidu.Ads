@@ -82,6 +82,9 @@ class DashboardLoginTests(unittest.TestCase):
         for slug, (path, header, field, fields) in login.SNAPSHOTS.items():
             day = '2026-11-11'
             snapshot = {'through': day, 'rows': [{'date': day, **dict.fromkeys(fields, 123)}]}
+            if slug == 'ssw':
+                snapshot['rows'].insert(0, {'date': '2026-11-10', 'customers': 1})
+                snapshot['rows'][1]['messages'] = 0
             nonce = secrets.token_bytes(12)
             sources[path] = header + nonce + AESGCM(self.keys[slug]).encrypt(nonce, json.dumps(snapshot).encode(), header)
             snapshots[slug] = {field: snapshot}
