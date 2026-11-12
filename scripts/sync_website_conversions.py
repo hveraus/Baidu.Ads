@@ -12,15 +12,17 @@ from urllib.parse import urlsplit
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
-from website_conversions import FIELDS, FILENAME, SSW_FIELDS, SSW_FILENAME, load_rows, validate_rows
+from website_conversions import FIELDS, FILENAME, SSW_FIELDS, SSW_FILENAME, TINA_PAID_FIELDS, TINA_PAID_FILENAME, load_rows, validate_rows
 from scripts.publish_data import export_website_conversions
 
 SECRET='BAIDU_TONGJI_CREDENTIALS_JSON'
 SSW_SITE_CONFIG='BAIDU_TONGJI_SSW_SITE_JSON'
 SERVICE='https://api.baidu.com/json/tongji/v1/ReportService/'
+TINA_HOSTS={'tinacms.com.cn','www.tinacms.com.cn'}
 SITES={
- 'tinacms':('TinaCMS China',{'tinacms.com.cn','www.tinacms.com.cn'},FIELDS),
- 'ssw':('SSW China',{'ssw.com.cn','www.ssw.com.cn'},SSW_FIELDS),
+ 'tinacms':('TinaCMS China',TINA_HOSTS,FIELDS,FILENAME),
+ 'tinacms-paid':('TinaCMS China paid',TINA_HOSTS,TINA_PAID_FIELDS,TINA_PAID_FILENAME),
+ 'ssw':('SSW China',{'ssw.com.cn','www.ssw.com.cn'},SSW_FIELDS,SSW_FILENAME),
 }
 BEIJING=dt.timezone(dt.timedelta(hours=8))
 
@@ -72,7 +74,7 @@ def read_daily(result, metric, start, end):
  return days
 
 
-def fetch_paid_day(config, day, target):
+def fetch_paid_day(config, day, goal_field, target):
  date=day.strftime('%Y%m%d')
  base={'site_id':config['site_id'],'method':'pro/hour/a','adProduct':'0,0',
        'start_date':date,'end_date':date}
@@ -91,11 +93,11 @@ def fetch_paid_day(config, day, target):
  if visits is None:
   return None
  return {'date':day.isoformat(),'paid_sessions':visits,
-         'paid_contact_click_sessions':total('trans_count',target=target)}
+         goal_field:total('trans_count',target=target)}
 
 
 def fetch_rows(config, previous, *, end, site_slug='tinacms'):
- name,hosts,fields=SITES[site_slug]
+ name,hosts,fields,_=SITES[site_slug]
  site=config['site_id']
  targets={field:config[field.removeprefix('paid_').removesuffix('_sessions')+'_target'] for field in fields[2:]}
  if any(type(x) is not int or x<=0 for x in [site,*targets.values()]) or len(set(targets.values()))!=len(targets):
@@ -111,9 +113,10 @@ def fetch_rows(config, previous, *, end, site_slug='tinacms'):
  latest=max((dt.date.fromisoformat(r['date']) for r in previous if r['date']<=end.isoformat()),default=first)
  start=max(first,latest-dt.timedelta(days=6))
  all_rows=[]
- if site_slug=='ssw':
+ if fields[1]=='paid_sessions':
+  goal_field,=targets
   for offset in range((end-start).days+1):
-   row=fetch_paid_day(config,start+dt.timedelta(days=offset),targets['paid_contact_click_sessions'])
+   row=fetch_paid_day(config,start+dt.timedelta(days=offset),goal_field,targets[goal_field])
    if row is not None:
     all_rows.append(row)
   return validate_rows(all_rows,fields)
@@ -156,9 +159,9 @@ def main():
  parser.add_argument('--csv',type=Path,help='Import the documented daily aggregate CSV instead of querying Tongji')
  parser.add_argument('--site',choices=SITES,default='tinacms')
  args=parser.parse_args()
- name,_,fields=SITES[args.site]
- data_root=ROOT if args.site=='tinacms' else ROOT/'accounts'/args.site
- path=data_root/'data'/(SSW_FILENAME if args.site=='ssw' else FILENAME)
+ name,_,fields,filename=SITES[args.site]
+ data_root=ROOT/'accounts'/'ssw' if args.site=='ssw' else ROOT
+ path=data_root/'data'/filename
  secret=os.environ.get(SECRET)
  site_config=os.environ.get(SSW_SITE_CONFIG) if args.site=='ssw' else secret
  if not args.csv and not (secret and site_config):

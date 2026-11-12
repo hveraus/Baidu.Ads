@@ -35,6 +35,13 @@ jobs:
           if ! python scripts/sync_website_conversions.py; then
             echo '::warning::TinaCMS website analytics could not sync. The previous website totals were retained.'
           fi
+      - name: Sync TinaCMS paid email clicks
+        env:
+          BAIDU_TONGJI_CREDENTIALS_JSON: ${{ secrets.BAIDU_TONGJI_CREDENTIALS_JSON }}
+        run: |
+          if ! python scripts/sync_website_conversions.py --site tinacms-paid; then
+            echo '::warning::TinaCMS paid email clicks could not sync. The previous totals were retained.'
+          fi
       - name: Sync SSW website conversions
         env:
           BAIDU_TONGJI_CREDENTIALS_JSON: ${{ secrets.BAIDU_TONGJI_CREDENTIALS_JSON }}

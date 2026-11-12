@@ -45,6 +45,30 @@ class WebsiteConversionTests(unittest.TestCase):
    with self.assertRaisesRegex(ValueError,'not an active TinaCMS China site'):
     fetch_rows({**config,'site_id':2},[],end=dt.date(2026,10,2))
 
+ def test_tinacms_paid_email_uses_paid_report_and_preserves_zero_and_missing(self):
+  config={'site_id':12,'start_date':'2026-11-09','email_click_target':34,'install_copy_target':56}
+
+  def request(config, method, body=None):
+   if method=='getSiteList':
+    return {'list':[{'site_id':12,'domain':'www.tinacms.com.cn','status':0}]}
+   self.assertEqual((body['site_id'],body['method'],body['adProduct']),(12,'pro/hour/a','0,0'))
+   date=body['start_date']
+   self.assertEqual(body['end_date'],date)
+   metric=body['metrics']
+   if metric=='trans_count':
+    self.assertEqual(body['target'],34)
+   if date=='20261111':
+    self.assertEqual(metric,'visit_count')
+    return {'result':{'fields':['simple_date_title',metric],'sum':[],'total':0}}
+   value=8 if metric=='visit_count' else {'20261109':0,'20261110':'--'}[date]
+   return {'result':{'fields':['simple_date_title',metric],'sum':[[value],[]]}}
+
+  with patch('scripts.sync_website_conversions.tongji',side_effect=request):
+   self.assertEqual(fetch_rows(config,[],end=dt.date(2026,11,11),site_slug='tinacms-paid'),[
+    {'date':'2026-11-09','paid_sessions':8,'paid_email_click_sessions':0},
+    {'date':'2026-11-10','paid_sessions':8,'paid_email_click_sessions':None},
+   ])
+
  def test_ssw_uses_paid_visits_and_its_contact_target(self):
   config={'site_id':12,'start_date':'2026-11-11','contact_click_target':34}
   date=dt.date(2026,11,11)

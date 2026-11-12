@@ -19,6 +19,11 @@
 - The repository stores the encrypted `data/posthog-cli.enc` snapshot. Open the TinaCMS overview, find the China Tina CLI section, and unlock it with the Keeper viewing key. Both language versions use the selected dashboard date range. The page decrypts the snapshot in the browser and asks for the key again after a reload. [TinaCMS overview](https://hveraus.github.io/Baidu.Ads/).
 - To verify a run, check the collection step log, confirm `data/posthog-cli.enc` was updated on `main`, and check that the Pages deploy completed. Open the overview and verify both event counts and the data coverage date after unlocking. [Implementation PR](https://github.com/hveraus/Baidu.Ads/pull/2) · [First cloud run](https://github.com/hveraus/Baidu.Ads/actions/runs/42969827850).
 
+## TinaCMS paid email enquiry clicks
+
+- The TinaCMS overview counts Baidu paid sessions with the existing email enquiry click goal, once per session. The card follows the Beijing date range and combines all Baidu campaigns. A reported zero displays as 0, and missing goal data displays as —.
+- **Sync TinaCMS paid email clicks** runs `scripts/sync_website_conversions.py --site tinacms-paid` with the existing Baidu Tongji secret. It queries `pro/hour/a` with the TinaCMS site's `email_click_target` and writes only daily aggregates to `data/website-paid-email-clicks.json`.
+
 ## SSW China website conversions
 
 - The Baidu Tongji site **SSW 中国站** uses site ID `23684705` under 智鹏瑞尔. The **联系我们点击** goal uses ID `1557094` and counts visits to the virtual path `/__analytics/conversion/contact-click` on both `ssw.com.cn` and `www.ssw.com.cn`, once per session. The website source is `ZPREHZ/ssw.com.cn`. [Baidu Tongji goal settings](https://tongji.baidu.com/main/setting/90172887/home/trans/basicsetting?flag=page&siteId=23684705).

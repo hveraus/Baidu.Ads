@@ -5,6 +5,8 @@ import json
 FILENAME='website-conversions.json'
 METRICS=('sessions','install_copy_sessions','email_click_sessions')
 FIELDS=('date',*METRICS)
+TINA_PAID_FILENAME='website-paid-email-clicks.json'
+TINA_PAID_FIELDS=('date','paid_sessions','paid_email_click_sessions')
 SSW_FILENAME='website-paid-conversions.json'
 SSW_FIELDS=('date','paid_sessions','paid_contact_click_sessions')
 

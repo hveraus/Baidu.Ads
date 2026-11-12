@@ -2,7 +2,7 @@
 import base64,datetime as dt,json,sqlite3
 from pathlib import Path
 from i18n import english_template
-from website_conversions import FILENAME, SSW_FIELDS, SSW_FILENAME, load_rows
+from website_conversions import FILENAME, SSW_FIELDS, SSW_FILENAME, TINA_PAID_FIELDS, TINA_PAID_FILENAME, load_rows
 ROOT=Path(__file__).resolve().parent
 
 def build_dashboard(public=False):
@@ -28,6 +28,7 @@ def build_dashboard(public=False):
  data={'reports':reports,'inventory':inventory,'coverage':coverage,'status':status,'generated':dt.datetime.now().isoformat(),'record_counts':record_counts,'website':json.loads((ROOT/'website-audit.json').read_text()) if (ROOT/'website-audit.json').exists() else {}}
  if profile['slug']=='tinacms':
   data['website_conversions']=load_rows(ROOT/'data'/FILENAME)
+  data['tina_paid_website_conversions']=load_rows(ROOT/'data'/TINA_PAID_FILENAME,TINA_PAID_FIELDS)
   if public:
    from scripts.sync_posthog_cli import ENCRYPTED_SNAPSHOT, read_encrypted_snapshot
    encrypted=read_encrypted_snapshot(ROOT/'data'/ENCRYPTED_SNAPSHOT)
