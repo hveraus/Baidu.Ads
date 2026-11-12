@@ -1,6 +1,7 @@
-"""GitHub sign-in and authenticated Baidu.Ads reports behind the SSW HTTPS proxy."""
+"""Password sign-in and authenticated Baidu.Ads reports behind the SSW HTTPS proxy."""
 import argparse
 import base64
+from collections import deque
 import datetime as dt
 from functools import lru_cache
 import hashlib
@@ -13,11 +14,10 @@ from pathlib import Path
 import re
 import secrets
 import subprocess
+import sys
 import threading
 import time
-from urllib.error import HTTPError, URLError
-from urllib.parse import urlencode, urlsplit
-from urllib.request import Request, build_opener
+from urllib.parse import urlsplit
 
 from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -27,18 +27,18 @@ from account_ui import account_template
 from i18n import english_template
 from publication import public_template
 from scripts.accounts import PROFILES
-from scripts.sync_posthog_cli import NoRedirect, SNAPSHOT_HEADER as POSTHOG_HEADER
+from scripts.sync_posthog_cli import SNAPSHOT_HEADER as POSTHOG_HEADER
 from wecom_snapshot import HEADER as WECOM_HEADER
 
 
 ROOT = Path(__file__).resolve().parent
 BASE_URL = 'https://ads.ssw.com.cn'
 REPORT_REF = 'refs/remotes/origin/main'
-GITHUB_AUTHORIZE = 'https://github.com/login/oauth/authorize'
-GITHUB_TOKEN = 'https://github.com/login/oauth/access_token'
-GITHUB_USER = 'https://api.github.com/user'
-OWNER_ID = 4745861
-OPENER = build_opener(NoRedirect())
+USERNAME = re.compile(r'[A-Za-z0-9_.@-]{1,64}')
+PASSWORD_HASH = re.compile(r'([0-9a-f]{32}):([0-9a-f]{64})')
+MAX_PASSWORD_BYTES = 1024
+LOGIN_ATTEMPT_LIMIT = 5
+LOGIN_ATTEMPT_WINDOW = 60
 GIT_REFRESH_LOCK = threading.Lock()
 INLINE_HANDLER = re.compile(r'\son[a-z]+="([^"\n]+)"')
 REPORT_DATA = re.compile(rb'<script id="report-data" type="application/json">(.*?)</script>', re.DOTALL)
@@ -60,12 +60,17 @@ def key_bytes(value):
     return bytes.fromhex(value)
 
 
-def fetch(req, limit):
-    with OPENER.open(req, timeout=15) as response:
-        content = response.read(limit + 1)
-    if len(content) > limit:
-        raise ValueError('Upstream response exceeds size limit')
-    return content
+def password_digest(password, salt):
+    return hashlib.scrypt(password, salt=salt, n=2**17, r=8, p=1, dklen=32, maxmem=256 * 1024 * 1024)
+
+
+def hash_password(password):
+    if len(password) > MAX_PASSWORD_BYTES or len(password.decode('utf-8')) < 15:
+        raise ValueError('Use a password with at least 15 characters and at most 1024 UTF-8 bytes.')
+    if b'\r' in password or b'\n' in password:
+        raise ValueError('The password cannot contain a line break.')
+    salt = secrets.token_bytes(16)
+    return salt.hex() + ':' + password_digest(password, salt).hex()
 
 
 @lru_cache(maxsize=2)
@@ -107,53 +112,6 @@ def check_upstream():
         if not source_bytes(path, bucket, 16_384).startswith(header):
             raise ValueError('Unexpected encrypted snapshot format')
     print('Git report data and encrypted snapshots are readable.')
-    for url in (GITHUB_TOKEN, GITHUB_USER):
-        try:
-            fetch(Request(url, method='HEAD', headers={'User-Agent': 'Baidu.Ads'}), 0)
-        except HTTPError as error:
-            if error.code not in (301, 302, 401, 403, 404, 405):
-                raise
-        print(f'HTTPS connection to {urlsplit(url).hostname} succeeded.')
-
-
-def github_json(request, limit, stage):
-    try:
-        payload = json.loads(fetch(request, limit))
-    except HTTPError as error:
-        logging.warning('GitHub OAuth %s request returned HTTP %d.', stage, error.code)
-        raise
-    except URLError as error:
-        logging.warning('GitHub OAuth %s connection failed (%s).', stage, type(error.reason).__name__)
-        raise
-    except (OSError, ValueError) as error:
-        logging.warning('GitHub OAuth %s response failed (%s).', stage, type(error).__name__)
-        raise
-    if not isinstance(payload, dict):
-        raise ValueError('Unexpected GitHub OAuth response')
-    return payload
-
-
-def github_identity(code, verifier, client_id, client_secret):
-    form = urlencode({
-        'client_id': client_id, 'client_secret': client_secret, 'code': code,
-        'redirect_uri': BASE_URL + '/callback', 'code_verifier': verifier,
-    }).encode()
-    payload = github_json(Request(GITHUB_TOKEN, data=form, headers={
-        'Accept': 'application/json', 'User-Agent': 'Baidu.Ads',
-        'Content-Type': 'application/x-www-form-urlencoded',
-    }), 16_384, 'token')
-    token = payload.get('access_token')
-    if not isinstance(token, str) or not token:
-        error = payload.get('error')
-        if error not in ('incorrect_client_credentials', 'redirect_uri_mismatch',
-                         'bad_verification_code', 'unverified_user_email', 'bad_code_verifier'):
-            error = 'unexpected_response'
-        logging.warning('GitHub OAuth token exchange failed (%s).', error)
-        raise ValueError('GitHub OAuth token exchange failed')
-    return github_json(Request(GITHUB_USER, headers={
-        'Authorization': f'Bearer {token}', 'Accept': 'application/vnd.github+json',
-        'User-Agent': 'Baidu.Ads',
-    }), 64_000, 'identity')
 
 
 def decrypt_snapshot(packed, key, header, fields):
@@ -218,31 +176,47 @@ def render_report(slug, lang, keys, csrf):
     nonce = secrets.token_urlsafe(18)
     template = template.replace('<script', f'<script nonce="{nonce}"').replace('<div class="header-right">',
         '<div class="header-right">' + form, 1)
-    template = (template.replace('本页及所展示统计数据可公开访问', '已通过 GitHub 登录')
-                .replace('This page and its advertising statistics are publicly accessible', 'Signed in with GitHub'))
+    template = (template.replace('本页及所展示统计数据可公开访问', '已登录')
+                .replace('This page and its advertising statistics are publicly accessible', 'Signed in'))
     return template.replace('/*__DATA__*/', packed, 1), f"'nonce-{nonce}' 'unsafe-hashes' {handler_policy}"
 
 
 def login_page(path, error=None):
     lang = 'en' if path.endswith('/en.html') else 'zh'
-    title = 'Sign in to Baidu.Ads' if lang == 'en' else '登录 Baidu.Ads'
-    button = 'Continue with GitHub' if lang == 'en' else '使用 GitHub 登录'
+    title, username, password, button = (
+        ('Sign in to Baidu.Ads', 'Username', 'Password', 'Sign in') if lang == 'en'
+        else ('登录 Baidu.Ads', '账号', '密码', '登录')
+    )
+    if 'login_csrf' not in session:
+        session['login_csrf'] = secrets.token_urlsafe(32)
+    csrf = html.escape(session['login_csrf'], quote=True)
     notice = f'<p role="alert">{html.escape(error)}</p>' if error else ''
-    target = '/login?' + urlencode({'page': path})
+    target = html.escape(path, quote=True)
     return f'''<!doctype html><html lang="{lang}"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>{title}</title>
-<style>body{{margin:0;min-height:100vh;display:grid;place-items:center;background:#f3f6f3;color:#152419;font:16px system-ui,sans-serif}}main{{background:white;border:1px solid #dce5de;border-radius:16px;padding:36px;max-width:30rem;margin:16px}}h1{{margin:0 0 22px;font-size:1.6rem}}a{{display:inline-block;background:#174d37;color:white;padding:11px 18px;border-radius:7px;text-decoration:none}}p{{line-height:1.5}}</style>
-</head><body><main><h1>{title}</h1>{notice}<a href="{html.escape(target, quote=True)}">{button}</a></main></body></html>'''
+<style>body{{margin:0;min-height:100vh;display:grid;place-items:center;background:#f3f6f3;color:#152419;font:16px system-ui,sans-serif}}main{{background:white;border:1px solid #dce5de;border-radius:16px;padding:32px;width:min(21rem,calc(100vw - 6rem));margin:16px}}h1{{margin:0 0 24px;font-size:1.6rem}}form{{display:grid;gap:16px}}label{{display:grid;gap:6px;font-weight:600}}input,button{{font:inherit;border-radius:7px;padding:10px 12px}}input{{min-width:0;border:1px solid #aebbb3;color:inherit}}button{{background:#174d37;color:white;border:0;cursor:pointer;font-weight:600}}[role=alert]{{color:#a32828}}</style>
+</head><body><main><h1>{title}</h1>{notice}<form action="/login" method="post">
+<input type="hidden" name="csrf" value="{csrf}"><input type="hidden" name="page" value="{target}">
+<label>{username}<input name="username" autocomplete="username" autocapitalize="none" maxlength="64" required></label>
+<label>{password}<input name="password" type="password" autocomplete="current-password" required></label>
+<button type="submit">{button}</button></form></main></body></html>'''
 
 
-def create_app(client_id, client_secret, session_key, keys):
+def create_app(username, password_hash, session_key, keys):
+    match = PASSWORD_HASH.fullmatch(password_hash)
+    if not USERNAME.fullmatch(username) or not match:
+        raise ValueError('Invalid dashboard login configuration')
+    salt, expected_digest = map(bytes.fromhex, match.groups())
+    username = username.encode()
+    attempts = deque()
+    attempts_lock = threading.Lock()
     app = Flask(__name__)
     app.config.update(
         SECRET_KEY=session_key, TRUSTED_HOSTS=[urlsplit(BASE_URL).hostname],
         SESSION_COOKIE_NAME='__Host-baidu_ads_session', SESSION_COOKIE_PATH='/',
         SESSION_COOKIE_SECURE=True, SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE='Lax',
         SESSION_REFRESH_EACH_REQUEST=False, PERMANENT_SESSION_LIFETIME=dt.timedelta(days=7),
-        MAX_CONTENT_LENGTH=4096,
+        MAX_CONTENT_LENGTH=8192,
     )
 
     @app.after_request
@@ -260,43 +234,38 @@ def create_app(client_id, client_secret, session_key, keys):
     def health():
         return 'OK\n'
 
-    @app.get('/login')
+    @app.post('/login')
     def login():
-        page = request.args.get('page', '/')
+        page = request.form.get('page', '/')
         if page not in REPORT_PAGES:
             abort(400)
-        if session.get('user_id') == OWNER_ID:
-            return redirect(page)
-        verifier = secrets.token_urlsafe(32)
-        state = secrets.token_urlsafe(32)
+        csrf = request.form.get('csrf', '')
+        expected = session.get('login_csrf', '')
+        if not expected or not csrf.isascii() or not hmac.compare_digest(expected, csrf):
+            abort(403)
+        if session.get('authenticated') is True:
+            return redirect(page, code=303)
+        english = page.endswith('/en.html')
+        password = request.form.get('password', '').encode()
+        with attempts_lock:
+            now = time.monotonic()
+            while attempts and now - attempts[0] >= LOGIN_ATTEMPT_WINDOW:
+                attempts.popleft()
+            if len(attempts) >= LOGIN_ATTEMPT_LIMIT:
+                message = 'Too many attempts. Try again in a minute.' if english else '尝试次数过多，请稍后再试。'
+                return login_page(page, message), 429, {'Retry-After': str(LOGIN_ATTEMPT_WINDOW)}
+            if (len(password) <= MAX_PASSWORD_BYTES and
+                    hmac.compare_digest(password_digest(password, salt), expected_digest) and
+                    hmac.compare_digest(request.form.get('username', '').encode(), username)):
+                attempts.clear()
+            else:
+                attempts.append(now)
+                message = 'Incorrect username or password.' if english else '账号或密码有误。'
+                return login_page(page, message), 401
         session.clear()
-        session.update(oauth_state=state, verifier=verifier, issued=int(time.time()), page=page)
-        challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).rstrip(b'=').decode()
-        return redirect(GITHUB_AUTHORIZE + '?' + urlencode({
-            'client_id': client_id, 'redirect_uri': BASE_URL + '/callback', 'state': state,
-            'code_challenge': challenge, 'code_challenge_method': 'S256', 'allow_signup': 'false',
-        }))
-
-    @app.get('/callback')
-    def callback():
-        state = session.pop('oauth_state', '')
-        verifier = session.pop('verifier', '')
-        issued = session.pop('issued', 0)
-        page = session.pop('page', '/')
-        received, code = request.args.get('state', ''), request.args.get('code', '')
-        if (not state or not verifier or not code or page not in REPORT_PAGES or
-                not received.isascii() or not hmac.compare_digest(state, received) or not 0 <= time.time() - issued < 600):
-            return login_page('/', '登录会话已失效，请重试。'), 400
-        try:
-            identity = github_identity(code, verifier, client_id, client_secret)
-        except (OSError, ValueError, KeyError, TypeError):
-            return login_page(page, 'GitHub 登录暂不可用，请重试。'), 502
-        if type(identity) is not dict or identity.get('id') != OWNER_ID:
-            return login_page(page, '此 GitHub 账号没有看板访问权限。'), 403
-        session.clear()
-        session.update(user_id=OWNER_ID, csrf=secrets.token_urlsafe(32))
+        session.update(authenticated=True, csrf=secrets.token_urlsafe(32))
         session.permanent = True
-        return redirect(page)
+        return redirect(page, code=303)
 
     @app.post('/logout')
     def logout():
@@ -318,7 +287,7 @@ def create_app(client_id, client_secret, session_key, keys):
         path = '/' + page
         if path not in REPORT_PAGES:
             abort(404)
-        if session.get('user_id') != OWNER_ID:
+        if session.get('authenticated') is not True:
             return login_page(path)
         slug, lang = REPORT_PAGES[path]
         try:
@@ -332,17 +301,26 @@ def create_app(client_id, client_secret, session_key, keys):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--check-upstream', action='store_true', help='Check Git data and GitHub HTTPS connectivity')
-    if parser.parse_args().check_upstream:
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument('--check-upstream', action='store_true', help='Check Git report data')
+    modes.add_argument('--hash-password', action='store_true', help='Hash a UTF-8 password from standard input')
+    args = parser.parse_args()
+    if args.hash_password:
+        try:
+            print(hash_password(sys.stdin.buffer.readline(MAX_PASSWORD_BYTES + 3).rstrip(b'\r\n')))
+        except ValueError as error:
+            raise SystemExit(str(error))
+        raise SystemExit
+    if args.check_upstream:
         check_upstream()
         raise SystemExit
 
     from waitress import serve
 
     application = create_app(
-        os.environ['BAIDU_ADS_GITHUB_CLIENT_ID'], os.environ['BAIDU_ADS_GITHUB_CLIENT_SECRET'],
+        os.environ['BAIDU_ADS_LOGIN_USERNAME'], os.environ['BAIDU_ADS_PASSWORD_HASH'],
         key_bytes(os.environ['BAIDU_ADS_SESSION_KEY']),
         {'tinacms': key_bytes(os.environ['POSTHOG_CLI_SNAPSHOT_KEY']),
          'ssw': key_bytes(os.environ['WECOM_SNAPSHOT_KEY'])},
     )
-    serve(application, host='127.0.0.1', port=8765, max_request_header_size=16_384, max_request_body_size=4096)
+    serve(application, host='127.0.0.1', port=8765, max_request_header_size=16_384, max_request_body_size=8192)
