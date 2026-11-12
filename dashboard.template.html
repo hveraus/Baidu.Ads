@@ -148,7 +148,7 @@ function overviewConversionMetric(apiConversions){
  return metric(label,covered.length?fmt(sum(covered,field)):'—',note);
 }
 function homepageViewsMetric(){
- const data=DATA.ssw_homepage_views;
+ const data=DATA.homepage_views;
  if(!data)return '';
  $('metrics').classList.add('with-homepage-views');
  const covered=data.filter(row=>row.date>=state.start&&row.date<=state.end);

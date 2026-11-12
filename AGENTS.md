@@ -24,6 +24,10 @@
 - The TinaCMS overview counts Baidu paid sessions with the existing email enquiry click goal, once per session. The card follows the Beijing date range and combines all Baidu campaigns. A reported zero displays as 0, and missing goal data displays as —.
 - **Sync TinaCMS paid email clicks** runs `scripts/sync_website_conversions.py --site tinacms-paid` with the existing Baidu Tongji secret. It queries `pro/hour/a` with the TinaCMS site's `email_click_target` and writes only daily aggregates to `data/website-paid-email-clicks.json`.
 
+## TinaCMS homepage views
+
+- **Sync TinaCMS homepage views** uses Baidu Tongji's visited pages report (`visit/toppage/a`) from the configured TinaCMS collection date. It sums daily PV across all sources for the root paths of `tinacms.com.cn` and `www.tinacms.com.cn`, including query-parameter variants. The overview follows the selected Beijing dates and reports data coverage. The snapshot is `data/homepage-views.json`.
+
 ## SSW China website conversions
 
 - The Baidu Tongji site **SSW 中国站** uses site ID `23684705` under 智鹏瑞尔. The **联系我们点击** goal uses ID `1557094` and counts visits to the virtual path `/__analytics/conversion/contact-click` on both `ssw.com.cn` and `www.ssw.com.cn`, once per session. The website source is `ZPREHZ/ssw.com.cn`. [Baidu Tongji goal settings](https://tongji.baidu.com/main/setting/90172887/home/trans/basicsetting?flag=page&siteId=23684705).

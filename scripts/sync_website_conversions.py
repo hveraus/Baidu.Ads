@@ -12,7 +12,7 @@ from urllib.parse import urlsplit
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
-from website_conversions import FIELDS, FILENAME, SSW_FIELDS, SSW_FILENAME, SSW_HOMEPAGE_FIELDS, SSW_HOMEPAGE_FILENAME, TINA_PAID_FIELDS, TINA_PAID_FILENAME, load_rows, validate_rows
+from website_conversions import FIELDS, FILENAME, SSW_FIELDS, SSW_FILENAME, HOMEPAGE_FIELDS, HOMEPAGE_FILENAME, TINA_PAID_FIELDS, TINA_PAID_FILENAME, load_rows, validate_rows
 from scripts.publish_data import export_website_conversions
 
 SECRET='BAIDU_TONGJI_CREDENTIALS_JSON'
@@ -23,8 +23,9 @@ SSW_HOSTS={'ssw.com.cn','www.ssw.com.cn'}
 SITES={
  'tinacms':('TinaCMS China',TINA_HOSTS,FIELDS,FILENAME),
  'tinacms-paid':('TinaCMS China paid',TINA_HOSTS,TINA_PAID_FIELDS,TINA_PAID_FILENAME),
+ 'tinacms-homepage':('TinaCMS China homepage',TINA_HOSTS,HOMEPAGE_FIELDS,HOMEPAGE_FILENAME),
  'ssw':('SSW China',SSW_HOSTS,SSW_FIELDS,SSW_FILENAME),
- 'ssw-homepage':('SSW China homepage',SSW_HOSTS,SSW_HOMEPAGE_FIELDS,SSW_HOMEPAGE_FILENAME),
+ 'ssw-homepage':('SSW China homepage',SSW_HOSTS,HOMEPAGE_FIELDS,HOMEPAGE_FILENAME),
 }
 BEIJING=dt.timezone(dt.timedelta(hours=8))
 
@@ -98,7 +99,7 @@ def fetch_paid_day(config, day, goal_field, target):
          goal_field:total('trans_count',target=target)}
 
 
-def fetch_homepage_day(config, day):
+def fetch_homepage_day(config, day, hosts):
  date=day.strftime('%Y%m%d')
  report=tongji(config,'getData',{'site_id':config['site_id'],'method':'visit/toppage/a',
                                 'start_date':date,'end_date':date,'metrics':'pv_count','max_results':0})['result']
@@ -117,7 +118,7 @@ def fetch_homepage_day(config, day):
    if not isinstance(url,str):
     continue
    parsed=urlsplit(url if '://' in url else '//'+url.removeprefix('//'))
-   if parsed.scheme in ('','http','https') and parsed.hostname in SSW_HOSTS and parsed.path in ('','/'):
+   if parsed.scheme in ('','http','https') and parsed.hostname in hosts and parsed.path in ('','/'):
     raw,=value
     count=read_count(raw)
     if count is None:
@@ -144,9 +145,9 @@ def fetch_rows(config, previous, *, end, site_slug='tinacms'):
  latest=max((dt.date.fromisoformat(r['date']) for r in previous if r['date']<=end.isoformat()),default=first)
  start=max(first,latest-dt.timedelta(days=6))
  all_rows=[]
- if site_slug=='ssw-homepage':
+ if fields==HOMEPAGE_FIELDS:
   for offset in range((end-start).days+1):
-   row=fetch_homepage_day(config,start+dt.timedelta(days=offset))
+   row=fetch_homepage_day(config,start+dt.timedelta(days=offset),hosts)
    if row is not None:
     all_rows.append(row)
   return validate_rows(all_rows,fields)

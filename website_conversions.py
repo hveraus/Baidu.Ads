@@ -9,8 +9,8 @@ TINA_PAID_FILENAME='website-paid-email-clicks.json'
 TINA_PAID_FIELDS=('date','paid_sessions','paid_email_click_sessions')
 SSW_FILENAME='website-paid-conversions.json'
 SSW_FIELDS=('date','paid_sessions','paid_contact_click_sessions')
-SSW_HOMEPAGE_FILENAME='homepage-views.json'
-SSW_HOMEPAGE_FIELDS=('date','homepage_views')
+HOMEPAGE_FILENAME='homepage-views.json'
+HOMEPAGE_FIELDS=('date','homepage_views')
 
 
 def validate_rows(rows,fields=FIELDS):

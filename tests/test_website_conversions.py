@@ -69,34 +69,39 @@ class WebsiteConversionTests(unittest.TestCase):
     {'date':'2026-11-10','paid_sessions':8,'paid_email_click_sessions':None},
    ])
 
- def test_ssw_homepage_counts_all_source_pv_for_root_urls_only(self):
+ def test_homepage_counts_all_source_pv_for_each_sites_root_urls(self):
   config={'site_id':12,'start_date':'2026-11-11'}
   date=dt.date(2026,11,11)
-  sites={'list':[{'site_id':12,'domain':'www.ssw.com.cn','status':0}]}
   urls=[
    'https://www.ssw.com.cn/',
    {'id':'http://ssw.com.cn/?utm_source=baidu','name':'SSW'},
    {'id':'3','name':'ssw.com.cn/'},
    'https://www.ssw.com.cn/services/',
    'https://ssw.com.cn/__analytics/conversion/contact-click',
+   'https://www.tinacms.com.cn/',
+   {'id':'https://tinacms.com.cn/?utm_source=baidu','name':'TinaCMS'},
+   'https://tinacms.com.cn/pricing/',
    'https://other.example/',
   ]
-  counts=[4,3,2,12,7,25]
+  counts=[4,3,2,12,7,6,7,21,25]
   page={'fields':['visit_page_title','pv_count'],'total':len(urls),
         'items':[[[url] for url in urls],[[n] for n in counts],[],[]]}
-  with patch('scripts.sync_website_conversions.tongji',side_effect=[sites,{'result':page}]) as request:
-   self.assertEqual(fetch_rows(config,[],end=date,site_slug='ssw-homepage'),[
-    {'date':'2026-11-11','homepage_views':9},
-   ])
-   self.assertEqual(request.call_args.args[2],{
-    'site_id':12,'method':'visit/toppage/a','metrics':'pv_count',
-    'start_date':'20261111','end_date':'20261111','max_results':0,
-   })
-  with patch('scripts.sync_website_conversions.tongji',side_effect=[sites,{'result':{**page,'total':0,'items':[[],[],[],[]]}}]):
-   self.assertEqual(fetch_rows(config,[],end=date,site_slug='ssw-homepage'),[])
-  with patch('scripts.sync_website_conversions.tongji',side_effect=[sites,{'result':{**page,'total':len(urls)+1}}]):
-   with self.assertRaisesRegex(ValueError,'Incomplete'):
-    fetch_rows(config,[],end=date,site_slug='ssw-homepage')
+  for site,hostname,expected in [('ssw-homepage','www.ssw.com.cn',9),('tinacms-homepage','www.tinacms.com.cn',13)]:
+   with self.subTest(site=site):
+    sites={'list':[{'site_id':12,'domain':hostname,'status':0}]}
+    with patch('scripts.sync_website_conversions.tongji',side_effect=[sites,{'result':page}]) as request:
+     self.assertEqual(fetch_rows(config,[],end=date,site_slug=site),[
+      {'date':'2026-11-11','homepage_views':expected},
+     ])
+     self.assertEqual(request.call_args.args[2],{
+      'site_id':12,'method':'visit/toppage/a','metrics':'pv_count',
+      'start_date':'20261111','end_date':'20261111','max_results':0,
+     })
+    with patch('scripts.sync_website_conversions.tongji',side_effect=[sites,{'result':{**page,'total':0,'items':[[],[],[],[]]}}]):
+     self.assertEqual(fetch_rows(config,[],end=date,site_slug=site),[])
+    with patch('scripts.sync_website_conversions.tongji',side_effect=[sites,{'result':{**page,'total':len(urls)+1}}]):
+     with self.assertRaisesRegex(ValueError,'Incomplete'):
+      fetch_rows(config,[],end=date,site_slug=site)
 
  def test_ssw_uses_paid_visits_and_its_contact_target(self):
   config={'site_id':12,'start_date':'2026-11-11','contact_click_target':34}
