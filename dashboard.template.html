@@ -8,7 +8,12 @@
 <div class="shell"><aside><p class="nav-label">智鹏瑞尔 · 搜索推广</p><button class="nav active" data-view="overview"><span class="navmark">01</span>投放总览</button><button class="nav" data-view="keywords"><span class="navmark">02</span>关键词表现</button><button class="nav" data-view="queries"><span class="navmark">03</span>用户搜索词</button><button class="nav" data-view="ads"><span class="navmark">04</span>广告与落地页</button><button class="nav" data-view="traffic"><span class="navmark">05</span>流量分布</button><button class="nav" data-view="advice"><span class="navmark">06</span>投流建议 / 下一期</button><button class="nav" data-view="health"><span class="navmark">07</span>数据与口径</button><div class="aside-bottom">数据保存在本机<br><strong>每日 09:00 自动采集</strong><br>北京时间 · 通过 Codex 运行</div></aside>
 <main><div class="page-head"><div><div class="eyebrow">从花费到效果，看清每一次点击</div><h1 id="page-title">投放总览</h1><p class="subtitle" id="range-label"></p></div><div class="filters"><label class="sr-only" for="plan">计划</label><select id="plan"></select><label class="sr-only" for="period">日期范围</label><select id="period"><option value="90">最近90天</option><option value="30">最近30天</option><option value="7">最近7天</option><option value="yesterday">昨天</option><option value="custom">自定义日期</option></select><div id="custom" class="date-custom" hidden><label class="sr-only" for="start">开始日期</label><input id="start" type="date"><span>至</span><label class="sr-only" for="end">结束日期</label><input id="end" type="date"><button id="apply">应用</button></div></div></div>
 <div id="notice" class="notice" hidden></div>
-<section class="view" id="overview"><div class="metrics" id="metrics"></div><div class="section" id="website-traffic" hidden><div class="section-head"><h2>全站流量</h2><small id="website-traffic-range"></small></div><div class="metrics website-traffic-metrics" id="website-traffic-metrics"></div><p class="footnote website-traffic-note" id="website-traffic-note" hidden>访客数、IP 数和平均访问时长需要百度统计的完整区间汇总。可选择最近 7、30 或 90 天查看。</p></div><div class="section" id="website-conversions" hidden><div class="section-head"><h2>网站转化率</h2><small>全站会话 · 按所选日期统计</small></div><div class="metrics website-metrics" id="website-conversion-metrics"></div><p class="footnote">每项转化率＝触发该行为的会话数 ÷ 同一覆盖日期的网站会话数。同一会话每项只计一次。邮件咨询指点击邮件链接，不代表邮件已发送。全站数据不随推广计划筛选变化。</p></div><div class="section" id="posthog-cli" hidden><div class="section-head"><h2>中国区 Tina CLI</h2><small id="posthog-cli-coverage"></small></div><form id="posthog-cli-unlock" hidden><label>查看密钥 <input id="posthog-cli-key" type="password" autocomplete="off" spellcheck="false" required></label> <button type="submit">解锁 CLI 数据</button> <span id="posthog-cli-error" role="status"></span></form><div class="metrics website-metrics" id="posthog-cli-metrics"></div><div id="posthog-cli-trend" hidden><div class="section-head"><h3>NPX 每日趋势</h3><div class="legend cli-legend" id="posthog-cli-legend"></div></div><div id="posthog-cli-chart"></div></div><p class="footnote">PostHog · 北京时间 · 按事件发生次数统计，覆盖所有来源。</p></div><div id="insights" class="insights"></div><div class="two"><div class="section"><div class="section-head"><h2>每天花了多少，带来多少点击</h2><div class="legend"><span><i style="background:var(--green)"></i>消费</span><span><i style="background:#91a8c6"></i>点击</span></div></div><div id="daily-chart"></div><p class="footnote">左右两轴分别为消费（元）与点击（次）；鼠标移到日期位置可查看当日数值</p></div><div class="section"><div class="section-head"><h2>花费最多的关键词</h2><button class="text-button" onclick="go('keywords')">查看全部 →</button></div><div id="top-keywords" class="bars"></div></div></div><div class="section"><div class="section-head"><h2>优先检查这些关键词</h2><small>消费 ≥ ¥100 且点击 ≥ 10，API 转化记录为 0</small></div><div id="priority-table"></div><p class="footnote">这是排查顺序，不能据此认定流量无效。先确认转化追踪是否正常，再结合真实询盘质量决定是否调整</p></div></section>
+<section class="view" id="overview"><div class="metrics" id="metrics"></div><div class="section" id="website-traffic" hidden><div class="section-head"><h2>全站流量</h2><small id="website-traffic-range"></small></div><div class="metrics website-traffic-metrics" id="website-traffic-metrics"></div><p class="footnote website-traffic-note" id="website-traffic-note" hidden>访客数、IP 数和平均访问时长需要百度统计的完整区间汇总。可选择最近 7、30 或 90 天查看。</p></div><div class="section" id="website-conversions" hidden><div class="section-head"><h2>网站转化率</h2><small>全站会话 · 按所选日期统计</small></div><div class="metrics website-metrics" id="website-conversion-metrics"></div><p class="footnote">每项转化率＝触发该行为的会话数 ÷ 同一覆盖日期的网站会话数。同一会话每项只计一次。邮件咨询指点击邮件链接，不代表邮件已发送。全站数据不随推广计划筛选变化。</p></div><div class="section" id="posthog-cli" hidden><div class="section-head"><h2>中国区 Tina CLI</h2><small id="posthog-cli-coverage"></small></div><form id="posthog-cli-unlock" hidden><label>查看密钥 <input id="posthog-cli-key" type="password" autocomplete="off" spellcheck="false" required></label> <button type="submit">解锁 CLI 数据</button> <span id="posthog-cli-error" role="status"></span></form><div class="metrics website-metrics" id="posthog-cli-metrics"></div><div id="posthog-cli-trend" hidden><div class="section-head"><h3>NPX 每日趋势</h3><div class="legend cli-legend" id="posthog-cli-legend"></div></div><div id="posthog-cli-chart"></div></div><p class="footnote">PostHog · 北京时间 · 按事件发生次数统计，覆盖所有来源。</p></div><div class="section" id="wecom-consultations" hidden>
+<div class="section-head"><h2>微信客服咨询</h2><small id="wecom-consultations-coverage"></small></div>
+<form id="wecom-consultations-unlock" hidden><label>查看密钥 <input id="wecom-consultations-key" type="password" autocomplete="off" spellcheck="false" required></label> <button type="submit">解锁客服数据</button> <span id="wecom-consultations-error" role="status"></span></form>
+<div class="metrics website-metrics" id="wecom-consultations-metrics"></div>
+<p class="footnote">微信客服 · 北京时间 · 按天统计咨询客户人数。同一客户跨天咨询会分别计入，覆盖该客服账号的全部来源。</p>
+</div><div id="insights" class="insights"></div><div class="two"><div class="section"><div class="section-head"><h2>每天花了多少，带来多少点击</h2><div class="legend"><span><i style="background:var(--green)"></i>消费</span><span><i style="background:#91a8c6"></i>点击</span></div></div><div id="daily-chart"></div><p class="footnote">左右两轴分别为消费（元）与点击（次）；鼠标移到日期位置可查看当日数值</p></div><div class="section"><div class="section-head"><h2>花费最多的关键词</h2><button class="text-button" onclick="go('keywords')">查看全部 →</button></div><div id="top-keywords" class="bars"></div></div></div><div class="section"><div class="section-head"><h2>优先检查这些关键词</h2><small>消费 ≥ ¥100 且点击 ≥ 10，API 转化记录为 0</small></div><div id="priority-table"></div><p class="footnote">这是排查顺序，不能据此认定流量无效。先确认转化追踪是否正常，再结合真实询盘质量决定是否调整</p></div></section>
 <section class="view" id="keywords" hidden><div class="section"><div class="section-head"><div><h2>每个关键词的表现</h2><p class="subtitle" style="margin-top:8px">点击关键词，可查看每日表现与触发的实际搜索词</p></div><button class="export" id="export-keywords">导出当前结果 ↓</button></div><div class="table-tools"><div id="keyword-tabs" class="tabs"></div><div><label class="sr-only" for="keyword-search">搜索关键词或单元</label><input class="search" id="keyword-search" placeholder="搜索关键词、单元名称…"></div></div><div id="keyword-table"></div><p class="footnote">“无报告记录”表示关键词存在于当前清单，但所选日期内接口没有返回表现记录；数值显示为 —。质量度与状态来自最新清单，不代表历史状态。点击率、平均点击价格由合计重新计算</p></div></section>
 <section class="view" id="queries" hidden><div class="section"><div class="section-head"><div><h2>用户真正搜索了什么</h2><p class="subtitle" style="margin-top:8px">“投放关键词”是你买的词，“搜索词”是用户实际输入的词</p></div><button class="export" id="export-queries">导出当前结果 ↓</button></div><div class="table-tools"><p class="subtitle" id="query-count"></p><input class="search" id="query-search" aria-label="搜索用户搜索词" placeholder="搜索用户输入的词…"></div><div id="query-table"></div></div></section>
 <section class="view" id="ads" hidden><div class="section"><div class="section-head"><h2>哪些广告文案带来点击</h2><button class="export" onclick="exportRows(state.creatives,'创意表现')">导出创意 ↓</button></div><div id="creative-table"></div></div><div class="section"><div class="section-head"><h2>点击最终去了哪里</h2><button class="export" onclick="exportRows(state.landing,'落地页表现')">导出落地页 ↓</button></div><div id="landing-table"></div><p class="footnote">落地页按钮点击属于行为指标；点击咨询按钮、拨打电话与真实有效线索是不同口径</p></div></section>
@@ -74,7 +79,7 @@ function renderNotice(){
  notice.hidden=!parts.length;
  notice.innerHTML=parts.length?'<span aria-hidden="true">!</span><div>'+parts.join(' ')+'</div>':'';
 }
-function renderView(){if(state.view==='overview'){overview();websiteTraffic();websiteConversions();posthogCli();}if(state.view==='keywords')keywords();if(state.view==='queries')queries();if(state.view==='ads')ads();if(state.view==='traffic')traffic();if(state.view==='health')health();if(state.view==='advice')advice()}
+function renderView(){if(state.view==='overview'){overview();websiteTraffic();websiteConversions();posthogCli();wecomConsultations();}if(state.view==='keywords')keywords();if(state.view==='queries')queries();if(state.view==='ads')ads();if(state.view==='traffic')traffic();if(state.view==='health')health();if(state.view==='advice')advice()}
 function metric(label,value,note){return `<div class="metric"><div class="metric-label">${label}</div><div class="metric-value">${value}</div><small>${note}</small></div>`}
 function websiteConversions(){
  const data=DATA.website_conversions;
@@ -135,32 +140,60 @@ function posthogCliChart(rows){
  }).join('');
  chart.innerHTML=svg+'</svg>';
 }
-$('posthog-cli-unlock').onsubmit=async event=>{
- event.preventDefault();
- const input=$('posthog-cli-key'), error=$('posthog-cli-error');
- const value=input.value.trim();
- input.value='';
- error.textContent='';
- if(!/^[0-9a-f]{64}$/i.test(value)){
-  error.textContent='请输入 64 位十六进制查看密钥';
-  return;
- }
- try{
-  const key=await crypto.subtle.importKey('raw',Uint8Array.from(value.match(/../g),b=>parseInt(b,16)),'AES-GCM',false,['decrypt']);
-  const header=new TextEncoder().encode('BAIDU-ADS-POSTHOG-v1\n');
-  const packed=Uint8Array.from(atob(DATA.encrypted_posthog_cli),c=>c.charCodeAt(0));
-  const offset=header.length;
-  if(!header.every((byte,i)=>byte===packed[i]))throw Error('Snapshot format');
-  const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:packed.slice(offset,offset+12),additionalData:header},key,packed.slice(offset+12));
-  const snapshot=JSON.parse(new TextDecoder().decode(plain));
-  const iso=d=>typeof d==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(d);
-  if(!iso(snapshot.through)||!Array.isArray(snapshot.rows)||snapshot.rows.length!==90||!snapshot.rows.every(row=>iso(row.date)&&Number.isSafeInteger(row.started)&&row.started>=0&&Number.isSafeInteger(row.finished)&&row.finished>=0))throw Error('Snapshot schema');
-  posthogSnapshot=snapshot;
-  posthogCli();
- }catch{
-  error.textContent='无法解锁，请核对查看密钥';
- }
-};
+const isIsoDate=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)&&Number.isFinite(Date.parse(value));
+const isCount=value=>Number.isSafeInteger(value)&&value>=0;
+function bindSnapshotUnlock(section, encoded, format, unlock){
+ const form=$(`${section}-unlock`);
+ form.onsubmit=async event=>{
+  event.preventDefault();
+  const input=$(`${section}-key`), error=$(`${section}-error`);
+  const value=input.value.trim();
+  input.value='';
+  error.textContent='';
+  if(!/^[0-9a-f]{64}$/i.test(value)){
+   error.textContent='请输入 64 位十六进制查看密钥';
+   return;
+  }
+  try{
+   const key=await crypto.subtle.importKey('raw',Uint8Array.from(value.match(/../g),b=>parseInt(b,16)),'AES-GCM',false,['decrypt']);
+   const header=new TextEncoder().encode(format);
+   const packed=Uint8Array.from(atob(encoded),c=>c.charCodeAt(0));
+   const offset=header.length;
+   if(!header.every((byte,i)=>byte===packed[i]))throw Error('Snapshot format');
+   const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:packed.slice(offset,offset+12),additionalData:header},key,packed.slice(offset+12));
+   const snapshot=JSON.parse(new TextDecoder().decode(plain));
+   if(!isIsoDate(snapshot.through)||!Array.isArray(snapshot.rows))throw Error('Snapshot schema');
+   unlock(snapshot);
+  }catch{
+   error.textContent='无法解锁，请核对查看密钥';
+  }
+ };
+}
+bindSnapshotUnlock('posthog-cli',DATA.encrypted_posthog_cli,'BAIDU-ADS-POSTHOG-v1\n',snapshot=>{
+ if(snapshot.rows.length!==90||!snapshot.rows.every(row=>isIsoDate(row.date)&&isCount(row.started)&&isCount(row.finished)))throw Error('PostHog schema');
+ posthogSnapshot=snapshot;
+ posthogCli();
+});
+let wecomSnapshot=null;
+function wecomConsultations(){
+ if(!DATA.encrypted_wecom_consultations)return;
+ $('wecom-consultations').hidden=false;
+ const snapshot=wecomSnapshot;
+ $('wecom-consultations-unlock').hidden=!!snapshot;
+ if(!snapshot)return;
+ const latest=snapshot.rows.at(-1).date;
+ $('wecom-consultations-coverage').textContent=`最近有数据的日期 ${latest}`;
+ const days=(Date.parse(state.end)-Date.parse(state.start))/86400000+1;
+ const rows=snapshot.rows.filter(row=>row.date>=state.start&&row.date<=state.end);
+ const note=rows.length?`覆盖 ${fmt(rows.length)} / ${fmt(days)} 天`:'所选日期没有已采集的客服数据';
+ $('wecom-consultations-metrics').innerHTML=metric('咨询客户人数（日累计）',rows.length?fmt(sum(rows,'customers')):'—',note);
+}
+bindSnapshotUnlock('wecom-consultations',DATA.encrypted_wecom_consultations,'BAIDU-ADS-WECOM-v1\n',snapshot=>{
+ const earliest=Date.parse(snapshot.through)-89*86400000;
+ if(!snapshot.rows.length||!snapshot.rows.every((row,index,rows)=>isIsoDate(row.date)&&Date.parse(row.date)>=earliest&&row.date<=snapshot.through&&(!index||row.date>rows[index-1].date)&&isCount(row.customers)))throw Error('WeCom schema');
+ wecomSnapshot=snapshot;
+ wecomConsultations();
+});
 function overviewConversionMetric(apiConversions){
  const sswPaid=DATA.ssw_paid_website_conversions;
  const paid=sswPaid??DATA.tina_paid_website_conversions;

@@ -4,6 +4,7 @@ from pathlib import Path
 from i18n import english_template
 from website_conversions import FILENAME, SSW_FIELDS, SSW_FILENAME, TINA_PAID_FIELDS, TINA_PAID_FILENAME, load_rows
 from website_traffic import TRAFFIC_FILENAME, load_traffic
+from wecom_snapshot import FILENAME as WECOM_FILENAME, read_encrypted_snapshot as read_wecom_snapshot
 ROOT=Path(__file__).resolve().parent
 
 def build_dashboard(public=False):
@@ -37,6 +38,10 @@ def build_dashboard(public=False):
     data['encrypted_posthog_cli']=base64.b64encode(encrypted).decode('ascii')
  elif profile['slug']=='ssw':
   data['ssw_paid_website_conversions']=load_rows(ROOT/'data'/SSW_FILENAME,SSW_FIELDS)
+  if public:
+   encrypted=read_wecom_snapshot(ROOT/'data'/WECOM_FILENAME)
+   if encrypted:
+    data['encrypted_wecom_consultations']=base64.b64encode(encrypted).decode('ascii')
  if profile['slug'] in ('tinacms','ssw'):
   data['website_traffic']=load_traffic(ROOT/'data'/TRAFFIC_FILENAME)
  template=(ROOT/'dashboard.template.html').read_text()

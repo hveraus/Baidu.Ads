@@ -8,9 +8,10 @@ from vault import encrypt,restore,key_bytes
 from verify_data import verify
 from website_conversions import FILENAME,SSW_FILENAME,HOMEPAGE_FILENAME
 from website_traffic import TRAFFIC_FILENAME
+from wecom_snapshot import FILENAME as WECOM_FILENAME
 PROFILES={'yakshaver':{'slug':'yakshaver','name':'YakShaver','user_name':'智鹏瑞尔-1','user_id':91119162,'app_id':'94f6d7c3dc7ed96fc1984fd505d99666','website':'http://yakshaver.com.cn/','token_expires':'2027-02-01','secret':'BAIDU_YAKSHAVER_CREDENTIALS_JSON'}}
 PROFILES['ssw']={'slug':'ssw','name':'SSW','user_name':'智鹏瑞尔-2','user_id':91119163,'app_id':'301ac6829851c4cccb2d8363d17bd623','website':'https://ssw.cn','token_expires':'2027-02-01','secret':'BAIDU_SSW_CREDENTIALS_JSON'}
-FILES=['tracker.py','dashboard.py','dashboard.template.html','i18n.py','i18n.en.json','publication.py','account_ui.py','config.json','website_conversions.py','website_traffic.py']
+FILES=['tracker.py','dashboard.py','dashboard.template.html','i18n.py','i18n.en.json','publication.py','account_ui.py','config.json','website_conversions.py','website_traffic.py','wecom_snapshot.py']
 def prepare(slug):
  profile=PROFILES[slug];runtime=ROOT/'.private'/slug;runtime.mkdir(parents=True,exist_ok=True,mode=0o700)
  for name in FILES:shutil.copy2(ROOT/name,runtime/name)
@@ -41,12 +42,14 @@ def collect(slug,backfill=False):
 def publish(slug):
  profile,runtime=prepare(slug);verify(runtime/'baidu.sqlite3');export(runtime)
  out=ROOT/'accounts'/slug/'data';out.parent.mkdir(parents=True,exist_ok=True)
- shutil.copytree(runtime/'data',out,dirs_exist_ok=True,ignore=shutil.ignore_patterns(FILENAME,SSW_FILENAME,HOMEPAGE_FILENAME,TRAFFIC_FILENAME))
+ shutil.copytree(runtime/'data',out,dirs_exist_ok=True,ignore=shutil.ignore_patterns(FILENAME,SSW_FILENAME,HOMEPAGE_FILENAME,TRAFFIC_FILENAME,WECOM_FILENAME))
  build_one(slug)
 
 def build_one(slug):
  profile,runtime=prepare(slug);source=ROOT/'accounts'/slug/'data'
  if not (source/'public.sqlite3').exists():raise ValueError('No public history for '+slug)
+ if slug=='ssw' and not (source/WECOM_FILENAME).exists():
+  (runtime/'data'/WECOM_FILENAME).unlink(missing_ok=True)
  shutil.copytree(source,runtime/'data',dirs_exist_ok=True)
  subprocess.run([sys.executable,str(runtime/'dashboard.py'),'--public'],check=True)
  shutil.copytree(runtime/'report',ROOT/'report'/slug,dirs_exist_ok=True)
