@@ -2,7 +2,7 @@
 import base64,datetime as dt,json,sqlite3
 from pathlib import Path
 from i18n import english_template
-from website_conversions import FILENAME, SSW_FIELDS, SSW_FILENAME, SSW_HOMEPAGE_FIELDS, SSW_HOMEPAGE_FILENAME, TINA_PAID_FIELDS, TINA_PAID_FILENAME, load_rows
+from website_conversions import FILENAME, SSW_FIELDS, SSW_FILENAME, HOMEPAGE_FIELDS, HOMEPAGE_FILENAME, TINA_PAID_FIELDS, TINA_PAID_FILENAME, load_rows
 ROOT=Path(__file__).resolve().parent
 
 def build_dashboard(public=False):
@@ -36,7 +36,8 @@ def build_dashboard(public=False):
     data['encrypted_posthog_cli']=base64.b64encode(encrypted).decode('ascii')
  elif profile['slug']=='ssw':
   data['ssw_paid_website_conversions']=load_rows(ROOT/'data'/SSW_FILENAME,SSW_FIELDS)
-  data['ssw_homepage_views']=load_rows(ROOT/'data'/SSW_HOMEPAGE_FILENAME,SSW_HOMEPAGE_FIELDS)
+ if profile['slug'] in ('tinacms','ssw'):
+  data['homepage_views']=load_rows(ROOT/'data'/HOMEPAGE_FILENAME,HOMEPAGE_FIELDS)
  template=(ROOT/'dashboard.template.html').read_text()
  if public:
   from publication import public_template
