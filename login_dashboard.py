@@ -303,6 +303,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     modes = parser.add_mutually_exclusive_group()
     modes.add_argument('--check-upstream', action='store_true', help='Check Git report data')
+    modes.add_argument('--check-posthog-key', action='store_true', help='Validate the Tina CLI key from standard input')
     modes.add_argument('--hash-password', action='store_true', help='Hash a UTF-8 password from standard input')
     args = parser.parse_args()
     if args.hash_password:
@@ -310,6 +311,18 @@ if __name__ == '__main__':
             print(hash_password(sys.stdin.buffer.readline(MAX_PASSWORD_BYTES + 3).rstrip(b'\r\n')))
         except ValueError as error:
             raise SystemExit(str(error))
+        raise SystemExit
+    if args.check_posthog_key:
+        try:
+            key = key_bytes(sys.stdin.buffer.readline(67).strip().decode('ascii'))
+            path, header, _, fields = SNAPSHOTS['tinacms']
+            snapshot = source_bytes(path, int(time.monotonic() // 180), 16_384)
+            decrypt_snapshot(snapshot, key, header, fields)
+        except InvalidTag:
+            raise SystemExit('This key does not match the Tina CLI snapshot.')
+        except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
+            raise SystemExit('Could not validate the Tina CLI key and snapshot.')
+        print('Tina CLI key validated.')
         raise SystemExit
     if args.check_upstream:
         check_upstream()

@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([switch]$Initialize, [switch]$InstallTask)
+param([switch]$Initialize, [switch]$InstallTask, [switch]$UpdatePostHogKey)
 
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
@@ -13,6 +13,43 @@ function Read-PasswordField([string]$Message) {
     $credential = Get-Credential -UserName 'Baidu.Ads' -Message $Message
     if (-not $credential -or -not $credential.Password.Length) { throw 'Setup cancelled.' }
     return $credential
+}
+
+function Save-LoginConfig($config) {
+    $staged = Join-Path $private ('dashboard-login-' + [guid]::NewGuid().ToString('N') + '.xml')
+    try {
+        $config | Export-Clixml -Path $staged
+        if (Test-Path -LiteralPath $loginPath) {
+            [IO.File]::Replace($staged, $loginPath, [NullString]::Value)
+        } else {
+            [IO.File]::Move($staged, $loginPath)
+        }
+    } finally {
+        if (Test-Path -LiteralPath $staged) { Remove-Item -LiteralPath $staged }
+    }
+}
+
+if ($UpdatePostHogKey) {
+    if ($Initialize -or $InstallTask) { throw 'Run -UpdatePostHogKey on its own.' }
+    $config = Import-Clixml -LiteralPath $loginPath
+    $credential = Read-PasswordField 'Enter the 64-character Tina CLI viewing key from Keeper'
+    try {
+        $key = $credential.GetNetworkCredential().Password.Trim()
+        if ($key -cnotmatch '^[0-9a-fA-F]{64}$') { throw 'Enter a 64-character hexadecimal viewing key.' }
+        $key | & $python $appPath --check-posthog-key
+        if ($LASTEXITCODE -ne 0) { throw 'Tina CLI key validation failed. The previous settings are still in place.' }
+        $config.POSTHOG_CLI_SNAPSHOT_KEY = ConvertTo-SecureString $key -AsPlainText -Force
+        Save-LoginConfig $config
+    } finally {
+        $key = $credential = $null
+    }
+    $taskName = 'baidu-ads-dashboard-login'
+    if ((Get-ScheduledTask -TaskName $taskName).State -eq 'Running') {
+        Stop-ScheduledTask -TaskName $taskName
+    }
+    Start-ScheduledTask -TaskName $taskName
+    'Tina CLI key saved and dashboard task restarted.'
+    exit 0
 }
 
 if ($Initialize) {
@@ -60,21 +97,11 @@ if ($Initialize) {
         [Array]::Clear($bytes, 0, $bytes.Length)
         $random.Dispose()
     }
-    $staged = Join-Path $private ('dashboard-login-' + [guid]::NewGuid().ToString('N') + '.xml')
-    try {
-        @{
-            BAIDU_ADS_LOGIN_USERNAME = $username
-            BAIDU_ADS_PASSWORD_HASH = $passwordHash
-            POSTHOG_CLI_SNAPSHOT_KEY = $posthogKey
-            BAIDU_ADS_SESSION_KEY = $sessionKey
-        } | Export-Clixml -Path $staged
-        if (Test-Path -LiteralPath $loginPath) {
-            [IO.File]::Replace($staged, $loginPath, [NullString]::Value)
-        } else {
-            [IO.File]::Move($staged, $loginPath)
-        }
-    } finally {
-        if (Test-Path -LiteralPath $staged) { Remove-Item -LiteralPath $staged }
+    Save-LoginConfig @{
+        BAIDU_ADS_LOGIN_USERNAME = $username
+        BAIDU_ADS_PASSWORD_HASH = $passwordHash
+        POSTHOG_CLI_SNAPSHOT_KEY = $posthogKey
+        BAIDU_ADS_SESSION_KEY = $sessionKey
     }
     "Dashboard login settings saved. Username: $username"
 }
