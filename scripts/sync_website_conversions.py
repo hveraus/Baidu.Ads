@@ -128,6 +128,17 @@ def fetch_homepage_day(config, day, hosts):
  return {'date':day.isoformat(),'homepage_views':views}
 
 
+def validate_site(config, hosts, name):
+ site=config['site_id']
+ if type(site) is not int or site<=0:
+  raise ValueError(f'Configure the {name} site ID')
+ sites=tongji(config,'getSiteList')['list']
+ if not any(row.get('site_id')==site and row.get('status')==0 and
+            urlsplit(row['domain'] if '://' in row['domain'] else '//'+row['domain']).hostname in hosts
+            for row in sites):
+  raise ValueError(f'The configured Baidu Tongji site is not an active {name} site')
+
+
 def fetch_rows(config, previous, *, end, site_slug='tinacms'):
  name,hosts,fields,_=SITES[site_slug]
  site=config['site_id']
@@ -137,11 +148,7 @@ def fetch_rows(config, previous, *, end, site_slug='tinacms'):
  first=dt.date.fromisoformat(config['start_date'])
  if first>end:
   return []
- sites=tongji(config,'getSiteList')['list']
- if not any(row.get('site_id')==site and row.get('status')==0 and
-            urlsplit(row['domain'] if '://' in row['domain'] else '//'+row['domain']).hostname in hosts
-            for row in sites):
-  raise ValueError(f'The configured Baidu Tongji site is not an active {name} site')
+ validate_site(config,hosts,name)
  latest=max((dt.date.fromisoformat(r['date']) for r in previous if r['date']<=end.isoformat()),default=first)
  start=max(first,latest-dt.timedelta(days=6))
  all_rows=[]

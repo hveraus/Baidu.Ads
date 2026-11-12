@@ -12,11 +12,15 @@ def export_website_conversions(path,rows,fields=FIELDS):
  merged={row['date']:row for row in previous}
  merged.update((row['date'],row) for row in validate_rows(rows,fields))
  clean=validate_rows(list(merged.values()),fields)
- if clean==previous:return
+ if clean!=previous:
+  write_aggregate(path,clean)
+
+
+def write_aggregate(path,data):
  with tempfile.NamedTemporaryFile(mode='w',encoding='utf-8',dir=path.parent,delete=False) as file:
   temp=Path(file.name)
   try:
-   file.write(json.dumps(clean,indent=2)+'\n')
+   file.write(json.dumps(data,indent=2)+'\n')
    file.close()
    temp.replace(path)
   finally:

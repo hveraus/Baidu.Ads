@@ -2,7 +2,8 @@
 import base64,datetime as dt,json,sqlite3
 from pathlib import Path
 from i18n import english_template
-from website_conversions import FILENAME, SSW_FIELDS, SSW_FILENAME, HOMEPAGE_FIELDS, HOMEPAGE_FILENAME, TINA_PAID_FIELDS, TINA_PAID_FILENAME, load_rows
+from website_conversions import FILENAME, SSW_FIELDS, SSW_FILENAME, TINA_PAID_FIELDS, TINA_PAID_FILENAME, load_rows
+from website_traffic import TRAFFIC_FILENAME, load_traffic
 ROOT=Path(__file__).resolve().parent
 
 def build_dashboard(public=False):
@@ -37,7 +38,7 @@ def build_dashboard(public=False):
  elif profile['slug']=='ssw':
   data['ssw_paid_website_conversions']=load_rows(ROOT/'data'/SSW_FILENAME,SSW_FIELDS)
  if profile['slug'] in ('tinacms','ssw'):
-  data['homepage_views']=load_rows(ROOT/'data'/HOMEPAGE_FILENAME,HOMEPAGE_FIELDS)
+  data['website_traffic']=load_traffic(ROOT/'data'/TRAFFIC_FILENAME)
  template=(ROOT/'dashboard.template.html').read_text()
  if public:
   from publication import public_template
