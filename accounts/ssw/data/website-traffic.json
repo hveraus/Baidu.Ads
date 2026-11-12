@@ -1,0 +1,23 @@
+{
+  "ranges": [
+    {
+      "start": "2026-11-11",
+      "end": "2026-11-11",
+      "pv_count": 10,
+      "visitor_count": 4,
+      "ip_count": 4,
+      "avg_visit_time": 47,
+      "trans_count": 1
+    }
+  ],
+  "days": [
+    {
+      "date": "2026-11-11",
+      "pv_count": 10,
+      "visitor_count": 4,
+      "ip_count": 4,
+      "avg_visit_time": 47,
+      "trans_count": 1
+    }
+  ]
+}
