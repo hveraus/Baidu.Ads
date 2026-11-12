@@ -31,9 +31,9 @@ Git 刷新按三分钟窗口检查，连接中断时读取最近一次成功拉�
 
 ## HTTPS
 
-阿里云服务器的 Nginx 安装目录为 `C:\SSW\Nginx`。先运行 `.\scripts\deploy_dashboard_proxy.ps1` 启用子域独立的 ACME HTTP 验证入口。在 Certify Certificate Manager 为 `ads.ssw.com.cn` 新建证书，使用 HTTP-01 和站点根目录 `C:\SSW\Nginx\acme`。将完整证书链与私钥导出到 `C:\SSW\Certificate\BaiduAds\fullchain.pem` 和 `C:\SSW\Certificate\BaiduAds\private.pem`，并在续期导出后重载 Nginx。
+阿里云服务器的 Nginx 安装目录为 `C:\SSW\Nginx`。以管理员身份运行 `.\scripts\deploy_dashboard_proxy.ps1 -ReloadAsSystem` 启用子域独立的 ACME HTTP 验证入口。在 Certify Certificate Manager 为 `ads.ssw.com.cn` 新建证书，使用 HTTP-01 和站点根目录 `C:\SSW\Nginx\acme`。将完整证书链与私钥导出到 `C:\SSW\Certificate\BaiduAds\fullchain.pem` 和 `C:\SSW\Certificate\BaiduAds\private.pem`，并在续期导出后重载 Nginx。
 
-签发证书后运行 `.\scripts\deploy_dashboard_proxy.ps1 -EnableHttps` 启用 HTTPS 反向代理。脚本先运行 `nginx -t`，通过后才重载。HTTPS 服务代理至 `127.0.0.1:8765`，等待登录服务启动时返回 503。
+签发证书后运行 `.\scripts\deploy_dashboard_proxy.ps1 -EnableHttps -ReloadAsSystem` 启用 HTTPS 反向代理。脚本先运行 `nginx -t`，通过后由一次性 Windows 任务使用现有 Nginx 服务的 SYSTEM 身份重载。HTTPS 服务代理至 `127.0.0.1:8765`，等待登录服务启动时返回 503。
 
 ## 上线核对
 

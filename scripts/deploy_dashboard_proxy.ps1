@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
     [switch]$EnableHttps,
+    [switch]$ReloadAsSystem,
     [string]$NginxRoot = 'C:\SSW\Nginx',
     [string]$CertificateDirectory = 'C:\SSW\Certificate\BaiduAds'
 )
@@ -67,6 +68,39 @@ server {
     $siteConfig += "`r`n" + $httpsConfig.Replace('FULLCHAIN', $fullchain.Replace('\', '/')).Replace('PRIVATE_KEY', $privateKey.Replace('\', '/'))
 }
 
+function Invoke-NginxReload {
+    if (-not $ReloadAsSystem) {
+        $reload = Start-Process -FilePath $nginx -ArgumentList '-s', 'reload' -NoNewWindow -Wait -PassThru
+        if ($reload.ExitCode -ne 0) { throw 'Nginx reload failed.' }
+        return
+    }
+
+    # The service runs in session 0 as SYSTEM. Signal it without restarting it.
+    $taskName = 'BaiduAds-NginxReload-' + [guid]::NewGuid().ToString('N')
+    $action = New-ScheduledTaskAction -Execute $nginx -Argument '-s reload' -WorkingDirectory $NginxRoot
+    $principal = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount
+    $settings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan -Minutes 1)
+    $null = Register-ScheduledTask -TaskName $taskName -Action $action -Principal $principal -Settings $settings
+    try {
+        $previousRun = (Get-ScheduledTaskInfo -TaskName $taskName).LastRunTime
+        Start-ScheduledTask -TaskName $taskName
+        $timer = [Diagnostics.Stopwatch]::StartNew()
+        do {
+            Start-Sleep -Milliseconds 250
+            $task = Get-ScheduledTask -TaskName $taskName
+            $run = Get-ScheduledTaskInfo -TaskName $taskName
+            if ($run.LastRunTime -ne $previousRun -and $task.State -eq 'Ready') {
+                if ($run.LastTaskResult -ne 0) { throw "Nginx reload failed with exit code $($run.LastTaskResult)." }
+                return
+            }
+        } while ($timer.Elapsed.TotalSeconds -lt 65)
+        Stop-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+        throw 'Timed out waiting for the Nginx reload task.'
+    } finally {
+        Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
+    }
+}
+
 $originalMain = [IO.File]::ReadAllBytes($main)
 # Preserve the existing configuration bytes, including comments in other encodings.
 $byteEncoding = [Text.Encoding]::GetEncoding(28591)
@@ -96,8 +130,7 @@ try {
     }
     $check = Start-Process -FilePath $nginx -ArgumentList '-t' -NoNewWindow -Wait -PassThru
     if ($check.ExitCode -ne 0) { throw 'Nginx rejected the new configuration.' }
-    $reload = Start-Process -FilePath $nginx -ArgumentList '-s', 'reload' -NoNewWindow -Wait -PassThru
-    if ($reload.ExitCode -ne 0) { throw 'Nginx reload failed.' }
+    Invoke-NginxReload
 } catch {
     if (-not $hasInclude) { [IO.File]::WriteAllBytes($main, $originalMain) }
     if ($null -ne $originalSite) {
