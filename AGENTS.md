@@ -46,6 +46,6 @@
 ## Dashboard GitHub sign-in
 
 - The login service is prepared for `https://ads.ssw.com.cn/` on the SSW Aliyun Windows server. It gates all three bilingual dashboards, uses a seven-day browser session, and allows GitHub user `hveraus` (immutable ID `4745861`). It decrypts the existing Tina CLI and SSW WeCom aggregates only after authorization.
-- On 2026-11-12, the Aliyun Windows checkout `%USERPROFILE%\baidu-ads-login` and its virtual environment were installed. The server DNS resolver reported that `ads.ssw.com.cn` did not exist.
+- On 2026-11-12, the Aliyun Windows checkout `%USERPROFILE%\baidu-ads-login` and its virtual environment were installed. Git access from the server worked, while the GitHub raw-content hostname reset TLS connections. The login service refreshes data using Git. The server DNS resolver reported that `ads.ssw.com.cn` did not exist.
 - Follow [deployment and cutover](docs/DASHBOARD_LOGIN.md) to register the GitHub OAuth App, provision DNS and TLS, and configure the Windows service under the WeCom collector user. The DPAPI login config belongs in `%LOCALAPPDATA%\Baidu.Ads\dashboard-login.xml`. Keep OAuth and snapshot keys out of Git and workflow logs.
 - Enable `BAIDU_ADS_REQUIRE_LOGIN=true` only after verifying the live sign-in, all dashboards, both private panels, and sign-out. Pages then publishes only the redirect entry. The existing public repository still contains public advertising aggregates and encrypted private snapshots. Collection schedules remain independent of login.

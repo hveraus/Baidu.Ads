@@ -2,7 +2,7 @@
 
 登录入口为 `https://ads.ssw.com.cn/`。目前处于部署准备阶段，完成下列上线核对前，原 Pages 继续提供静态报表。上线后，TinaCMS、YakShaver、SSW 的中英文页面共用一个 GitHub 登录会话，允许 GitHub 用户 `hveraus`（用户 ID `4745861`）查看。会话有效期 7 天，可以从页头退出。
 
-服务端在登录通过后从主分支读取广告报表与加密快照，在内存中解密中国区 Tina CLI 和 SSW 微信客服汇总。采集任务继续沿用现有的 GitHub Actions 和阿里云 Windows 任务。GitHub 仓库及历史中的广告汇总仍公开，PostHog 和微信客服快照仍以密文保存。
+服务端在登录通过后通过 Git 定期拉取主分支，读取广告报表与加密快照，在内存中解密中国区 Tina CLI 和 SSW 微信客服汇总。采集任务继续沿用现有的 GitHub Actions 和阿里云 Windows 任务。GitHub 仓库及历史中的广告汇总仍公开，PostHog 和微信客服快照仍以密文保存。
 
 ## GitHub 和域名
 
@@ -19,8 +19,11 @@ git clone https://github.com/hveraus/Baidu.Ads.git baidu-ads-login
 Set-Location baidu-ads-login
 py -3 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --only-binary=:all: -r requirements.txt
+.\.venv\Scripts\python.exe login_dashboard.py --check-upstream
 .\scripts\run_dashboard_login.ps1 -Initialize
 ```
+
+Git 刷新按三分钟窗口检查，连接中断时读取最近一次成功拉取的提交。
 
 初始化依次输入 OAuth Client ID、OAuth Client Secret、Keeper 中的 `Baidu.Ads PostHog 查看密钥`。脚本复用已由微信客服采集任务存入 DPAPI 的查看密钥，生成独立会话签名密钥并保存为同一用户下的 `%LOCALAPPDATA%\Baidu.Ads\dashboard-login.xml`。在设置或轮换时输入密钥，保留文件的默认用户权限。
 
