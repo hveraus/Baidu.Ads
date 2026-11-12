@@ -2,15 +2,15 @@
 
 中文 / English 本地与在线分析工具。通过百度营销官方 API 收集 16 类报告，包含全部当前关键词及其表现、实际搜索词、广告文案、落地页、地域、设备、匹配、小时、转化和无效点击。
 
-**在线页面：[hveraus.github.io/Baidu.Ads](https://hveraus.github.io/Baidu.Ads/)**
+**在线页面：[ads.ssw.com.cn](https://ads.ssw.com.cn/)**
 
-> 本仓库与 GitHub Pages 页面公开。投放统计、关键词、搜索词和广告内容可被访问者看到。百度令牌和访客 IP 不进入公开页面或明文数据；完整原始数据以加密备份保存。
+> 在线页面需要看板账号登录。GitHub 仓库公开，仓库里的投放统计、关键词、搜索词和广告内容可被访问者看到。百度令牌和访客 IP 不进入公开页面或明文数据；完整原始数据以加密备份保存。
 
 ## 换电脑怎么用
 
 ### 只查看 / 分享
 
-直接打开在线页面，不需要百度账号或令牌。[整站登录部署说明](docs/DASHBOARD_LOGIN.md)。右上角切换中文 / English。日期、筛选、搜索、导出和关键词详情均可在浏览器中使用。行动勾选与搜索词复核仅保存在当前浏览器，不会修改广告，也不会同步给其他访问者。
+用看板账号密码登录，TinaCMS、YakShaver 和 SSW 共用一个登录会话。旧的 GitHub Pages 书签会自动跳转。[整站登录部署说明](docs/DASHBOARD_LOGIN.md)。右上角切换中文 / English。日期、筛选、搜索、导出和关键词详情均可在浏览器中使用。行动勾选与搜索词复核仅保存在当前浏览器，不会修改广告，也不会同步给其他访问者。
 
 ### 获取代码和历史数据
 
@@ -68,7 +68,7 @@ python tracker.py
 |---|---|---|
 | UI、采集方法、报告配置、文档、测试 | Git 仓库 | 是 |
 | 全部公开统计历史、CSV、去 IP 的 SQLite | `data/` | 是 |
-| 中英文页面 | `report/` 与 Pages | 是 |
+| 中英文报表 | GitHub 仓库中的 `report/` | 是 |
 | 完整原始数据、访客 IP、运行记录和凭据的加密包 | `backups/private-data.enc` | 只有密文公开 |
 | 百度访问令牌 | `BAIDU_CREDENTIALS_JSON` Repository Secret；本机 `.credentials.json` | 否 |
 | 原始数据恢复密钥 | `DATA_BACKUP_KEY` Repository Secret；本机 `.backup-key` 和单独交付的恢复文件 | 否 |
