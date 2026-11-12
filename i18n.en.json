@@ -323,7 +323,6 @@
   "请选择有效日期，开始日期不能晚于结束日期": "Choose a valid date range. The start date cannot be after the end date.",
   "最近采集有失败项目": "Some reports failed in the latest run",
   "，请到“数据与口径”查看；已有历史数据仍可查看。": ". See Data & definitions for details. Existing historical data is still available.",
-  "API 未记录转化，请先核查网站表单、电话与转化追踪，不能据此判断没有真实询盘。": "The API has no conversion records. Check website forms, phone records and tracking before concluding that there were no actual enquiries.",
   "所选日期没有返回消费记录。可切换“最近90天”查看历史投放。": "No spend was returned for these dates. Select Last 90 days to review earlier activity.",
   "总消费": "Total spend",
   "所选日期内的实际消费": "Actual spend for the selected dates",
