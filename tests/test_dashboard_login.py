@@ -93,6 +93,12 @@ class DashboardLoginTests(unittest.TestCase):
                 response = self.get(path)
                 self.assertEqual(response.status_code, 200, path)
                 self.assertEqual(response.headers['Cache-Control'], 'no-store')
+                header = response.data.split(b'</header>', 1)[0]
+                refresh, signout = ('Refresh report', 'Sign out') if path.endswith('/en.html') else ('刷新报表', '退出登录')
+                self.assertEqual(header.count(b'class="header-icon"'), 2)
+                self.assertEqual(header.count(b'<svg '), 2)
+                self.assertLess(header.index(f'aria-label="{refresh}"'.encode()), header.index(b'id="language"'))
+                self.assertLess(header.index(b'id="language"'), header.index(f'aria-label="{signout}"'.encode()))
                 nonce = re.search(rb'<script nonce="([^"]+)"', response.data)[1].decode()
                 self.assertIn(f"'nonce-{nonce}'", response.headers['Content-Security-Policy'])
                 match = re.search(rb'id="report-data" type="application/json">(.*?)</script>', response.data)
