@@ -95,7 +95,7 @@ function websiteConversions(){
   return metric(label,sessions?pct(conversions/sessions):'—',note);
  }).join('');
 }
-let posthogSnapshot=null;
+let posthogSnapshot=DATA.private_posthog_cli??null;
 const posthogSeries=[['started','NPX 启动次数'],['finished','NPX 完成次数']];
 function posthogCli(){
  const snapshot=posthogSnapshot;
@@ -174,9 +174,9 @@ bindSnapshotUnlock('posthog-cli',DATA.encrypted_posthog_cli,'BAIDU-ADS-POSTHOG-v
  posthogSnapshot=snapshot;
  posthogCli();
 });
-let wecomSnapshot=null;
+let wecomSnapshot=DATA.private_wecom_consultations??null;
 function wecomConsultations(){
- if(!DATA.encrypted_wecom_consultations)return;
+ if(!DATA.encrypted_wecom_consultations&&!wecomSnapshot)return;
  $('wecom-consultations').hidden=false;
  const snapshot=wecomSnapshot;
  $('wecom-consultations-unlock').hidden=!!snapshot;
