@@ -3,6 +3,8 @@
 param(
     [Parameter(Mandatory, ParameterSetName = 'Initialize')]
     [switch]$Initialize,
+    [Parameter(ParameterSetName = 'Initialize')]
+    [string]$CorpId,
     [Parameter(Mandatory, ParameterSetName = 'Check')]
     [switch]$Check
 )
@@ -19,10 +21,30 @@ function Read-Secret([string]$Message) {
 }
 
 if ($Initialize) {
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    if (-not $CorpId) { $CorpId = (Read-Host 'WeCom CorpID').Trim() }
+    $appSecret = Read-Secret 'Enter the SSW customer service app Secret in the password field'
+    $base = 'https://qyapi.weixin.qq.com/cgi-bin'
+    $secret = [Uri]::EscapeDataString(([pscredential]::new('WeCom', $appSecret)).GetNetworkCredential().Password.Trim())
+    $encodedCorp = [Uri]::EscapeDataString($CorpId)
+    try {
+        $auth = Invoke-RestMethod -Uri "$base/gettoken?corpid=$encodedCorp&corpsecret=$secret" -TimeoutSec 20
+        if ($auth.errcode -ne 0) { throw "WeCom gettoken errcode=$($auth.errcode)" }
+        $accounts = Invoke-RestMethod -Uri "$base/kf/account/list?access_token=$($auth.access_token)" -TimeoutSec 20
+        if ($accounts.errcode -ne 0) { throw "WeCom account/list errcode=$($accounts.errcode)" }
+    } catch {
+        if ($_.Exception.Message -match '^WeCom (gettoken|account/list) errcode=\d+$') { throw }
+        throw 'Could not contact the WeCom API from this server.'
+    } finally {
+        Remove-Variable secret,auth -ErrorAction SilentlyContinue
+    }
+    $selectedAccounts = @($accounts.account_list | Where-Object { $_.open_kfid -and ($_.name -replace '[^a-z0-9]', '') -eq 'sswchina' })
+    if ($selectedAccounts.Count -ne 1) { throw 'Expected exactly one SSW China customer service account.' }
+    'Found the SSW China customer service account.'
     $config = @{
-        WECOM_CORP_ID = Read-Host 'WeCom CorpID'
-        WECOM_OPEN_KFID = Read-Host 'SSW website customer service account open_kfid'
-        WECOM_APP_SECRET = Read-Secret 'Enter the SSW customer service app Secret in the password field'
+        WECOM_CORP_ID = $CorpId
+        WECOM_OPEN_KFID = $selectedAccounts[0].open_kfid
+        WECOM_APP_SECRET = $appSecret
         WECOM_SNAPSHOT_KEY = Read-Secret 'Enter the private viewing key (64 hexadecimal characters) in the password field'
         WECOM_GITHUB_TOKEN = Read-Secret 'Enter the GitHub token for hveraus/Baidu.Ads in the password field'
     }

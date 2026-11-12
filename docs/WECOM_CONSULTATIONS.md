@@ -4,7 +4,7 @@ SSW 看板使用微信客服统计接口 `kf/get_corp_statistic` 的 `customer_c
 
 ## 首次设置
 
-1. 在智鹏瑞尔企业微信后台，确认 **SSW 客服统计** 已出现在 **App Management → WeChat Customer Service → API → Apps that can call APIs**。在该自建应用中配置调用服务器实际使用的公网出口 IP。核对 `ssw.com.cn` 当前客服账号的 `open_kfid`。
+1. 在智鹏瑞尔企业微信后台，确认 **SSW 客服统计** 已出现在 **App Management → WeChat Customer Service → API → Apps that can call APIs**。在该自建应用中配置调用服务器实际使用的公网出口 IP。当前网站客服账号为 **SSW China**，初始化时自动查找并固定该账号的 `open_kfid`。
 2. 在已列为可信 IP 的阿里云 Windows 服务器上，用运行计划任务的 Windows 账号检出本仓库，安装 Python 3.12 或更新版本，创建虚拟环境。
 
    ```powershell
@@ -12,7 +12,7 @@ SSW 看板使用微信客服统计接口 `kf/get_corp_statistic` 的 `customer_c
    .\.venv\Scripts\python.exe -m pip install --only-binary=:all: -r requirements.txt
    ```
 
-3. 准备企业 ID、自建应用 Secret、客服账号 `open_kfid` 和一把独立的随机 32 字节查看密钥（64 个十六进制字符）。将查看密钥保存在个人密码管理器。GitHub fine-grained PAT 仅选择 `hveraus/Baidu.Ads`，权限为 **Contents: Read and write**。该令牌在 GitHub 的授权范围覆盖整个仓库内容。Windows 配置向导通过密码输入框收集三个密钥。保留默认用户名，把各个密钥填入弹窗的密码栏。向导使用 DPAPI 加密保存，仅同一机器上的同一 Windows 账号可解密。
+3. 准备企业 ID、自建应用 Secret 和一把独立的随机 32 字节查看密钥（64 个十六进制字符）。将查看密钥保存在个人密码管理器。GitHub fine-grained PAT 仅选择 `hveraus/Baidu.Ads`，权限为 **Contents: Read and write**。该令牌在 GitHub 的授权范围覆盖整个仓库内容。Windows 配置向导通过密码输入框收集三个密钥。保留默认用户名，把各个密钥填入弹窗的密码栏。向导使用 DPAPI 加密保存，仅同一机器上的同一 Windows 账号可解密。
 
    ```powershell
    powershell.exe -NoProfile -File .\scripts\run_wecom_consultations.ps1 -Initialize
