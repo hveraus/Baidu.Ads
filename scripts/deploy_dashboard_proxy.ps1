@@ -1,0 +1,145 @@
+[CmdletBinding()]
+param(
+    [switch]$EnableHttps,
+    [switch]$ReloadAsSystem,
+    [string]$NginxRoot = 'C:\SSW\Nginx',
+    [string]$CertificateDirectory = 'C:\SSW\Certificate\BaiduAds'
+)
+
+$ErrorActionPreference = 'Stop'
+$nginx = Join-Path $NginxRoot 'nginx.exe'
+$main = Join-Path $NginxRoot 'conf\nginx.conf'
+$siteFolder = Join-Path $NginxRoot 'conf\baidu-ads-login'
+$site = Join-Path $siteFolder 'site.conf'
+$fullchain = Join-Path $CertificateDirectory 'fullchain.pem'
+$privateKey = Join-Path $CertificateDirectory 'private.pem'
+$webroot = (Join-Path $NginxRoot 'acme').Replace('\', '/')
+
+if (-not (Test-Path -LiteralPath $nginx -PathType Leaf) -or -not (Test-Path -LiteralPath $main -PathType Leaf)) {
+    throw 'Could not locate nginx.exe and conf/nginx.conf.'
+}
+if ($EnableHttps -and (-not (Test-Path -LiteralPath $fullchain -PathType Leaf) -or
+                       -not (Test-Path -LiteralPath $privateKey -PathType Leaf))) {
+    throw 'The dashboard certificate and private key must be present before enabling HTTPS.'
+}
+$httpTarget = 'return 503;'
+if ($EnableHttps) {
+    $httpTarget = 'return 301 https://ads.ssw.com.cn$request_uri;'
+}
+$siteConfig = @'
+server {
+    listen 80;
+    server_name ads.ssw.com.cn;
+    location ^~ /.well-known/acme-challenge/ {
+        root "WEBROOT";
+        default_type text/plain;
+        try_files $uri =404;
+    }
+    location / {
+        HTTP_TARGET
+    }
+}
+'@
+$siteConfig = $siteConfig.Replace('WEBROOT', $webroot).Replace('HTTP_TARGET', $httpTarget)
+if ($EnableHttps) {
+    $httpsConfig = @'
+server {
+    listen 443 ssl;
+    server_name ads.ssw.com.cn;
+    ssl_certificate "FULLCHAIN";
+    ssl_certificate_key "PRIVATE_KEY";
+    ssl_protocols TLSv1.2 TLSv1.3;
+    access_log off;
+    error_log logs/baidu-ads-login.error.log crit;
+
+    location / {
+        proxy_pass http://127.0.0.1:8765;
+        proxy_set_header Host ads.ssw.com.cn;
+        proxy_set_header Connection "";
+        error_page 502 504 =503 @starting;
+    }
+    location @starting {
+        default_type text/plain;
+        add_header Cache-Control "no-store" always;
+        return 503 "Dashboard sign-in is being configured.";
+    }
+}
+'@
+    $siteConfig += "`r`n" + $httpsConfig.Replace('FULLCHAIN', $fullchain.Replace('\', '/')).Replace('PRIVATE_KEY', $privateKey.Replace('\', '/'))
+}
+
+function Invoke-NginxReload {
+    if (-not $ReloadAsSystem) {
+        $reload = Start-Process -FilePath $nginx -ArgumentList '-s', 'reload' -NoNewWindow -Wait -PassThru
+        if ($reload.ExitCode -ne 0) { throw 'Nginx reload failed.' }
+        return
+    }
+
+    # The service runs in session 0 as SYSTEM. Signal it without restarting it.
+    $taskName = 'BaiduAds-NginxReload-' + [guid]::NewGuid().ToString('N')
+    $action = New-ScheduledTaskAction -Execute $nginx -Argument '-s reload' -WorkingDirectory $NginxRoot
+    $principal = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount
+    $settings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan -Minutes 1)
+    $null = Register-ScheduledTask -TaskName $taskName -Action $action -Principal $principal -Settings $settings
+    try {
+        $previousRun = (Get-ScheduledTaskInfo -TaskName $taskName).LastRunTime
+        Start-ScheduledTask -TaskName $taskName
+        $timer = [Diagnostics.Stopwatch]::StartNew()
+        do {
+            Start-Sleep -Milliseconds 250
+            $task = Get-ScheduledTask -TaskName $taskName
+            $run = Get-ScheduledTaskInfo -TaskName $taskName
+            if ($run.LastRunTime -ne $previousRun -and $task.State -eq 'Ready') {
+                if ($run.LastTaskResult -ne 0) { throw "Nginx reload failed with exit code $($run.LastTaskResult)." }
+                return
+            }
+        } while ($timer.Elapsed.TotalSeconds -lt 65)
+        Stop-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+        throw 'Timed out waiting for the Nginx reload task.'
+    } finally {
+        Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
+    }
+}
+
+$originalMain = [IO.File]::ReadAllBytes($main)
+# Preserve the existing configuration bytes, including comments in other encodings.
+$byteEncoding = [Text.Encoding]::GetEncoding(28591)
+$updated = $byteEncoding.GetString($originalMain)
+$include = 'include baidu-ads-login/site.conf;'
+$hasInclude = $updated.Contains($include)
+if (-not $hasInclude) {
+    $http = [regex]::Match($updated, '(?m)^[ \t]*http[ \t]*\{[ \t]*(?=\r?$)')
+    $httpEnd = [regex]::Match($updated, '(?m)^}(?=[\r\n \t]*\z)')
+    if (-not $http.Success -or -not $httpEnd.Success -or $httpEnd.Index -le $http.Index -or
+        $updated -match '(?m)^(?:stream|mail)[ \t]*\{' -or $updated.Contains('ads.ssw.com.cn')) {
+        throw 'Review the existing nginx.conf before adding a dashboard include.'
+    }
+    $updated = $updated.Insert($httpEnd.Index, "    $include`r`n")
+}
+$originalSite = $null
+if (Test-Path -LiteralPath $site -PathType Leaf) {
+    $originalSite = [IO.File]::ReadAllBytes($site)
+}
+$null = New-Item -ItemType Directory -Force -Path $siteFolder
+Push-Location -LiteralPath $NginxRoot
+try {
+    [IO.File]::WriteAllText($site, $siteConfig + "`r`n", [Text.Encoding]::ASCII)
+    if (-not $hasInclude) {
+        Copy-Item -LiteralPath $main -Destination ($main + '.before-baidu-ads-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
+        [IO.File]::WriteAllBytes($main, $byteEncoding.GetBytes($updated))
+    }
+    $check = Start-Process -FilePath $nginx -ArgumentList '-t' -NoNewWindow -Wait -PassThru
+    if ($check.ExitCode -ne 0) { throw 'Nginx rejected the new configuration.' }
+    Invoke-NginxReload
+} catch {
+    if (-not $hasInclude) { [IO.File]::WriteAllBytes($main, $originalMain) }
+    if ($null -ne $originalSite) {
+        [IO.File]::WriteAllBytes($site, $originalSite)
+    } else {
+        Remove-Item -LiteralPath $site -ErrorAction SilentlyContinue
+    }
+    throw
+} finally {
+    Pop-Location
+}
+if ($EnableHttps) { 'Dashboard HTTPS proxy configured.' } else { 'Dashboard ACME HTTP route configured.' }
