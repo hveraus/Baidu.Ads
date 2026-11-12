@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Collect encrypted daily consultation counts from the WeCom trusted IP."""
+"""Collect encrypted daily consultation and customer message counts from the WeCom trusted IP."""
 import argparse
 import base64
 import datetime as dt
@@ -79,12 +79,15 @@ def normalize_rows(results, start, end):
         statistic = row.get('statistic')
         if statistic is not None and not isinstance(statistic, dict):
             raise ValueError('WeCom statistic must be an object')
-        count = (statistic or {}).get('customer_cnt')
-        if count is not None and (type(count) is not int or not 0 <= count < 2**53):
-            raise ValueError('WeCom returned an invalid consultation count')
-        counts[day] = count
-    return [{'date': day.isoformat(), 'customers': count} for day, count in sorted(counts.items())
-            if count is not None]
+        daily = {}
+        for source, field in (('customer_cnt', 'customers'), ('customer_msg_cnt', 'messages')):
+            count = (statistic or {}).get(source)
+            if count is not None:
+                if type(count) is not int or not 0 <= count < 2**53:
+                    raise ValueError(f'WeCom returned an invalid {source}')
+                daily[field] = count
+        counts[day] = daily
+    return [{'date': day.isoformat(), **daily} for day, daily in sorted(counts.items()) if daily]
 
 
 def fetch_rows(token, account, through):
@@ -114,7 +117,7 @@ def encrypt_snapshot(rows, through, key):
 def publish_snapshot(encrypted, token):
     headers = {'Accept': 'application/vnd.github+json', 'Authorization': f'Bearer {token}',
                'X-GitHub-Api-Version': '2022-11-28'}
-    payload = {'message': 'Update encrypted SSW WeCom consultation totals', 'branch': 'main',
+    payload = {'message': 'Update encrypted SSW WeCom customer service totals', 'branch': 'main',
                'content': base64.b64encode(encrypted).decode('ascii')}
     try:
         current = request_json(GITHUB_FILE, query={'ref': 'main'}, headers=headers)

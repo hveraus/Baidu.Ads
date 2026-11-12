@@ -17,10 +17,13 @@ class WeComConsultationTests(unittest.TestCase):
         first = day - dt.timedelta(days=1)
         rows = normalize_rows([
             {'stat_time': timestamp(first - dt.timedelta(days=1))},
-            {'stat_time': timestamp(first), 'statistic': {}},
-            {'stat_time': timestamp(day), 'statistic': {'customer_cnt': 0, 'session_cnt': 2}},
+            {'stat_time': timestamp(first), 'statistic': {'customer_cnt': 0, 'session_cnt': 2}},
+            {'stat_time': timestamp(day), 'statistic': {'customer_msg_cnt': 0, 'session_cnt': 2}},
         ], first - dt.timedelta(days=1), day)
-        self.assertEqual(rows, [{'date': day.isoformat(), 'customers': 0}])
+        self.assertEqual(rows, [
+            {'date': first.isoformat(), 'customers': 0},
+            {'date': day.isoformat(), 'messages': 0},
+        ])
         key = bytes(range(32))
         snapshot = encrypt_snapshot(rows, day, key.hex())
         offset = len(HEADER)
