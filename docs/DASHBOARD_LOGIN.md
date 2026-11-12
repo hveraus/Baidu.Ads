@@ -1,6 +1,6 @@
 # Baidu.Ads 看板登录
 
-登录入口为 `https://ads.ssw.com.cn/`。目前处于部署准备阶段，完成下列上线核对前，原 Pages 继续提供静态报表。上线后，TinaCMS、YakShaver、SSW 的中英文页面共用一个 GitHub 登录会话，允许 GitHub 用户 `hveraus`（用户 ID `4745861`）查看。会话有效期 7 天，可以从页头退出。
+登录入口为 `https://ads.ssw.com.cn/`。HTTPS 已启用，登录服务等待配置 GitHub OAuth。完成下列上线核对前，原 Pages 继续提供静态报表。上线后，TinaCMS、YakShaver、SSW 的中英文页面共用一个 GitHub 登录会话，允许 GitHub 用户 `hveraus`（用户 ID `4745861`）查看。会话有效期 7 天，可以从页头退出。
 
 服务端在登录通过后通过 Git 定期拉取主分支，读取广告报表与加密快照，在内存中解密中国区 Tina CLI 和 SSW 微信客服汇总。采集任务继续沿用现有的 GitHub Actions 和阿里云 Windows 任务。GitHub 仓库及历史中的广告汇总仍公开，PostHog 和微信客服快照仍以密文保存。
 
@@ -31,7 +31,7 @@ Git 刷新按三分钟窗口检查，连接中断时读取最近一次成功拉�
 
 ## HTTPS
 
-阿里云服务器的 Nginx 安装目录为 `C:\SSW\Nginx`。以管理员身份运行 `.\scripts\deploy_dashboard_proxy.ps1 -ReloadAsSystem` 启用子域独立的 ACME HTTP 验证入口。在 Certify Certificate Manager 为 `ads.ssw.com.cn` 新建证书，使用 HTTP-01 和站点根目录 `C:\SSW\Nginx\acme`。将完整证书链与私钥导出到 `C:\SSW\Certificate\BaiduAds\fullchain.pem` 和 `C:\SSW\Certificate\BaiduAds\private.pem`，并在续期导出后重载 Nginx。
+阿里云服务器的 Nginx 安装目录为 `C:\SSW\Nginx`。以管理员身份运行 `.\scripts\deploy_dashboard_proxy.ps1 -ReloadAsSystem` 启用子域独立的 ACME HTTP 验证入口。在 Certify Certificate Manager 为 `ads.ssw.com.cn` 新建证书，使用 HTTP-01 和站点根目录 `C:\SSW\Nginx\acme`。将完整证书链与私钥导出到 `C:\SSW\Certificate\BaiduAds\fullchain.pem` 和 `C:\SSW\Certificate\BaiduAds\private.pem`，并在续期导出后重载 Nginx。将证书目录及私钥的访问权限限制在 SYSTEM 和 Administrators。Certify 的重载任务运行 `C:/SSW/Nginx/nginx.exe`，参数为 `-p C:/SSW/Nginx/ -s reload`。任务放在 PEM 导出之后，仅在成功时运行。
 
 签发证书后运行 `.\scripts\deploy_dashboard_proxy.ps1 -EnableHttps -ReloadAsSystem` 启用 HTTPS 反向代理。脚本先运行 `nginx -t`，通过后由一次性 Windows 任务使用现有 Nginx 服务的 SYSTEM 身份重载。HTTPS 服务代理至 `127.0.0.1:8765`，等待登录服务启动时返回 503。
 
