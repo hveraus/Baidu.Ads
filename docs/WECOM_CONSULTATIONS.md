@@ -12,7 +12,7 @@ SSW 看板使用微信客服统计接口 `kf/get_corp_statistic` 的 `customer_c
    .\.venv\Scripts\python.exe -m pip install --only-binary=:all: -r requirements.txt
    ```
 
-3. 准备企业 ID、自建应用 Secret、客服账号 `open_kfid` 和一把独立的随机 32 字节查看密钥（64 个十六进制字符）。将查看密钥保存在个人密码管理器。GitHub fine-grained PAT 仅选择 `hveraus/Baidu.Ads`，权限为 **Contents: Read and write**。该令牌在 GitHub 的授权范围覆盖整个仓库内容。Windows 配置向导会隐藏三个密钥的输入，使用 DPAPI 加密保存，仅同一机器上的同一 Windows 账号可解密。
+3. 准备企业 ID、自建应用 Secret、客服账号 `open_kfid` 和一把独立的随机 32 字节查看密钥（64 个十六进制字符）。将查看密钥保存在个人密码管理器。GitHub fine-grained PAT 仅选择 `hveraus/Baidu.Ads`，权限为 **Contents: Read and write**。该令牌在 GitHub 的授权范围覆盖整个仓库内容。Windows 配置向导通过密码输入框收集三个密钥。保留默认用户名，把各个密钥填入弹窗的密码栏。向导使用 DPAPI 加密保存，仅同一机器上的同一 Windows 账号可解密。
 
    ```powershell
    powershell.exe -NoProfile -File .\scripts\run_wecom_consultations.ps1 -Initialize

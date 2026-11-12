@@ -12,13 +12,19 @@ $configPath = Join-Path $env:LOCALAPPDATA 'Baidu.Ads\wecom-consultations.xml'
 $collector = Join-Path $PSScriptRoot 'sync_wecom_consultations.py'
 $python = Join-Path (Split-Path -Parent $PSScriptRoot) '.venv\Scripts\python.exe'
 
+function Read-Secret([string]$Message) {
+    $credential = Get-Credential -UserName 'Baidu.Ads' -Message $Message
+    if (-not $credential) { throw 'Setup cancelled.' }
+    return $credential.Password
+}
+
 if ($Initialize) {
     $config = @{
         WECOM_CORP_ID = Read-Host 'WeCom CorpID'
         WECOM_OPEN_KFID = Read-Host 'SSW website customer service account open_kfid'
-        WECOM_APP_SECRET = Read-Host 'SSW customer service analytics app Secret' -AsSecureString
-        WECOM_SNAPSHOT_KEY = Read-Host 'Private viewing key (64 hexadecimal characters)' -AsSecureString
-        WECOM_GITHUB_TOKEN = Read-Host 'GitHub token for hveraus/Baidu.Ads' -AsSecureString
+        WECOM_APP_SECRET = Read-Secret 'Enter the SSW customer service app Secret in the password field'
+        WECOM_SNAPSHOT_KEY = Read-Secret 'Enter the private viewing key (64 hexadecimal characters) in the password field'
+        WECOM_GITHUB_TOKEN = Read-Secret 'Enter the GitHub token for hveraus/Baidu.Ads in the password field'
     }
     if (-not $config.WECOM_CORP_ID.Trim() -or -not $config.WECOM_OPEN_KFID.Trim() -or
         -not $config.WECOM_APP_SECRET.Length -or $config.WECOM_SNAPSHOT_KEY.Length -ne 64 -or
