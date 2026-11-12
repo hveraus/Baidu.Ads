@@ -6,6 +6,7 @@ ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
 from website_conversions import FILENAME, SSW_FIELDS, SSW_FILENAME, HOMEPAGE_FIELDS, HOMEPAGE_FILENAME, TINA_PAID_FIELDS, TINA_PAID_FILENAME, load_rows
 from scripts.sync_posthog_cli import ENCRYPTED_SNAPSHOT, read_encrypted_snapshot
+from website_traffic import TRAFFIC_FILENAME, load_traffic
 JWT=re.compile(rb'eyJ[A-Za-z0-9_-]{15,}\.[A-Za-z0-9_-]{15,}\.[A-Za-z0-9_-]{15,}')
 FORBIDDEN={'.credentials.json','.backup-key','baidu.sqlite3','status.json','runs.jsonl'}
 def check():
@@ -17,6 +18,7 @@ def check():
  load_rows(root/'accounts'/'ssw'/'data'/SSW_FILENAME,SSW_FIELDS)
  for data_dir in (root/'data',root/'accounts'/'ssw'/'data'):
   load_rows(data_dir/HOMEPAGE_FILENAME,HOMEPAGE_FIELDS)
+  load_traffic(data_dir/TRAFFIC_FILENAME)
  read_encrypted_snapshot(root/'data'/ENCRYPTED_SNAPSHOT)
  check_files(root)
  print('Public data and tracked-file checks passed')
