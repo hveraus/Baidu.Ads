@@ -1,6 +1,6 @@
 ﻿单元ID,计划ID,单元名称,maxPrice,暂停,negativeWords,exactNegativeWords,状态代码,下线原因,adType,adgroupAutoTargetingStatus,pcFinalUrl,mobileFinalUrl,影子物料
-14507797191,2163663758,安全词-安全合规与治理,1.68,False,[],[],31,"[{""mainReason"": ""8"", ""detailReason"": ""0""}]",0,False,https://www.ssw.com.cn,https://www.ssw.com.cn,0
-14507797190,2163663758,部署词-大模型私有化部署,1.68,False,[],"[""个人搭建ai大模型"", ""个人ai模型搭建"", ""本地部署ai有必要吗""]",31,"[{""mainReason"": ""8"", ""detailReason"": ""0""}]",0,False,https://www.ssw.com.cn,https://www.ssw.com.cn,0
+14507797191,2163663758,安全词-安全合规与治理,1.68,False,[],[],31,[],0,False,https://www.ssw.com.cn,https://www.ssw.com.cn,0
+14507797190,2163663758,部署词-大模型私有化部署,1.68,False,[],"[""个人搭建ai大模型"", ""个人ai模型搭建"", ""本地部署ai有必要吗""]",31,[],0,False,https://www.ssw.com.cn,https://www.ssw.com.cn,0
 14507797189,2163663757,集成词-业务系统集成,1.68,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,https://www.ssw.com.cn,https://www.ssw.com.cn,0
 14507797188,2163663757,工作流词-AI工作流自动化,1.68,False,[],"[""工作流ai官网入口"", ""手机ai工作流""]",33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,https://www.ssw.com.cn,https://www.ssw.com.cn,0
 14507797187,2163663707,长尾词-对比选型,1.68,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,https://www.ssw.com.cn,https://www.ssw.com.cn,0
@@ -10,16 +10,16 @@
 14507797184,2163663706,行业词-制造行业,1.68,False,[],"[""赵露思人工智能梦工厂ai"", ""ai对制造业的影响"", ""ai人工智能造梦工厂官网""]",33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,https://www.ssw.com.cn,https://www.ssw.com.cn,0
 14507797198,2163663690,品牌词-官方与服务,1.68,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,https://www.ssw.com.cn,https://www.ssw.com.cn,0
 14507797197,2163663690,品牌词-SSW与智鹏瑞尔,1.68,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,https://www.ssw.com.cn,https://www.ssw.com.cn,0
-14507797196,2163663689,转型词-企业AI转型,1.68,False,[],[],31,"[{""mainReason"": ""8"", ""detailReason"": ""0""}]",0,False,https://www.ssw.com.cn,https://www.ssw.com.cn,0
-14507797195,2163663689,方案词-企业AI解决方案,1.68,False,[],"[""如何解决手机人工智能""]",31,"[{""mainReason"": ""8"", ""detailReason"": ""0""}]",0,False,https://www.ssw.com.cn,https://www.ssw.com.cn,0
-14507797194,2163663689,咨询词-企业AI咨询,1.68,False,[],"[""豆包人工智能在线提问""]",31,"[{""mainReason"": ""8"", ""detailReason"": ""0""}]",0,False,https://www.ssw.com.cn,https://www.ssw.com.cn,0
+14507797196,2163663689,转型词-企业AI转型,1.68,False,[],[],31,[],0,False,https://www.ssw.com.cn,https://www.ssw.com.cn,0
+14507797195,2163663689,方案词-企业AI解决方案,1.68,False,[],"[""如何解决手机人工智能""]",31,[],0,False,https://www.ssw.com.cn,https://www.ssw.com.cn,0
+14507797194,2163663689,咨询词-企业AI咨询,1.68,False,[],"[""豆包人工智能在线提问""]",31,[],0,False,https://www.ssw.com.cn,https://www.ssw.com.cn,0
 14507797193,2163663688,应用词-AI Agent定制,1.68,False,[],"[""ai智能体平台怎么玩"", ""ai中agent指什么"", ""百度ai waic2026智能体应用亮点"", ""智能体免费ai智能体无禁词"", ""五,ai智能体广场"", ""杨博文ai智能体"", ""theone陪伴ai智能体最新版本介绍"", ""ai agent官方下载"", ""ai智能体是什么"", ""无需下载的ai角色智能体"", ""ai智能体排行榜第一名"", ""ai智能体学练"", ""免费ai智能体"", ""百度智能体平台"", ""theone陪伴微信ai智能体"", ""科技巨头密集发布ai智能体"", ""ai智能体手机有那几款"", ""ai智能体十大龙头"", ""百度智能体入口"", ""theone陪伴ai智能体"", ""免费智能体平台"", ""如何创建自己的ai智能体""]",33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,https://www.ssw.com.cn,https://www.ssw.com.cn,0
 14507797192,2163663688,应用词-AI智能助手开发,1.68,False,[],"[""千问阿里ai助手官网"", ""人工智能与ai应用区别"", ""千问app全能ai问答助手下载"", ""智能ai助手下载"", ""百度ai助手"", ""ai智能助手网页版"", ""目前有哪些人工智能软件"", ""游戏ai助手"", ""豆包ai智能助手"", ""ai智能答题助手"", ""千问app-全能ai问答助手"", ""百度ai 助手"", ""百度ai智能助手"", ""橙篇ai智能助手入口"", ""千问智能ai助手,有问题找千问"", ""打开百度ai助手"", ""gk-pro中文版ai智能助手"", ""红魔ai助手""]",33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,https://www.ssw.com.cn,https://www.ssw.com.cn,0
 14507797183,2163663687,知识库词-RAG知识库建设,1.68,False,[],"[""知识库与rag的区别""]",33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,https://www.ssw.com.cn,https://www.ssw.com.cn,0
 14507797182,2163663687,知识库词-企业知识库搭建,1.68,False,[],"[""企业管理的基本知识""]",33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,https://www.ssw.com.cn,https://www.ssw.com.cn,0
 14507797181,2163663687,中台词-AI中台建设,1.68,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,https://www.ssw.com.cn,https://www.ssw.com.cn,0
-14507797191,2163663758,安全词-安全合规与治理,1.68,False,[],[],31,"[{""mainReason"": ""8"", ""detailReason"": ""0""}]",0,False,,,1
-14507797190,2163663758,部署词-大模型私有化部署,1.68,False,[],"[""个人搭建ai大模型"", ""个人ai模型搭建"", ""本地部署ai有必要吗""]",31,"[{""mainReason"": ""8"", ""detailReason"": ""0""}]",0,False,,,1
+14507797191,2163663758,安全词-安全合规与治理,1.68,False,[],[],31,[],0,False,,,1
+14507797190,2163663758,部署词-大模型私有化部署,1.68,False,[],"[""个人搭建ai大模型"", ""个人ai模型搭建"", ""本地部署ai有必要吗""]",31,[],0,False,,,1
 14507797189,2163663757,集成词-业务系统集成,1.68,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,,,1
 14507797188,2163663757,工作流词-AI工作流自动化,1.68,False,[],"[""工作流ai官网入口"", ""手机ai工作流""]",33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,,,1
 14507797187,2163663707,长尾词-对比选型,1.68,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,,,1
@@ -29,9 +29,9 @@
 14507797184,2163663706,行业词-制造行业,1.68,False,[],"[""赵露思人工智能梦工厂ai"", ""ai对制造业的影响"", ""ai人工智能造梦工厂官网""]",33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,,,1
 14507797198,2163663690,品牌词-官方与服务,1.68,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,,,1
 14507797197,2163663690,品牌词-SSW与智鹏瑞尔,1.68,False,[],[],33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,,,1
-14507797196,2163663689,转型词-企业AI转型,1.68,False,[],[],31,"[{""mainReason"": ""8"", ""detailReason"": ""0""}]",0,False,,,1
-14507797195,2163663689,方案词-企业AI解决方案,1.68,False,[],"[""如何解决手机人工智能""]",31,"[{""mainReason"": ""8"", ""detailReason"": ""0""}]",0,False,,,1
-14507797194,2163663689,咨询词-企业AI咨询,1.68,False,[],"[""豆包人工智能在线提问""]",31,"[{""mainReason"": ""8"", ""detailReason"": ""0""}]",0,False,,,1
+14507797196,2163663689,转型词-企业AI转型,1.68,False,[],[],31,[],0,False,,,1
+14507797195,2163663689,方案词-企业AI解决方案,1.68,False,[],"[""如何解决手机人工智能""]",31,[],0,False,,,1
+14507797194,2163663689,咨询词-企业AI咨询,1.68,False,[],"[""豆包人工智能在线提问""]",31,[],0,False,,,1
 14507797193,2163663688,应用词-AI Agent定制,1.68,False,[],"[""ai智能体平台怎么玩"", ""ai中agent指什么"", ""百度ai waic2026智能体应用亮点"", ""智能体免费ai智能体无禁词"", ""五,ai智能体广场"", ""杨博文ai智能体"", ""theone陪伴ai智能体最新版本介绍"", ""ai agent官方下载"", ""ai智能体是什么"", ""无需下载的ai角色智能体"", ""ai智能体排行榜第一名"", ""ai智能体学练"", ""免费ai智能体"", ""百度智能体平台"", ""theone陪伴微信ai智能体"", ""科技巨头密集发布ai智能体"", ""ai智能体手机有那几款"", ""ai智能体十大龙头"", ""百度智能体入口"", ""theone陪伴ai智能体"", ""免费智能体平台"", ""如何创建自己的ai智能体""]",33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,,,1
 14507797192,2163663688,应用词-AI智能助手开发,1.68,False,[],"[""千问阿里ai助手官网"", ""人工智能与ai应用区别"", ""千问app全能ai问答助手下载"", ""智能ai助手下载"", ""百度ai助手"", ""ai智能助手网页版"", ""目前有哪些人工智能软件"", ""游戏ai助手"", ""豆包ai智能助手"", ""ai智能答题助手"", ""千问app-全能ai问答助手"", ""百度ai 助手"", ""百度ai智能助手"", ""橙篇ai智能助手入口"", ""千问智能ai助手,有问题找千问"", ""打开百度ai助手"", ""gk-pro中文版ai智能助手"", ""红魔ai助手""]",33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,,,1
 14507797183,2163663687,知识库词-RAG知识库建设,1.68,False,[],"[""知识库与rag的区别""]",33,"[{""mainReason"": ""7"", ""detailReason"": ""1""}]",0,False,,,1
