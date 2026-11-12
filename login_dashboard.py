@@ -15,7 +15,7 @@ import secrets
 import subprocess
 import threading
 import time
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, urlsplit
 from urllib.request import Request, build_opener
 
@@ -116,19 +116,44 @@ def check_upstream():
         print(f'HTTPS connection to {urlsplit(url).hostname} succeeded.')
 
 
+def github_json(request, limit, stage):
+    try:
+        payload = json.loads(fetch(request, limit))
+    except HTTPError as error:
+        logging.warning('GitHub OAuth %s request returned HTTP %d.', stage, error.code)
+        raise
+    except URLError as error:
+        logging.warning('GitHub OAuth %s connection failed (%s).', stage, type(error.reason).__name__)
+        raise
+    except (OSError, ValueError) as error:
+        logging.warning('GitHub OAuth %s response failed (%s).', stage, type(error).__name__)
+        raise
+    if not isinstance(payload, dict):
+        raise ValueError('Unexpected GitHub OAuth response')
+    return payload
+
+
 def github_identity(code, verifier, client_id, client_secret):
     form = urlencode({
         'client_id': client_id, 'client_secret': client_secret, 'code': code,
         'redirect_uri': BASE_URL + '/callback', 'code_verifier': verifier,
     }).encode()
-    token = json.loads(fetch(Request(GITHUB_TOKEN, data=form, headers={
+    payload = github_json(Request(GITHUB_TOKEN, data=form, headers={
         'Accept': 'application/json', 'User-Agent': 'Baidu.Ads',
         'Content-Type': 'application/x-www-form-urlencoded',
-    }), 16_384))['access_token']
-    return json.loads(fetch(Request(GITHUB_USER, headers={
+    }), 16_384, 'token')
+    token = payload.get('access_token')
+    if not isinstance(token, str) or not token:
+        error = payload.get('error')
+        if error not in ('incorrect_client_credentials', 'redirect_uri_mismatch',
+                         'bad_verification_code', 'unverified_user_email', 'bad_code_verifier'):
+            error = 'unexpected_response'
+        logging.warning('GitHub OAuth token exchange failed (%s).', error)
+        raise ValueError('GitHub OAuth token exchange failed')
+    return github_json(Request(GITHUB_USER, headers={
         'Authorization': f'Bearer {token}', 'Accept': 'application/vnd.github+json',
         'User-Agent': 'Baidu.Ads',
-    }), 64_000))
+    }), 64_000, 'identity')
 
 
 def decrypt_snapshot(packed, key, header, fields):
