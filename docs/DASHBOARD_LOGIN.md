@@ -29,25 +29,11 @@ Git 刷新按三分钟窗口检查，连接中断时读取最近一次成功拉�
 
 将 `powershell.exe -NoProfile -File "<checkout>\scripts\run_dashboard_login.ps1"` 注册为 Windows 任务 `baidu-ads-dashboard-login`，使用同一个 Windows 用户，开机时启动，选择无论用户是否登录都运行，取消运行时长限制并启用失败重试。立即启动任务，以 `Host: ads.ssw.com.cn` 请求 `http://127.0.0.1:8765/health` 确认服务返回 `OK`。服务只监听回环地址。
 
-配置独立的 HTTPS vhost。将证书路径替换为实际托管路径，在 `nginx -t` 成功后重载。
+## HTTPS
 
-```nginx
-server {
-    listen 443 ssl;
-    server_name ads.ssw.com.cn;
-    ssl_certificate     path/to/ads.ssw.com.cn/fullchain.pem;
-    ssl_certificate_key path/to/ads.ssw.com.cn/privkey.pem;
+阿里云服务器的 Nginx 安装目录为 `C:\SSW\Nginx`。先运行 `.\scripts\deploy_dashboard_proxy.ps1` 启用子域独立的 ACME HTTP 验证入口。在 Certify Certificate Manager 为 `ads.ssw.com.cn` 新建证书，使用 HTTP-01 和站点根目录 `C:\SSW\Nginx\acme`。将完整证书链与私钥导出到 `C:\SSW\Certificate\BaiduAds\fullchain.pem` 和 `C:\SSW\Certificate\BaiduAds\private.pem`，并在续期导出后重载 Nginx。
 
-    access_log off;
-    error_log logs/baidu-ads-login.error.log crit;
-
-    location / {
-        proxy_pass http://127.0.0.1:8765;
-        proxy_set_header Host ads.ssw.com.cn;
-        proxy_set_header Connection "";
-    }
-}
-```
+签发证书后运行 `.\scripts\deploy_dashboard_proxy.ps1 -EnableHttps` 启用 HTTPS 反向代理。脚本先运行 `nginx -t`，通过后才重载。HTTPS 服务代理至 `127.0.0.1:8765`，等待登录服务启动时返回 503。
 
 ## 上线核对
 
