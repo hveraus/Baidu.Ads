@@ -6,7 +6,7 @@ from i18n import english_template
 from publication import public_template
 class AccountUITests(unittest.TestCase):
  def test_yakshaver_has_own_advice_identity_and_review_state(self):
-  source=public_template((ROOT/'dashboard.template.html').read_text())
+  source=public_template((ROOT/'dashboard.template.html').read_text(encoding='utf-8'))
   profile={'slug':'yakshaver','name':'YakShaver','user_name':'智鹏瑞尔-1'}
   for language,template in [('zh',source),('en',english_template(source))]:
    rendered=account_template(template,profile,language)
@@ -23,7 +23,7 @@ class AccountUITests(unittest.TestCase):
    self.assertIn('selected>YakShaver</option>',rendered)
    self.assertNotIn('智鹏瑞尔 ·',rendered)
  def test_ssw_switch_links_and_advice_are_account_specific(self):
-  source=(ROOT/'dashboard.template.html').read_text()
+  source=(ROOT/'dashboard.template.html').read_text(encoding='utf-8')
   rendered=account_template(source,{'slug':'ssw','name':'SSW','user_name':'智鹏瑞尔-2'},'zh')
   self.assertIn('value="../ssw/index.html" selected>SSW</option>',rendered)
   self.assertIn('value="../yakshaver/index.html">YakShaver</option>',rendered)
@@ -32,7 +32,7 @@ class AccountUITests(unittest.TestCase):
   self.assertNotIn('TinaDocs',rendered)
   self.assertNotIn('智鹏瑞尔-1',rendered)
  def test_tina_advice_is_preserved_and_data_not_renamed(self):
-  source=(ROOT/'dashboard.template.html').read_text()
+  source=(ROOT/'dashboard.template.html').read_text(encoding='utf-8')
   rendered=account_template(source,{'slug':'tinacms','name':'TinaCMS'},'zh')
   self.assertIn('TinaDocs',rendered)
   self.assertIn('baidu-ads-switch-state-tinacms',rendered)
