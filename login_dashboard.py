@@ -1,4 +1,5 @@
 """GitHub sign-in and authenticated Baidu.Ads reports behind the SSW HTTPS proxy."""
+import argparse
 import base64
 import datetime as dt
 from functools import lru_cache
@@ -6,11 +7,15 @@ import hashlib
 import hmac
 import html
 import json
+import logging
 import os
 from pathlib import Path
 import re
 import secrets
+import subprocess
+import threading
 import time
+from urllib.error import HTTPError
 from urllib.parse import urlencode, urlsplit
 from urllib.request import Request, build_opener
 
@@ -28,12 +33,13 @@ from wecom_snapshot import HEADER as WECOM_HEADER
 
 ROOT = Path(__file__).resolve().parent
 BASE_URL = 'https://ads.ssw.com.cn'
-RAW_URL = 'https://raw.githubusercontent.com/hveraus/Baidu.Ads/main/'
+REPORT_REF = 'refs/remotes/origin/main'
 GITHUB_AUTHORIZE = 'https://github.com/login/oauth/authorize'
 GITHUB_TOKEN = 'https://github.com/login/oauth/access_token'
 GITHUB_USER = 'https://api.github.com/user'
 OWNER_ID = 4745861
 OPENER = build_opener(NoRedirect())
+GIT_REFRESH_LOCK = threading.Lock()
 INLINE_HANDLER = re.compile(r'\son[a-z]+="([^"\n]+)"')
 REPORT_DATA = re.compile(rb'<script id="report-data" type="application/json">(.*?)</script>', re.DOTALL)
 REPORT_PAGES = {
@@ -62,9 +68,52 @@ def fetch(req, limit):
     return content
 
 
+@lru_cache(maxsize=2)
+def report_revision(cache_bucket):
+    # The Aliyun host can pull from GitHub even when the raw-content host is unreachable.
+    try:
+        subprocess.run(
+            ['git', '-c', 'credential.helper=', 'fetch', '--quiet', '--no-tags',
+             'origin', f'refs/heads/main:{REPORT_REF}'],
+            cwd=ROOT, check=True, timeout=15, capture_output=True,
+            env={**os.environ, 'GIT_TERMINAL_PROMPT': '0', 'GCM_INTERACTIVE': 'never'},
+        )
+    except (OSError, subprocess.SubprocessError):
+        logging.warning('Could not refresh report data. Serving the last downloaded Git revision.')
+    return subprocess.check_output(['git', 'rev-parse', REPORT_REF], cwd=ROOT, timeout=5).strip().decode('ascii')
+
+
 @lru_cache(maxsize=16)
+def git_blob(path, revision, limit):
+    content = subprocess.check_output(['git', 'show', f'{revision}:{path}'], cwd=ROOT, timeout=10)
+    if len(content) > limit:
+        raise ValueError('Report file exceeds size limit')
+    return content
+
+
 def source_bytes(path, cache_bucket, limit):
-    return fetch(Request(RAW_URL + path, headers={'User-Agent': 'Baidu.Ads'}), limit)
+    with GIT_REFRESH_LOCK:
+        revision = report_revision(cache_bucket)
+    return git_blob(path, revision, limit)
+
+
+def check_upstream():
+    bucket = int(time.monotonic() // 180)
+    for slug in ('tinacms', 'yakshaver', 'ssw'):
+        path = 'report/index.html' if slug == 'tinacms' else f'report/{slug}/index.html'
+        if not REPORT_DATA.search(source_bytes(path, bucket, 32 * 1024 * 1024)):
+            raise ValueError(f'Missing report data for {slug}')
+    for path, header, *_ in SNAPSHOTS.values():
+        if not source_bytes(path, bucket, 16_384).startswith(header):
+            raise ValueError('Unexpected encrypted snapshot format')
+    print('Git report data and encrypted snapshots are readable.')
+    for url in (GITHUB_TOKEN, GITHUB_USER):
+        try:
+            fetch(Request(url, method='HEAD', headers={'User-Agent': 'Baidu.Ads'}), 0)
+        except HTTPError as error:
+            if error.code not in (301, 302, 401, 403, 404, 405):
+                raise
+        print(f'HTTPS connection to {urlsplit(url).hostname} succeeded.')
 
 
 def github_identity(code, verifier, client_id, client_secret):
@@ -249,7 +298,7 @@ def create_app(client_id, client_secret, session_key, keys):
         slug, lang = REPORT_PAGES[path]
         try:
             body, g.script_policy = render_report(slug, lang, keys, session['csrf'])
-        except (InvalidTag, OSError, ValueError, KeyError, TypeError):
+        except (InvalidTag, OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
             return Response('看板数据暂不可用，请稍后刷新。', status=502, mimetype='text/plain')
         return Response(body, mimetype='text/html')
 
@@ -257,6 +306,12 @@ def create_app(client_id, client_secret, session_key, keys):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--check-upstream', action='store_true', help='Check Git data and GitHub HTTPS connectivity')
+    if parser.parse_args().check_upstream:
+        check_upstream()
+        raise SystemExit
+
     from waitress import serve
 
     application = create_app(
