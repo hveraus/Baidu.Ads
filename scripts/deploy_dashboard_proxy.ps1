@@ -75,10 +75,12 @@ $include = 'include baidu-ads-login/site.conf;'
 $hasInclude = $updated.Contains($include)
 if (-not $hasInclude) {
     $http = [regex]::Match($updated, '(?m)^[ \t]*http[ \t]*\{[ \t]*(?=\r?$)')
-    if (-not $http.Success -or $updated.Contains('ads.ssw.com.cn')) {
+    $httpEnd = [regex]::Match($updated, '(?m)^}(?=[\r\n \t]*\z)')
+    if (-not $http.Success -or -not $httpEnd.Success -or $httpEnd.Index -le $http.Index -or
+        $updated -match '(?m)^(?:stream|mail)[ \t]*\{' -or $updated.Contains('ads.ssw.com.cn')) {
         throw 'Review the existing nginx.conf before adding a dashboard include.'
     }
-    $updated = $updated.Insert($http.Index + $http.Length, "`r`n    $include")
+    $updated = $updated.Insert($httpEnd.Index, "    $include`r`n")
 }
 $originalSite = $null
 if (Test-Path -LiteralPath $site -PathType Leaf) {
@@ -88,7 +90,10 @@ $null = New-Item -ItemType Directory -Force -Path $siteFolder
 Push-Location -LiteralPath $NginxRoot
 try {
     [IO.File]::WriteAllText($site, $siteConfig + "`r`n", [Text.Encoding]::ASCII)
-    if (-not $hasInclude) { [IO.File]::WriteAllBytes($main, $byteEncoding.GetBytes($updated)) }
+    if (-not $hasInclude) {
+        Copy-Item -LiteralPath $main -Destination ($main + '.before-baidu-ads-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
+        [IO.File]::WriteAllBytes($main, $byteEncoding.GetBytes($updated))
+    }
     $check = Start-Process -FilePath $nginx -ArgumentList '-t' -NoNewWindow -Wait -PassThru
     if ($check.ExitCode -ne 0) { throw 'Nginx rejected the new configuration.' }
     $reload = Start-Process -FilePath $nginx -ArgumentList '-s', 'reload' -NoNewWindow -Wait -PassThru
