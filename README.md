@@ -4,7 +4,7 @@
 
 **在线页面：[ads.ssw.com.cn](https://ads.ssw.com.cn/)**
 
-> 在线页面需要看板账号登录。GitHub 仓库公开，仓库里的投放统计、关键词、搜索词和广告内容可被访问者看到。百度令牌和访客 IP 不进入公开页面或明文数据；完整原始数据以加密备份保存。
+> 在线页面需要看板账号登录。新采集的数据保存在阿里云 ECS。GitHub 仓库公开，仍可查看迁移前的广告统计、关键词、搜索词和广告文案。
 
 ## 换电脑怎么用
 
@@ -33,7 +33,7 @@ Windows PowerShell：先执行 `py -3 -m venv .venv`，然后用 `.venv\Scripts\
 
 选一种方式：
 
-1. **云端采集**：登录仓库，在 Actions → **Collect Baidu Ads data** → Run workflow。已配置的 Repository Secrets 会继续使用，无需把令牌复制到新电脑。
+1. **生产采集**：由阿里云 ECS 每日运行。手动更新时，在服务器上启动 `baidu-ads-collect-local` 任务。参见[阿里云采集与存储](docs/ALIYUN_COLLECTION.md)。
 2. **本机恢复完整数据**：把自己的恢复密钥通过密码管理器等私人渠道带到新电脑，运行：
 
 ```sh
@@ -55,11 +55,9 @@ python tracker.py
 
 ## 云端更新与发布
 
-- `.github/workflows/collect.yml`：计划每天 **北京时间 09:00** 运行，GitHub 调度可能延迟；也可手动运行。
-- 每次恢复加密历史 → 调用只读 API → 对账 → 导出去 IP 的公开数据 → 重新生成中英文页面 → 加密原始数据 → 提交更新 → 部署 Pages。
-- 默认重拉最近 7 天以更新迟到转化；中断较久时根据成功覆盖范围补采。
-- `.github/workflows/pages.yml`：主分支更新时部署，也可单独手动发布当前历史快照，不需要百度凭据。
-- 云端运行不依赖这台电脑开机。失败可在 GitHub Actions 查看；令牌临近到期会出现在运行摘要，需主动续期。GitHub 通知取决于你的账号设置。
+- `baidu-ads-collect-local` 每天 **北京时间 09:00** 在阿里云 ECS 查询百度营销、百度统计、PostHog 和微信客服。
+- 所有账户校验通过后，采集任务一次性更新看板使用的报表。失败时继续显示上一次成功报表。运行状态可在 Windows 任务计划程序及 `%LOCALAPPDATA%\Baidu.Ads\storage\collection.log` 查看。
+- GitHub 保留代码、迁移前历史和 Pages 跳转入口。
 - 令牌有效期依据百度界面填写。当前登记日期为 **2027-01-25**，不把自授权令牌当作普通 24 小时 OAuth 令牌刷新。
 
 ## 凭据放在哪里
@@ -67,21 +65,12 @@ python tracker.py
 | 内容 | 存放位置 | 是否公开 |
 |---|---|---|
 | UI、采集方法、报告配置、文档、测试 | Git 仓库 | 是 |
-| 全部公开统计历史、CSV、去 IP 的 SQLite | `data/` | 是 |
-| 中英文报表 | GitHub 仓库中的 `report/` | 是 |
-| 完整原始数据、访客 IP、运行记录和凭据的加密包 | `backups/private-data.enc` | 只有密文公开 |
-| 百度访问令牌 | `BAIDU_CREDENTIALS_JSON` Repository Secret；本机 `.credentials.json` | 否 |
-| 原始数据恢复密钥 | `DATA_BACKUP_KEY` Repository Secret；本机 `.backup-key` 和单独交付的恢复文件 | 否 |
+| 活跃报表和加密统计快照 | ECS 的 `%LOCALAPPDATA%\Baidu.Ads\storage` | 需登录查看报表 |
+| 原始 SQLite、CSV、百度营销凭据 | ECS 的私有采集目录 | 否 |
+| 百度统计、PostHog 和微信客服凭据 | ECS 的 DPAPI 配置文件 | 否 |
+| 迁移前广告统计和加密历史 | GitHub 仓库中的 `data/`、`report/`、`backups/` 及 `accounts/` | 统计汇总及密文公开 |
 
-GitHub Secrets 无法在设置页读回明文。**请保管恢复密钥**，它没有提交到仓库。其他电脑可以直接使用在线页面或运行云端任务；本机恢复完整私有历史需要自己的恢复文件。不要把恢复文件、令牌放进 issue、代码或 Pages。
-
-首次配置或续期后，可在已登录 `gh` 的本机运行：
-
-```sh
-python scripts/configure_github.py --repo hveraus/Baidu.Ads
-```
-
-该脚本通过 stdin 上传已有本机凭据与恢复密钥，不在命令参数或日志中输出值。详细步骤见 [GitHub 与恢复](docs/GITHUB.md)。
+百度授权续期后更新阿里云采集配置。恢复迁移前的加密历史时，使用原有恢复密钥。详细路径见[阿里云采集与存储](docs/ALIYUN_COLLECTION.md)。
 
 ## 常用命令
 
@@ -113,14 +102,14 @@ python -m unittest discover -s tests -v
 
 ### 中国区 Tina CLI 数据
 
-采集任务按北京时间查询最近 90 个完整日期的中国区启动和完成次数。启用时，在仓库的 Actions Secrets 配置 `POSTHOG_CLI_QUERY_KEY`（TinaCloud 项目的 `Query: Read` 密钥）和 `POSTHOG_CLI_SNAPSHOT_KEY`（专用的随机 32 字节密钥，用 64 个十六进制字符表示）。将查看密钥保存在个人密码管理器。任务只提交 `data/posthog-cli.enc`；TinaCMS 总览在当前页面内解密，刷新后需要重新解锁。
+采集任务按北京时间查询最近 90 个完整日期的中国区启动和完成次数。ECS 使用 TinaCloud 的 `Query: Read` 个人密钥采集，并用独立的快照密钥加密统计。登录看板后，TinaCMS 总览自动显示这些数字。
 
 ## 多网站独立账户
 
 左上角标题下拉可在 TinaCMS、YakShaver 和 SSW 之间切换，每个账户拥有独立的关键词、消费、历史数据和建议。原始关键词与广告文案保留原文。YakShaver 的建议不沿用 TinaCMS 的文档管理意图判断或预算分组。
 
-- TinaCMS 继续使用根目录原有数据及 `BAIDU_CREDENTIALS_JSON` Secret。
-- YakShaver 账户 ID 为 `91119162`，推广账户名 `智鹏瑞尔-1`，使用 `BAIDU_YAKSHAVER_CREDENTIALS_JSON` Secret。
+- TinaCMS 在 ECS 采集目录根目录保存原始数据和凭据。
+- YakShaver 账户 ID 为 `91119162`，推广账户名 `智鹏瑞尔-1`。
 - YakShaver 原始数据与凭据仅在 `.private/yakshaver/`，公开数据在 `accounts/yakshaver/data/`，加密备份在 `accounts/yakshaver/backups/private-data.enc`。
 - 加密备份复用原有 `DATA_BACKUP_KEY`，可使用已交付的私人恢复密钥。自授权令牌登记有效期到 **2027-02-01**。
 - 应用登记的回调字段为 `https://yakshaver.ai`，与 TinaCMS 相同使用产品官网首页；当前没有启用 OAuth 回调，不将官网首页视为已实现的回调接口。实际推广报告中的落地页为 `http://yakshaver.com.cn/`。
@@ -130,16 +119,15 @@ python scripts/accounts.py build                       # 从公开历史生成�
 python scripts/accounts.py restore --account yakshaver # 用恢复密钥恢复 YakShaver 私有历史
 python scripts/accounts.py collect --account yakshaver # 增量采集、对账、公开导出和加密
 python scripts/accounts.py collect --account yakshaver --backfill
-python scripts/accounts.py configure-github --account yakshaver
 ```
 
-新电脑仅查看时运行 `scripts/accounts.py build`；恢复完整数据时先按照上方说明设置 `DATA_BACKUP_KEY` 或将私有恢复密钥保存为根目录 `.backup-key`，再执行 `restore`。如需重新授权，可把新凭据安全保存到 `.private/yakshaver/.credentials.json`，字段格式参考 `.credentials.example.json`，并更新对应 GitHub Secret。云端每天依次采集 TinaCMS、YakShaver 和 SSW，全部对账通过后发布。任何账户失败时保留上一版线上报告，不发布部分更新；不会修改广告。
+新电脑可以用 `scripts/accounts.py build` 生成历史报表。恢复迁移前的私有数据时，使用原有 `DATA_BACKUP_KEY` 再执行 `restore`。生产授权续期时，在 ECS 更新 `.private/yakshaver/.credentials.json`，字段格式参考 `.credentials.example.json`。
 
 ### SSW 独立账户
 
 - 应用 `ssw` 已生效，推广账户 `智鹏瑞尔-2`（ID `91119163`）。回调字段登记官网 `https://ssw.cn`，采集使用自授权，不依赖 OAuth 回调。
-- 令牌登记有效期 **2027-02-01**。GitHub 使用独立 Secret `BAIDU_SSW_CREDENTIALS_JSON`。
+- 令牌登记有效期 **2027-02-01**。生产授权在 ECS 的 `.private/ssw/.credentials.json` 更新。
 - 私有数据在 `.private/ssw/`，去 IP 的公开数据在 `accounts/ssw/data/`，完整加密备份在 `accounts/ssw/backups/private-data.enc`。
 - 在线页面：[SSW 百度投流分析](https://hveraus.github.io/Baidu.Ads/ssw/)。下拉切换账户时保留语言和栏目。
 
-恢复、回补和更新 Secret 的命令与 YakShaver 相同，把参数改为 `--account ssw` 即可。复用原有私人恢复密钥，各账户数据分别恢复与对账。
+恢复历史和回补的命令与 YakShaver 相同，把参数改为 `--account ssw` 即可。

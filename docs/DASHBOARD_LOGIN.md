@@ -2,7 +2,7 @@
 
 登录入口为 `https://ads.ssw.com.cn/`。TinaCMS、YakShaver、SSW 的中英文页面共用一个看板账号和七天浏览器会话，可从页头退出。HTTPS 已部署，原 Pages 地址会跳转到对应的新页面。
 
-登录后，服务端通过 Git 定期读取主分支的广告报表，在内存中解密中国区 Tina CLI 和 SSW 微信客服汇总。现有 GitHub Actions 和阿里云 Windows 采集任务继续运行。GitHub 仓库及历史中的广告汇总仍公开，PostHog 和微信客服快照仍以密文保存。
+登录后，服务端读取阿里云 ECS 最近一次通过校验的报表，在内存中解密中国区 Tina CLI 和 SSW 微信客服汇总。GitHub 保留迁移前的广告统计、加密快照和 Pages 跳转入口。采集方式见[阿里云采集与存储](ALIYUN_COLLECTION.md)。
 
 ## 域名
 
