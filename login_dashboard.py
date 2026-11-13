@@ -2,6 +2,7 @@
 import argparse
 import base64
 from collections import deque
+from contextlib import closing
 import datetime as dt
 from functools import lru_cache
 import hashlib
@@ -13,6 +14,7 @@ import os
 from pathlib import Path
 import re
 import secrets
+import sqlite3
 import subprocess
 import sys
 import threading
@@ -21,7 +23,7 @@ from urllib.parse import urlsplit
 
 from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from flask import Flask, Response, abort, g, redirect, request, session
+from flask import Flask, Response, abort, flash, g, get_flashed_messages, redirect, render_template, request, session
 
 from account_ui import account_template
 from i18n import english_template
@@ -33,6 +35,7 @@ from wecom_snapshot import HEADER as WECOM_HEADER
 
 ROOT = Path(__file__).resolve().parent
 BASE_URL = 'https://ads.ssw.com.cn'
+OWNER = 'kenshi'
 REPORT_REF = 'refs/remotes/origin/main'
 USERNAME = re.compile(r'[A-Za-z0-9_.@-]{1,64}')
 PASSWORD_HASH = re.compile(r'([0-9a-f]{32}):([0-9a-f]{64})')
@@ -173,7 +176,7 @@ def report_template(slug, lang, aliyun=False):
     return template, handler_policy
 
 
-def render_report(slug, lang, keys, csrf):
+def render_report(slug, lang, keys, csrf, *, can_manage=False):
     read = report_source()
     path = 'report/index.html' if slug == 'tinacms' else f'report/{slug}/index.html'
     match = REPORT_DATA.search(read(path, 32 * 1024 * 1024))
@@ -198,6 +201,14 @@ def render_report(slug, lang, keys, csrf):
             'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
             '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>'
             '</svg></button></form>')
+    if can_manage:
+        users = 'Manage users' if lang == 'en' else '用户管理'
+        form = (f'<a href="/users?lang={lang}" aria-label="{users}" title="{users}" '
+                'style="display:grid;place-items:center;width:36px;height:36px;color:inherit">'
+                '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+                'stroke-width="1.8" stroke-linecap="round" aria-hidden="true">'
+                '<circle cx="10" cy="7" r="3"/><path d="M4 20v-2a6 6 0 0 1 12 0v2m3-12v6m-3-3h6"/>'
+                '</svg></a>' + form)
     template, handler_policy = report_template(slug, lang, bool(os.environ.get('BAIDU_ADS_LOCAL_STORAGE')))
     nonce = secrets.token_urlsafe(18)
     template = template.replace('<script', f'<script nonce="{nonce}"').replace('<!-- dashboard-signout -->', form, 1)
@@ -212,6 +223,7 @@ def login_page(path, error=None):
         ('Sign in to Baidu.Ads', 'Username', 'Password', 'Sign in') if lang == 'en'
         else ('登录 Baidu.Ads', '账号', '密码', '登录')
     )
+    recovery = 'Forgot your password? Contact kenshi.' if lang == 'en' else '忘记密码？请联系 kenshi 重置。'
     if 'login_csrf' not in session:
         session['login_csrf'] = secrets.token_urlsafe(32)
     csrf = html.escape(session['login_csrf'], quote=True)
@@ -224,15 +236,18 @@ def login_page(path, error=None):
 <input type="hidden" name="csrf" value="{csrf}"><input type="hidden" name="page" value="{target}">
 <label>{username}<input name="username" autocomplete="username" autocapitalize="none" maxlength="64" required></label>
 <label>{password}<input name="password" type="password" autocomplete="current-password" required></label>
-<button type="submit">{button}</button></form></main></body></html>'''
+<button type="submit">{button}</button></form><p>{recovery}</p></main></body></html>'''
 
 
-def create_app(username, password_hash, session_key, keys):
-    match = PASSWORD_HASH.fullmatch(password_hash)
-    if not USERNAME.fullmatch(username) or not match:
+def create_app(username, password_hash, session_key, keys, users_db=None):
+    if not USERNAME.fullmatch(username) or not PASSWORD_HASH.fullmatch(password_hash):
         raise ValueError('Invalid dashboard login configuration')
-    salt, expected_digest = map(bytes.fromhex, match.groups())
-    username = username.encode()
+    if users_db is not None:
+        with closing(sqlite3.connect(users_db, isolation_level=None)) as db:
+            db.execute('''CREATE TABLE IF NOT EXISTS users (
+                username TEXT PRIMARY KEY COLLATE NOCASE,
+                password_hash TEXT NOT NULL
+            )''')
     attempts = deque()
     attempts_lock = threading.Lock()
     app = Flask(__name__)
@@ -243,6 +258,34 @@ def create_app(username, password_hash, session_key, keys):
         SESSION_REFRESH_EACH_REQUEST=False, PERMANENT_SESSION_LIFETIME=dt.timedelta(days=7),
         MAX_CONTENT_LENGTH=8192,
     )
+
+    def account_hash(name):
+        if name == username:
+            return password_hash
+        if users_db is None or not USERNAME.fullmatch(name):
+            return None
+        with closing(sqlite3.connect(users_db)) as db:
+            row = db.execute('SELECT password_hash FROM users WHERE username = ?', (name,)).fetchone()
+        return row[0] if row else None
+
+    def session_version(name, saved_hash):
+        return hmac.digest(session_key, f'{name}:{saved_hash}'.encode(), 'sha256').hex()
+
+    def signed_in_user():
+        name = session.get('username', '')
+        version = session.get('version', '')
+        saved_hash = account_hash(name) if version else None
+        if saved_hash and hmac.compare_digest(version, session_version(name, saved_hash)):
+            return name
+        if version or session.get('authenticated'):
+            session.clear()
+        return None
+
+    def require_csrf(key='csrf'):
+        csrf = request.form.get('csrf', '')
+        expected = session.get(key, '')
+        if not expected or not csrf.isascii() or not hmac.compare_digest(expected, csrf):
+            abort(403)
 
     @app.after_request
     def protect_response(response):
@@ -264,13 +307,11 @@ def create_app(username, password_hash, session_key, keys):
         page = request.form.get('page', '/')
         if page not in REPORT_PAGES:
             abort(400)
-        csrf = request.form.get('csrf', '')
-        expected = session.get('login_csrf', '')
-        if not expected or not csrf.isascii() or not hmac.compare_digest(expected, csrf):
-            abort(403)
-        if session.get('authenticated') is True:
+        require_csrf('login_csrf')
+        if signed_in_user():
             return redirect(page, code=303)
         english = page.endswith('/en.html')
+        name = request.form.get('username', '')
         password = request.form.get('password', '').encode()
         with attempts_lock:
             now = time.monotonic()
@@ -279,27 +320,71 @@ def create_app(username, password_hash, session_key, keys):
             if len(attempts) >= LOGIN_ATTEMPT_LIMIT:
                 message = 'Too many attempts. Try again in a minute.' if english else '尝试次数过多，请稍后再试。'
                 return login_page(page, message), 429, {'Retry-After': str(LOGIN_ATTEMPT_WINDOW)}
+            saved_hash = account_hash(name)
+            salt, expected_digest = map(bytes.fromhex, (saved_hash or password_hash).split(':'))
             if (len(password) <= MAX_PASSWORD_BYTES and
-                    hmac.compare_digest(password_digest(password, salt), expected_digest) and
-                    hmac.compare_digest(request.form.get('username', '').encode(), username)):
+                    hmac.compare_digest(password_digest(password, salt), expected_digest) and saved_hash):
                 attempts.clear()
             else:
                 attempts.append(now)
                 message = 'Incorrect username or password.' if english else '账号或密码有误。'
                 return login_page(page, message), 401
         session.clear()
-        session.update(authenticated=True, csrf=secrets.token_urlsafe(32))
+        session.update(username=name, version=session_version(name, saved_hash), csrf=secrets.token_urlsafe(32))
         session.permanent = True
         return redirect(page, code=303)
 
     @app.post('/logout')
     def logout():
-        csrf = request.form.get('csrf', '')
-        expected = session.get('csrf', '')
-        if not expected or not csrf.isascii() or not hmac.compare_digest(expected, csrf):
-            abort(403)
+        require_csrf()
         session.clear()
         return redirect('/', code=303)
+
+    @app.route('/users', methods=['GET', 'POST'])
+    def manage_users():
+        name = signed_in_user()
+        if name != OWNER or name != username or users_db is None:
+            abort(403)
+        english = request.args.get('lang') == 'en'
+        error = None
+        status = 200
+        with closing(sqlite3.connect(users_db, isolation_level=None)) as db:
+            if request.method == 'POST':
+                require_csrf()
+                action = request.form.get('action')
+                target = request.form.get('username', '').strip().lower()
+                password = request.form.get('password', '')
+                if action not in ('create', 'reset'):
+                    abort(400)
+                if target in (OWNER, username.lower()) or not USERNAME.fullmatch(target):
+                    error = ('Choose a valid username for a dashboard viewer.', '请输入有效的看板查看账号。')
+                else:
+                    try:
+                        new_hash = hash_password(password.encode())
+                    except ValueError:
+                        error = ('Use at least 15 characters and at most 1024 UTF-8 bytes, with no line breaks.',
+                                 '密码至少 15 个字符，最多 1024 个 UTF-8 字节，且不能换行。')
+                    else:
+                        if action == 'create':
+                            result = db.execute('INSERT INTO users VALUES (?, ?) ON CONFLICT(username) DO NOTHING',
+                                                (target, new_hash))
+                            if result.rowcount == 0:
+                                error = ('This username already exists.', '该账号已存在。')
+                                status = 409
+                        else:
+                            result = db.execute('UPDATE users SET password_hash = ? WHERE username = ?',
+                                                (new_hash, target))
+                            if result.rowcount == 0:
+                                error = ('This account was not found.', '找不到该账号。')
+                        if error is None:
+                            flash(action)
+                            return redirect('/users?lang=en' if english else '/users', code=303)
+                if error and status == 200:
+                    status = 400
+            viewers = [row[0] for row in db.execute('SELECT username FROM users ORDER BY username')]
+        return render_template('dashboard_users.html', viewers=viewers, english=english,
+                               csrf=session['csrf'], messages=get_flashed_messages(),
+                               error=error[0 if english else 1] if error else None), status
 
     @app.get('/ssw')
     @app.get('/yakshaver')
@@ -312,11 +397,15 @@ def create_app(username, password_hash, session_key, keys):
         path = '/' + page
         if path not in REPORT_PAGES:
             abort(404)
-        if session.get('authenticated') is not True:
+        name = signed_in_user()
+        if not name:
             return login_page(path)
         slug, lang = REPORT_PAGES[path]
         try:
-            body, g.script_policy = render_report(slug, lang, keys, session['csrf'])
+            body, g.script_policy = render_report(
+                slug, lang, keys, session['csrf'],
+                can_manage=name == username == OWNER and users_db is not None,
+            )
         except (InvalidTag, OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
             return Response('看板数据暂不可用，请稍后刷新。', status=502, mimetype='text/plain')
         return Response(body, mimetype='text/html')
@@ -360,5 +449,6 @@ if __name__ == '__main__':
         key_bytes(os.environ['BAIDU_ADS_SESSION_KEY']),
         {'tinacms': key_bytes(os.environ['POSTHOG_CLI_SNAPSHOT_KEY']),
          'ssw': key_bytes(os.environ['WECOM_SNAPSHOT_KEY'])},
+        users_db=os.environ.get('BAIDU_ADS_USERS_DB'),
     )
     serve(application, host='127.0.0.1', port=8765, max_request_header_size=16_384, max_request_body_size=8192)

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="{{ 'en' if english else 'zh-CN' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{{ 'Manage users' if english else '用户管理' }} · Baidu.Ads</title>
+  <style>
+    * { box-sizing: border-box }
+    body { margin: 0; background: #f6f7f5; color: #202b27; font: 15px system-ui,sans-serif }
+    main { max-width: 50rem; margin: 0 auto; padding: 24px 18px 48px }
+    a { color: #176c54 }
+    h1 { margin: 18px 0 24px; font-size: 1.8rem }
+    h2 { margin: 0 0 16px; font-size: 1.15rem }
+    section { background: white; border: 1px solid #e0e5df; border-radius: 12px; padding: 20px; margin-bottom: 16px }
+    p { margin: 0 0 12px }
+    ul { margin: 0; padding-left: 22px; overflow-wrap: anywhere }
+    form { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr) auto; gap: 12px; align-items: end }
+    label { display: grid; gap: 6px; font-weight: 600 }
+    input, select, button { font: inherit; min-width: 0; border-radius: 7px; padding: 9px 10px }
+    input, select { border: 1px solid #aebbb3; background: white; color: inherit; width: 100% }
+    button { background: #174d37; color: white; border: 1px solid #174d37; cursor: pointer; font-weight: 600 }
+    small { display: block; color: #52645a; margin-top: 10px }
+    [role=alert] { color: #a32828 }
+    [role=status] { color: #176c54 }
+    @media (max-width: 600px) { form { grid-template-columns: 1fr } button { justify-self: start } }
+  </style>
+</head>
+<body><main>
+  <a href="{{ '/en.html' if english else '/' }}">{{ 'Back to dashboard' if english else '返回看板' }}</a>
+  <h1>{{ 'Manage users' if english else '用户管理' }}</h1>
+  {% if error %}<p role="alert">{{ error }}</p>{% endif %}
+  {% for message in messages %}
+  <p role="status">{% if message == 'create' %}{{ 'Account created.' if english else '账号已创建。' }}{% else %}{{ 'Password reset. The user must sign in again.' if english else '密码已重置，该用户需重新登录。' }}{% endif %}</p>
+  {% endfor %}
+  <section>
+    <h2>{{ 'Add account' if english else '新增账号' }}</h2>
+    <form method="post">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <input type="hidden" name="action" value="create">
+      <label>{{ 'Username' if english else '账号' }}
+        <input name="username" autocomplete="off" autocapitalize="none" maxlength="64" pattern="[A-Za-z0-9_.@\-]+" required>
+      </label>
+      <label>{{ 'Password' if english else '密码' }}
+        <input name="password" type="password" autocomplete="new-password" minlength="15" maxlength="1024" required>
+      </label>
+      <button>{{ 'Create account' if english else '创建账号' }}</button>
+    </form>
+    <small>{{ 'Use at least 15 characters for passwords.' if english else '密码至少 15 个字符。' }}</small>
+  </section>
+  <section>
+    <h2>{{ 'Reset password' if english else '重置密码' }}</h2>
+    {% if viewers %}
+    <form method="post">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <input type="hidden" name="action" value="reset">
+      <label>{{ 'Account' if english else '账号' }}
+        <select name="username" required>
+          <option value="">{{ 'Select an account' if english else '选择账号' }}</option>
+          {% for viewer in viewers %}<option>{{ viewer }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>{{ 'New password' if english else '新密码' }}
+        <input name="password" type="password" autocomplete="new-password" minlength="15" maxlength="1024" required>
+      </label>
+      <button>{{ 'Reset password' if english else '重置密码' }}</button>
+    </form>
+    {% else %}
+    <p>{{ 'No viewer accounts yet.' if english else '还没有查看账号。' }}</p>
+    {% endif %}
+  </section>
+</main></body></html>

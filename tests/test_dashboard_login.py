@@ -128,6 +128,64 @@ class DashboardLoginTests(unittest.TestCase):
                 read('report.html', 4)
             git_source.assert_not_called()
 
+    def test_kenshi_manages_viewers_and_reset_revokes_existing_sessions(self):
+        with tempfile.TemporaryDirectory() as directory:
+            database = Path(directory) / 'users.sqlite3'
+            session_key = secrets.token_bytes(32)
+            app = login.create_app('kenshi', self.password_hash, session_key, self.keys, database)
+            self.client = app.test_client()
+            self.assertEqual(self.get('/users').status_code, 403)
+            csrf = self.start_login()
+            self.assertEqual(self.finish_login(csrf, username='kenshi').status_code, 303)
+            page = self.get('/users?lang=en')
+            self.assertIn(b'Manage users', page.data)
+            csrf = re.search(rb'name="csrf" value="([^"]+)"', page.data)[1].decode()
+            owner = self.client
+            with patch.object(login, 'source_bytes', return_value=b'<script id="report-data" type="application/json">{}</script>'):
+                self.assertIn(b'href="/users?lang=en"', self.get('/yakshaver/en.html').data)
+
+            def save(action, name, password, token=csrf):
+                return owner.post('/users?lang=en', base_url=login.BASE_URL, data={
+                    'csrf': token, 'action': action, 'username': name, 'password': password,
+                })
+
+            initial = 'initial-viewer-password'
+            updated = 'updated-viewer-password'
+            self.assertEqual(save('create', 'viewer', initial, token='bad').status_code, 403)
+            self.assertEqual(save('create', 'viewer', 'short').status_code, 400)
+            self.assertEqual(save('create', 'KENSHI', initial).status_code, 400)
+            self.assertEqual(save('create', 'Viewer', initial).status_code, 303)
+            self.assertIn(b'<option>viewer</option>', self.get('/users').data)
+            self.assertEqual(save('create', 'viewer', updated).status_code, 409)
+
+            self.client = app.test_client()
+            self.assertEqual(self.finish_login(self.start_login(), username='viewer', password=initial).status_code, 303)
+            self.assertEqual(self.get('/users').status_code, 403)
+            self.assertEqual(self.client.post('/users', base_url=login.BASE_URL, data={'csrf': csrf}).status_code, 403)
+            report = b'<script id="report-data" type="application/json">{"private_posthog_cli":123,"private_wecom_consultations":456}</script>'
+            for slug, path in [('tinacms', '/en.html'), ('ssw', '/ssw/en.html')]:
+                snapshot_path, header, field, fields = login.SNAPSHOTS[slug]
+                day = '2026-11-12'
+                snapshot = {'through': day, 'rows': [{'date': day, **dict.fromkeys(fields, 7)}]}
+                nonce = secrets.token_bytes(12)
+                encrypted = header + nonce + AESGCM(self.keys[slug]).encrypt(nonce, json.dumps(snapshot).encode(), header)
+                with patch.object(login, 'source_bytes', side_effect=lambda name, *_: encrypted if name == snapshot_path else report):
+                    response = self.get(path)
+                self.assertEqual(response.status_code, 200)
+                self.assertNotIn(b'href="/users', response.data)
+                match = re.search(rb'id="report-data" type="application/json">(.*?)</script>', response.data)
+                self.assertEqual(json.loads(match[1]), {field: snapshot})
+
+            self.assertEqual(save('reset', 'kenshi', updated).status_code, 400)
+            self.assertEqual(save('reset', 'viewer', updated).status_code, 303)
+            self.assertIn(b'action="/login"', self.get('/ssw/').data)
+            self.client = login.create_app('kenshi', self.password_hash, session_key, self.keys, database).test_client()
+            csrf = self.start_login()
+            self.assertEqual(self.finish_login(csrf, username='viewer', password=initial).status_code, 401)
+            self.assertEqual(self.finish_login(csrf, username='viewer', password=updated).status_code, 303)
+            self.assertNotIn(initial.encode(), database.read_bytes())
+            self.assertNotIn(updated.encode(), database.read_bytes())
+
     def test_pages_entry_contains_only_links_to_authenticated_reports(self):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory)
