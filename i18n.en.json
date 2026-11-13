@@ -1,4 +1,8 @@
 {
+  "显示主题": "Appearance",
+  "浅色主题": "Light theme",
+  "深色主题": "Dark theme",
+  "跟随系统主题": "Use system theme",
   "中国区 Tina CLI": "Tina CLI in China",
   "微信客服咨询": "WeChat Customer Service consultations",
   "解锁客服数据": "Unlock consultation data",

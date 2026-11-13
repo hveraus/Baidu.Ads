@@ -11,7 +11,7 @@ def account_template(template,profile,lang):
  def header(source):
   source,n=re.subn(r'(<div class="brand">)[^<]+(?= <span>)',lambda m:m[1]+selector,source,count=1)
   if n!=1:raise ValueError('Header title structure changed')
-  css='.brand{display:flex;align-items:center;min-width:0}#account-switch{font:inherit;font-weight:700;letter-spacing:inherit;border:1px solid transparent;border-radius:5px;background:transparent;color:var(--ink);padding:6px 24px 6px 6px;margin-left:-6px;cursor:pointer;max-width:165px}#account-switch:hover{background:var(--light)}#account-switch:focus-visible{outline:2px solid var(--green);outline-offset:2px}.brand span{white-space:nowrap}'
+  css='.brand{display:flex;align-items:center;min-width:0}#account-switch{font:inherit;font-weight:700;letter-spacing:inherit;border:1px solid transparent;border-radius:5px;background:transparent;color:var(--ink);padding:6px 24px 6px 6px;margin-left:-6px;cursor:pointer;max-width:165px}#account-switch:hover{background:var(--light)}#account-switch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.brand span{white-space:nowrap}'
   return source.replace('</style>',css+'</style>',1)
  # Review and filter state are scoped to an account, while language preference is shared.
  template=template.replace('baidu-ads-switch-state',f'baidu-ads-switch-state-{slug}')
