@@ -54,4 +54,4 @@
 
 ## Aliyun collection and local report storage
 
-The Windows cutover procedure and rollback are in [docs/ALIYUN_COLLECTION.md](docs/ALIYUN_COLLECTION.md). Keep the live GitHub and WeCom tasks enabled until the first ECS collection, encrypted backup and authenticated dashboard have been verified. After cutover the active data comes from ECS storage. GitHub retains the code, old report history and Pages redirect.
+The Windows cutover procedure and rollback are in [docs/ALIYUN_COLLECTION.md](docs/ALIYUN_COLLECTION.md). Keep the live GitHub and WeCom tasks enabled until the first ECS collection and authenticated dashboard have been verified. After cutover the active data comes from ECS storage. GitHub retains the code, old report history and Pages redirect.

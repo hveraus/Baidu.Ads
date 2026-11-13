@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Collect and publish a complete report revision to private ECS storage."""
 import argparse
-import io
 import json
 import os
 from pathlib import Path
@@ -10,9 +9,6 @@ import subprocess
 import sys
 import time
 import uuid
-import zipfile
-
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -22,10 +18,8 @@ from scripts import vault
 
 REPORTS = ('report/index.html', 'report/yakshaver/index.html', 'report/ssw/index.html')
 SNAPSHOT_FILES = tuple(spec[0] for spec in SNAPSHOTS.values())
-HEADER = b'BAIDU-ADS-ECS-BACKUP-v1\n'
-BACKUP_FOLDERS = ('data', 'accounts', 'backups')
 REQUIRED = (
-    'DATA_BACKUP_KEY', 'BAIDU_TONGJI_CREDENTIALS_JSON', 'BAIDU_TONGJI_SSW_SITE_JSON',
+    'BAIDU_TONGJI_CREDENTIALS_JSON', 'BAIDU_TONGJI_SSW_SITE_JSON',
     'POSTHOG_CLI_QUERY_KEY', 'POSTHOG_CLI_SNAPSHOT_KEY', 'WECOM_SNAPSHOT_KEY',
     'WECOM_CORP_ID', 'WECOM_OPEN_KFID', 'WECOM_APP_SECRET',
 )
@@ -41,10 +35,8 @@ STEPS = (
     ('scripts/verify_data.py',),
     ('scripts/publish_data.py',),
     ('dashboard.py', '--public'),
-    ('scripts/accounts.py', 'collect', '--account', 'yakshaver'),
-    ('scripts/accounts.py', 'collect', '--account', 'ssw'),
-    ('scripts/vault.py', 'backup'),
-    ('scripts/vault.py', 'verify'),
+    ('scripts/accounts.py', 'collect', '--account', 'yakshaver', '--no-backup'),
+    ('scripts/accounts.py', 'collect', '--account', 'ssw', '--no-backup'),
     ('scripts/check_public.py',),
 )
 
@@ -53,15 +45,14 @@ def collect():
     missing = [name for name in REQUIRED if not os.environ.get(name, '').strip()]
     if missing:
         raise ValueError('Missing collector settings: ' + ', '.join(missing))
-    key = vault.key_bytes()
-    if not (ROOT / 'baidu.sqlite3').exists():
-        vault.restore(ROOT / 'backups/private-data.enc', ROOT, key)
+    if not (ROOT / 'baidu.sqlite3').exists() or not (ROOT / '.credentials.json').exists():
+        vault.restore(ROOT / 'backups/private-data.enc', ROOT, vault.key_bytes())
     from scripts.accounts import PROFILES, prepare
 
     for slug, profile in PROFILES.items():
         _, runtime = prepare(slug)
-        if not (runtime / '.credentials.json').exists():
-            vault.restore(ROOT / 'accounts' / slug / 'backups/private-data.enc', runtime, key)
+        if not (runtime / 'baidu.sqlite3').exists() or not (runtime / '.credentials.json').exists():
+            vault.restore(ROOT / 'accounts' / slug / 'backups/private-data.enc', runtime, vault.key_bytes())
         os.environ[profile['secret']] = (runtime / '.credentials.json').read_text(encoding='utf-8')
     for step in STEPS:
         print('Running', *step, flush=True)
@@ -82,42 +73,7 @@ def prepare_release(release):
         decrypt_snapshot((release / name).read_bytes(), key_bytes(os.environ.get(key_name)), header, fields)
 
 
-def backup(release, output):
-    plain = io.BytesIO()
-    with zipfile.ZipFile(plain, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
-        for name in REPORTS:
-            archive.write(release / name, name)
-        for folder in BACKUP_FOLDERS:
-            for path in (ROOT / folder).rglob('*'):
-                if path.is_file():
-                    archive.write(path, path.relative_to(ROOT).as_posix())
-    nonce = os.urandom(12)
-    cipher = AESGCM(vault.key_bytes())
-    output.write_bytes(HEADER + nonce + cipher.encrypt(nonce, plain.getvalue(), HEADER))
-    with open_backup(output) as archive:
-        if archive.testzip() is not None:
-            raise ValueError('ECS backup verification failed')
-
-
-def open_backup(path):
-    packed = path.read_bytes()
-    offset = len(HEADER)
-    if not packed.startswith(HEADER) or len(packed) <= offset + 28:
-        raise ValueError('Invalid ECS backup format')
-    plain = AESGCM(vault.key_bytes()).decrypt(packed[offset:offset + 12], packed[offset + 12:], HEADER)
-    return zipfile.ZipFile(io.BytesIO(plain))
-
-
-def restore_backup(path, destination):
-    with open_backup(path) as archive:
-        if archive.testzip() is not None:
-            raise ValueError('ECS backup verification failed')
-        destination.mkdir(parents=True, exist_ok=False)
-        archive.extractall(destination)
-    print('Backup restored to', destination)
-
-
-def publish(storage, *, oss=None, ossutil='ossutil'):
+def publish(storage):
     revision = uuid.uuid4().hex
     releases = storage / 'releases'
     release = releases / revision
@@ -125,12 +81,6 @@ def publish(storage, *, oss=None, ossutil='ossutil'):
     pointer = storage / (revision + '.tmp')
     try:
         prepare_release(release)
-        if oss:
-            output = release / 'backup.enc'
-            backup(release, output)
-            target = oss.rstrip('/') + '/' + revision + '.enc'
-            subprocess.run([ossutil, 'cp', str(output), target], check=True, timeout=300)
-            output.unlink()
         pointer.write_text(revision + '\n', encoding='ascii')
         for attempt in range(5):
             try:
@@ -155,17 +105,9 @@ def publish(storage, *, oss=None, ossutil='ossutil'):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('mode', choices=('seed', 'collect', 'check', 'restore'))
+    parser.add_argument('mode', choices=('seed', 'collect', 'check'))
     parser.add_argument('--storage', type=Path, required=True)
-    parser.add_argument('--oss')
-    parser.add_argument('--backup', type=Path, help='encrypted backup to restore')
-    parser.add_argument('--ossutil', default='ossutil')
     args = parser.parse_args()
-    if args.mode == 'restore':
-        if not args.backup:
-            parser.error('restore requires --backup and a new --storage directory')
-        restore_backup(args.backup, args.storage)
-        return
     if args.mode == 'check':
         release = args.storage / 'releases' / (args.storage / 'current').read_text(encoding='ascii').strip()
         for slug, (name, header, _, fields) in SNAPSHOTS.items():
@@ -191,7 +133,7 @@ def main():
             raise SystemExit('This storage already has a report revision.')
         if args.mode == 'collect':
             collect()
-        publish(args.storage, oss=args.oss, ossutil=args.ossutil)
+        publish(args.storage)
 
 
 if __name__ == '__main__':

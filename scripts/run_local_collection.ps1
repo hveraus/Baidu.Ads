@@ -4,9 +4,7 @@ param(
     [switch]$Seed,
     [switch]$Check,
     [switch]$InstallTask,
-    [string]$SiteConfig,
-    [string]$OssUri,
-    [string]$Ossutil = 'ossutil'
+    [string]$SiteConfig
 )
 
 $ErrorActionPreference = 'Stop'
@@ -29,16 +27,11 @@ function Read-Secret([string]$Message) {
 if ($Initialize) {
     if (-not $SiteConfig) { $SiteConfig = Read-Host 'Paste the BAIDU_TONGJI_SSW_SITE_JSON repository variable' }
     $null = ConvertFrom-Json -InputObject $SiteConfig
-    if ($OssUri -and $OssUri -notmatch '^oss://[a-z0-9-]+/[^\s]+$') {
-        throw 'Use an OSS bucket URI with a dedicated backup prefix.'
-    }
     $config = @{
-        DATA_BACKUP_KEY = Read-Secret 'Enter the existing 64-character Baidu.Ads backup key'
+        DATA_BACKUP_KEY = Read-Secret 'Enter the existing 64-character key to import historical data'
         BAIDU_TONGJI_CREDENTIALS_JSON = Read-Secret 'Enter the Baidu Tongji read credentials JSON'
         POSTHOG_CLI_QUERY_KEY = Read-Secret 'Enter the PostHog project query key'
         BAIDU_TONGJI_SSW_SITE_JSON = $SiteConfig
-        OSS_URI = $OssUri
-        OSSUTIL = $Ossutil
     }
     $staged = $configPath + '.' + [guid]::NewGuid().ToString('N')
     try {
@@ -87,9 +80,6 @@ if (-not ($Seed -or $Check)) {
     $config = Import-Clixml -LiteralPath $configPath
     foreach ($name in @('DATA_BACKUP_KEY', 'BAIDU_TONGJI_CREDENTIALS_JSON', 'POSTHOG_CLI_QUERY_KEY', 'BAIDU_TONGJI_SSW_SITE_JSON')) {
         $settings[$name] = $config[$name]
-    }
-    if ($config.OSS_URI) {
-        $argsForPython += @('--oss', $config.OSS_URI, '--ossutil', $config.OSSUTIL)
     }
 }
 

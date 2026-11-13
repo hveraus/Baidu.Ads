@@ -4,12 +4,10 @@
 
 1. 从 GitHub 克隆已验证的迁移版本到 `%USERPROFILE%\baidu-ads-collector`。首次迁移用同一版本带来的三个加密历史备份和最新报表。采集可复用看板的 Python 虚拟环境。
 2. 在采集 checkout 执行 `powershell -NoProfile -File .\scripts\run_local_collection.ps1 -Seed`，再以 `-Check` 核对三个广告账号和两份加密快照的覆盖日期。初始化数据位于 `%LOCALAPPDATA%\Baidu.Ads\storage`。
-3. 用 `-Initialize -SiteConfig '<BAIDU_TONGJI_SSW_SITE_JSON>' -OssUri 'oss://<private-bucket>/<prefix>' -Ossutil '<ossutil.exe 的完整路径>'` 保存采集配置。备份密钥、百度统计授权 JSON 和 PostHog 查询密钥通过 Windows 密码框输入，保存在当前账号的 DPAPI 配置中。广告账号凭据从各自的加密历史恢复。PostHog 快照密钥及微信客服配置复用现有设置。OSS 使用仅限备份路径的访问身份。若已单独配置 ossutil，可省略 `-Ossutil`。
-4. 手动执行一次脚本，然后用 `-Check` 和 `storage\collection.log` 验证。确认 OSS 可取回本次加密备份后，用 `-InstallTask` 注册后台采集任务。
+3. 用 `-Initialize -SiteConfig '<BAIDU_TONGJI_SSW_SITE_JSON>'` 保存采集配置。用于首次导入历史的解密密钥、百度统计授权 JSON 和 PostHog 查询密钥通过 Windows 密码框输入，保存在当前账号的 DPAPI 配置中。广告账号凭据从各自的加密历史恢复。PostHog 快照密钥及微信客服配置复用现有设置。
+4. 手动执行一次脚本，然后用 `-Check` 和 `storage\collection.log` 验证。实时采集验证通过后，用 `-InstallTask` 注册后台采集任务。
 5. 部署带本地读取功能的看板代码后，在 `storage` 内创建空的 `use-local` 文件并重启 `baidu-ads-dashboard-login`。登录看板核对 TinaCMS、YakShaver 和 SSW。确认 GitHub 没有正在运行的采集，再停用 GitHub 的 `collect.yml` 和 Windows 的旧 `baidu-ads-ssw-wecom` 任务。GitHub Pages 继续提供旧链接跳转。
 
 采集在私有 checkout 生成报表，校验完毕后一次切换 `storage\current`。每次看板请求固定读取同一批次的文件。失败时继续展示上一次成功报表。首次切换后的回退方式为移走 `use-local` 并重启看板任务，恢复旧采集任务前先停 ECS 本地采集任务。
 
-OSS 对象包含报表、公开统计层、加密快照和三个历史备份。整个压缩包再使用现有备份密钥进行 AES-256-GCM 加密，格式为 `BAIDU-ADS-ECS-BACKUP-v1\n`、12 字节 nonce、密文及认证标签，头部用作关联数据。备份密钥和两份快照密钥需要单独保存。
-
-恢复时，从 OSS 下载所需的 `.enc` 对象。使用安全方式将备份密钥提供为 `DATA_BACKUP_KEY` 环境变量，运行 `python scripts/collect_local.py restore --backup <文件> --storage <全新的恢复目录>`。确认报表和加密快照完整后，把恢复目录中的 `data`、`accounts`、`backups` 和 `report` 拷入新的采集 checkout，使用 `-Seed` 和 `-Check` 验证。历史原始数据由各账号的加密备份在首次采集时恢复。
+新增数据和加密统计快照留在现有 ECS。采集失败时，看板继续展示上一次已校验的数据。整块云盘丢失后，迁移后采集的数据依赖各上游 API 的历史保留期来重新获取。

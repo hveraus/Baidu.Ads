@@ -25,7 +25,7 @@ def pack(root):
  for folder in RAW_DIRS:
   if (root/folder).exists():
    for p in (root/folder).rglob('*'):
-    if p.is_file() and not p.is_symlink() and '__pycache__' not in p.parts:files[p.relative_to(root).as_posix()]=p.read_bytes()
+    if p.is_file() and not p.is_symlink() and '__pycache__' not in p.parts:files[str(p.relative_to(root))]=p.read_bytes()
  if (root/'baidu.sqlite3').exists():
   # Capture a coherent database even if another reader is connected.
   source=sqlite3.connect(root/'baidu.sqlite3');target=sqlite3.connect(':memory:');source.backup(target)
