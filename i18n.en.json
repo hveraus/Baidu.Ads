@@ -475,9 +475,13 @@
   "位置指标不能代替有效线索": "Position metrics do not replace qualified-lead data.",
   " 次。位置指标不能代替有效线索": " clicks. Position metrics do not replace qualified-lead data.",
   "公开共享数据快照": "Published shared-data snapshot",
+  "阿里云报表快照": "Alibaba Cloud report snapshot",
   "每日 09:00 云端采集": "Cloud collection at 09:00 daily",
   "北京时间 · GitHub Actions": "Beijing time · GitHub Actions",
+  "北京时间 · 阿里云": "Beijing time · Alibaba Cloud",
+  "阿里云每天北京时间 09:00 采集截至昨天的数据。页面显示最近一次通过校验的报表。": "Alibaba Cloud collects data through the previous day at 09:00 Beijing time. This page shows the latest validated report.",
   "北京时间，GitHub Actions 计划每日 09:00 采集截至昨天的数据，回补最近7天；GitHub 调度可能延迟，无需本机开机。页面是最近成功发布的数据快照；请查看最近运行时间并刷新报表": "Dates use Beijing time. GitHub Actions is scheduled at 09:00 daily to collect through the previous day and refresh the last 7 days. Scheduling may be delayed; this Mac does not need to be running. This page shows the latest successfully published snapshot. Check the last run time and refresh the report.",
   "数据来源：百度营销官方 API · 当前账户：智鹏瑞尔 · 本页及所展示统计数据可公开访问": "Source: Baidu Marketing API · Account: 智鹏瑞尔 · This page and its advertising statistics are publicly accessible",
-  "；到期前需在百度后台续期并更新 GitHub Actions Secrets。采集令牌不会发送到浏览器。仓库包含可公开的统计数据及加密原始备份，访客 IP 不进入公开页面或明文数据。": ". Renew authorisation in Baidu before expiry and update GitHub Actions Secrets. Tokens are never sent to the browser. The repository contains public statistics and an encrypted private backup. Visitor IPs are excluded from the public page and plaintext data."
+  "；到期前需在百度后台续期并更新 GitHub Actions Secrets。采集令牌不会发送到浏览器。仓库包含可公开的统计数据及加密原始备份，访客 IP 不进入公开页面或明文数据。": ". Renew authorisation in Baidu before expiry and update GitHub Actions Secrets. Tokens are never sent to the browser. The repository contains public statistics and an encrypted private backup. Visitor IPs are excluded from the public page and plaintext data.",
+  "。到期前请在百度后台续期并更新阿里云采集配置。采集令牌和访客 IP 不会发送到浏览器。": ". Renew authorisation in Baidu before expiry and update the collector settings on Alibaba Cloud. The browser receives aggregate reports without collection tokens or visitor IPs."
 }

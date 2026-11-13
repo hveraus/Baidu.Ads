@@ -7,8 +7,17 @@ REPLACEMENTS={
  '数据来源：百度营销官方 API · 当前账户：智鹏瑞尔 · 数据与分析均保存在本机':'数据来源：百度营销官方 API · 当前账户：智鹏瑞尔 · 本页及所展示统计数据可公开访问',
  '；临近到期会提醒，需在百度后台续期并更新本机凭据。页面仅包含报表数据，不包含令牌。CSV、SQLite、程序与本页都保存在 Baidu.Ads 文件夹。':'；到期前需在百度后台续期并更新 GitHub Actions Secrets。采集令牌不会发送到浏览器。仓库包含可公开的统计数据及加密原始备份，访客 IP 不进入公开页面或明文数据。',
 }
-def public_template(source):
- for old,new in REPLACEMENTS.items():
+ALIYUN_REPLACEMENTS = {
+ **REPLACEMENTS,
+ '数据保存在本机': '阿里云报表快照',
+ '北京时间 · 通过 Codex 运行': '北京时间 · 阿里云',
+ '北京时间，每日采集截至昨天的数据，回补最近7天以覆盖迟到转化。自动任务通过 Codex 在本机运行，需要本机与 Codex 可运行且有网络。页面为本地快照；采集完成后点“刷新报表”': '阿里云每天北京时间 09:00 采集截至昨天的数据。页面显示最近一次通过校验的报表。',
+ '；临近到期会提醒，需在百度后台续期并更新本机凭据。页面仅包含报表数据，不包含令牌。CSV、SQLite、程序与本页都保存在 Baidu.Ads 文件夹。': '。到期前请在百度后台续期并更新阿里云采集配置。采集令牌和访客 IP 不会发送到浏览器。',
+}
+
+def public_template(source, *, aliyun=False):
+ replacements = ALIYUN_REPLACEMENTS if aliyun else REPLACEMENTS
+ for old,new in replacements.items():
   if old not in source:raise ValueError('Publication text changed; review privacy wording before publishing')
   source=source.replace(old,new)
  return source

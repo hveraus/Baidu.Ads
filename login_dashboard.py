@@ -158,10 +158,10 @@ def decrypt_snapshot(packed, key, header, fields):
     return {'through': through.isoformat(), 'rows': clean}
 
 
-@lru_cache(maxsize=6)
-def report_template(slug, lang):
+@lru_cache(maxsize=12)
+def report_template(slug, lang, aliyun=False):
     profile = {'slug': 'tinacms', 'name': 'TinaCMS'} if slug == 'tinacms' else PROFILES[slug]
-    source = public_template((ROOT / 'dashboard.template.html').read_text(encoding='utf-8'))
+    source = public_template((ROOT / 'dashboard.template.html').read_text(encoding='utf-8'), aliyun=aliyun)
     if lang == 'en':
         source = english_template(source)
     template = account_template(source, profile, lang)
@@ -198,7 +198,7 @@ def render_report(slug, lang, keys, csrf):
             'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
             '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>'
             '</svg></button></form>')
-    template, handler_policy = report_template(slug, lang)
+    template, handler_policy = report_template(slug, lang, bool(os.environ.get('BAIDU_ADS_LOCAL_STORAGE')))
     nonce = secrets.token_urlsafe(18)
     template = template.replace('<script', f'<script nonce="{nonce}"').replace('<!-- dashboard-signout -->', form, 1)
     template = (template.replace('本页及所展示统计数据可公开访问', '已登录')
