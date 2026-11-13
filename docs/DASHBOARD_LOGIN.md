@@ -2,11 +2,11 @@
 
 登录入口为 `https://ads.ssw.com.cn/`。每个账号的七天浏览器会话可在 TinaCMS、YakShaver、SSW 的中英文看板通用，也可从页头退出。HTTPS 已部署，原 Pages 地址会跳转到对应的新页面。
 
-登录后，服务端读取阿里云 ECS 最近一次通过校验的报表。管理员登录时，服务端在内存中解密中国区 Tina CLI 和 SSW 微信客服汇总。GitHub 保留迁移前的广告统计、加密快照和 Pages 跳转入口。采集方式见[阿里云采集与存储](ALIYUN_COLLECTION.md)。
+登录后，服务端读取阿里云 ECS 最近一次通过校验的报表，并在内存中解密中国区 Tina CLI 和 SSW 微信客服汇总。GitHub 保留迁移前的广告统计、加密快照和 Pages 跳转入口。采集方式见[阿里云采集与存储](ALIYUN_COLLECTION.md)。
 
 ## 用户管理
 
-用 `kenshi` 登录后，点击页头的用户管理图标，或直接打开 `https://ads.ssw.com.cn/users`。在页面上设置查看账号和初始密码。用户忘记密码时，在重置区选择该账号并设置新密码，旧会话随即失效。查看账号可访问三个看板的广告与网站统计。Tina CLI 和微信客服的加密统计由管理员查看。
+用 `kenshi` 登录后，点击页头的用户管理图标，或直接打开 `https://ads.ssw.com.cn/users`。在页面上设置查看账号和初始密码。用户忘记密码时，在重置区选择该账号并设置新密码，旧会话随即失效。所有登录账号都可查看三个看板的广告和网站统计，以及 Tina CLI 和微信客服汇总。
 
 查看账号只保存用户名和加盐的 scrypt 密码哈希，数据库在 `%LOCALAPPDATA%\Baidu.Ads\dashboard-users.sqlite3`。管理员密码仍使用现有 Windows 登录配置。若管理员忘记自己的密码，在服务器用下文的 `-Initialize` 流程重新设置并重启服务。
 

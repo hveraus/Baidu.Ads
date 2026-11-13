@@ -176,7 +176,7 @@ def report_template(slug, lang, aliyun=False):
     return template, handler_policy
 
 
-def render_report(slug, lang, keys, csrf, *, owner, can_manage=False):
+def render_report(slug, lang, keys, csrf, *, can_manage=False):
     read = report_source()
     path = 'report/index.html' if slug == 'tinacms' else f'report/{slug}/index.html'
     match = REPORT_DATA.search(read(path, 32 * 1024 * 1024))
@@ -186,7 +186,7 @@ def render_report(slug, lang, keys, csrf, *, owner, can_manage=False):
     for field in ('encrypted_posthog_cli', 'encrypted_wecom_consultations',
                   'private_posthog_cli', 'private_wecom_consultations'):
         data.pop(field, None)
-    if owner and slug in SNAPSHOTS:
+    if slug in SNAPSHOTS:
         snapshot_path, header, field, fields = SNAPSHOTS[slug]
         packed = read(snapshot_path, 16_384)
         data[field] = decrypt_snapshot(packed, keys[slug], header, fields)
@@ -403,7 +403,7 @@ def create_app(username, password_hash, session_key, keys, users_db=None):
         slug, lang = REPORT_PAGES[path]
         try:
             body, g.script_policy = render_report(
-                slug, lang, keys, session['csrf'], owner=name == username,
+                slug, lang, keys, session['csrf'],
                 can_manage=name == username == OWNER and users_db is not None,
             )
         except (InvalidTag, OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):

@@ -163,14 +163,18 @@ class DashboardLoginTests(unittest.TestCase):
             self.assertEqual(self.get('/users').status_code, 403)
             self.assertEqual(self.client.post('/users', base_url=login.BASE_URL, data={'csrf': csrf}).status_code, 403)
             report = b'<script id="report-data" type="application/json">{"private_posthog_cli":123,"private_wecom_consultations":456}</script>'
-            with patch.object(login, 'source_bytes', return_value=report) as source:
-                for path in ('/en.html', '/ssw/en.html'):
+            for slug, path in [('tinacms', '/en.html'), ('ssw', '/ssw/en.html')]:
+                snapshot_path, header, field, fields = login.SNAPSHOTS[slug]
+                day = '2026-11-12'
+                snapshot = {'through': day, 'rows': [{'date': day, **dict.fromkeys(fields, 7)}]}
+                nonce = secrets.token_bytes(12)
+                encrypted = header + nonce + AESGCM(self.keys[slug]).encrypt(nonce, json.dumps(snapshot).encode(), header)
+                with patch.object(login, 'source_bytes', side_effect=lambda name, *_: encrypted if name == snapshot_path else report):
                     response = self.get(path)
-                    self.assertEqual(response.status_code, 200)
-                    self.assertNotIn(b'href="/users', response.data)
-                    match = re.search(rb'id="report-data" type="application/json">(.*?)</script>', response.data)
-                    self.assertEqual(json.loads(match[1]), {})
-                self.assertEqual(source.call_count, 2)
+                self.assertEqual(response.status_code, 200)
+                self.assertNotIn(b'href="/users', response.data)
+                match = re.search(rb'id="report-data" type="application/json">(.*?)</script>', response.data)
+                self.assertEqual(json.loads(match[1]), {field: snapshot})
 
             self.assertEqual(save('reset', 'kenshi', updated).status_code, 400)
             self.assertEqual(save('reset', 'viewer', updated).status_code, 303)
