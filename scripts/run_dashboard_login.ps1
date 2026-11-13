@@ -6,6 +6,10 @@ $root = Split-Path -Parent $PSScriptRoot
 $private = Join-Path $env:LOCALAPPDATA 'Baidu.Ads'
 $loginPath = Join-Path $private 'dashboard-login.xml'
 $wecomPath = Join-Path $private 'wecom-consultations.xml'
+$storage = Join-Path $private 'storage'
+if (Test-Path -LiteralPath (Join-Path $storage 'use-local') -PathType Leaf) {
+    $env:BAIDU_ADS_LOCAL_STORAGE = $storage
+}
 $python = Join-Path $root '.venv\Scripts\python.exe'
 $appPath = Join-Path $root 'login_dashboard.py'
 

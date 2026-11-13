@@ -18,7 +18,7 @@ def prepare(slug):
  (runtime/'profile.json').write_text(json.dumps(profile,ensure_ascii=False))
  return profile,runtime
 
-def collect(slug,backfill=False):
+def collect(slug,backfill=False,save_backup=True):
  profile,runtime=prepare(slug);archive=ROOT/'accounts'/slug/'backups/private-data.enc'
  # Never let TinaCMS credentials leak into a second account's backup or API calls.
  secret=os.environ.get(profile['secret']);local=runtime/'.credentials.json'
@@ -31,13 +31,14 @@ def collect(slug,backfill=False):
  env=dict(os.environ,BAIDU_CREDENTIALS_JSON=secret)
  subprocess.run([sys.executable,str(runtime/'tracker.py')]+(['--backfill'] if backfill else []),env=env,check=True)
  publish(slug)
- old=os.environ.get('BAIDU_CREDENTIALS_JSON')
- try:
-  os.environ['BAIDU_CREDENTIALS_JSON']=secret;encrypt(runtime,archive,key_bytes())
- finally:
-  if old is None:os.environ.pop('BAIDU_CREDENTIALS_JSON',None)
-  else:os.environ['BAIDU_CREDENTIALS_JSON']=old
- print('Collected and encrypted:',slug)
+ if save_backup:
+  old=os.environ.get('BAIDU_CREDENTIALS_JSON')
+  try:
+   os.environ['BAIDU_CREDENTIALS_JSON']=secret;encrypt(runtime,archive,key_bytes())
+  finally:
+   if old is None:os.environ.pop('BAIDU_CREDENTIALS_JSON',None)
+   else:os.environ['BAIDU_CREDENTIALS_JSON']=old
+ print('Collected and encrypted:' if save_backup else 'Collected:',slug)
 
 def publish(slug):
  profile,runtime=prepare(slug);verify(runtime/'baidu.sqlite3');export(runtime)
@@ -59,8 +60,8 @@ def build():
  for slug in PROFILES:build_one(slug)
 
 def main():
- p=argparse.ArgumentParser();p.add_argument('command',choices=['collect','publish','build','configure-github','restore']);p.add_argument('--account',choices=list(PROFILES),default='yakshaver');p.add_argument('--backfill',action='store_true');a=p.parse_args()
- if a.command=='collect':collect(a.account,a.backfill)
+ p=argparse.ArgumentParser();p.add_argument('command',choices=['collect','publish','build','configure-github','restore']);p.add_argument('--account',choices=list(PROFILES),default='yakshaver');p.add_argument('--backfill',action='store_true');p.add_argument('--no-backup',action='store_true');a=p.parse_args()
+ if a.command=='collect':collect(a.account,a.backfill,save_backup=not a.no_backup)
  elif a.command=='publish':publish(a.account)
  elif a.command=='build':build()
  elif a.command=='restore':

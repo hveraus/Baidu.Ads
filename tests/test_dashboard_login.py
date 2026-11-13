@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 import re
 import secrets
@@ -107,6 +108,25 @@ class DashboardLoginTests(unittest.TestCase):
         self.assertEqual(self.client.post('/logout', base_url=login.BASE_URL).status_code, 403)
         self.assertEqual(self.client.post('/logout', data={'csrf': csrf}, base_url=login.BASE_URL).status_code, 303)
         self.assertIn(b'action="/login"', self.get('/ssw/').data)
+
+    def test_local_source_pins_a_revision_without_calling_git(self):
+        with tempfile.TemporaryDirectory() as directory, patch.dict(
+            os.environ, {'BAIDU_ADS_LOCAL_STORAGE': directory}
+        ), patch.object(login, 'source_bytes') as git_source:
+            storage = Path(directory)
+            for revision, content in [('a' * 32, b'first'), ('b' * 32, b'second')]:
+                release = storage / 'releases' / revision
+                release.mkdir(parents=True)
+                (release / 'report.html').write_bytes(content)
+            pointer = storage / 'current'
+            pointer.write_text('a' * 32, encoding='ascii')
+            read = login.report_source()
+            pointer.write_text('b' * 32, encoding='ascii')
+            self.assertEqual(read('report.html', 5), b'first')
+            self.assertEqual(login.report_source()('report.html', 6), b'second')
+            with self.assertRaises(ValueError):
+                read('report.html', 4)
+            git_source.assert_not_called()
 
     def test_pages_entry_contains_only_links_to_authenticated_reports(self):
         with tempfile.TemporaryDirectory() as directory:
