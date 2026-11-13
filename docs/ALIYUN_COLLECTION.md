@@ -11,3 +11,5 @@
 采集在私有 checkout 生成报表，校验完毕后一次切换 `storage\current`。每次看板请求固定读取同一批次的文件。失败时继续展示上一次成功报表。首次切换后的回退方式为移走 `use-local` 并重启看板任务，恢复旧采集任务前先停 ECS 本地采集任务。
 
 OSS 对象包含报表、公开统计层、加密快照和三个历史备份。整个压缩包再使用现有备份密钥进行 AES-256-GCM 加密，格式为 `BAIDU-ADS-ECS-BACKUP-v1\n`、12 字节 nonce、密文及认证标签，头部用作关联数据。备份密钥和两份快照密钥需要单独保存。
+
+恢复时，从 OSS 下载所需的 `.enc` 对象。使用安全方式将备份密钥提供为 `DATA_BACKUP_KEY` 环境变量，运行 `python scripts/collect_local.py restore --backup <文件> --storage <全新的恢复目录>`。确认报表和加密快照完整后，把恢复目录中的 `data`、`accounts`、`backups` 和 `report` 拷入新的采集 checkout，使用 `-Seed` 和 `-Check` 验证。历史原始数据由各账号的加密备份在首次采集时恢复。

@@ -90,16 +90,31 @@ def backup(release, output):
         for folder in BACKUP_FOLDERS:
             for path in (ROOT / folder).rglob('*'):
                 if path.is_file():
-                    archive.write(path, path.relative_to(ROOT))
+                    archive.write(path, path.relative_to(ROOT).as_posix())
     nonce = os.urandom(12)
     cipher = AESGCM(vault.key_bytes())
     output.write_bytes(HEADER + nonce + cipher.encrypt(nonce, plain.getvalue(), HEADER))
-    packed = output.read_bytes()
-    offset = len(HEADER)
-    restored = cipher.decrypt(packed[offset:offset + 12], packed[offset + 12:], HEADER)
-    with zipfile.ZipFile(io.BytesIO(restored)) as archive:
+    with open_backup(output) as archive:
         if archive.testzip() is not None:
             raise ValueError('ECS backup verification failed')
+
+
+def open_backup(path):
+    packed = path.read_bytes()
+    offset = len(HEADER)
+    if not packed.startswith(HEADER) or len(packed) <= offset + 28:
+        raise ValueError('Invalid ECS backup format')
+    plain = AESGCM(vault.key_bytes()).decrypt(packed[offset:offset + 12], packed[offset + 12:], HEADER)
+    return zipfile.ZipFile(io.BytesIO(plain))
+
+
+def restore_backup(path, destination):
+    with open_backup(path) as archive:
+        if archive.testzip() is not None:
+            raise ValueError('ECS backup verification failed')
+        destination.mkdir(parents=True, exist_ok=False)
+        archive.extractall(destination)
+    print('Backup restored to', destination)
 
 
 def publish(storage, *, oss=None, ossutil='ossutil'):
@@ -140,11 +155,17 @@ def publish(storage, *, oss=None, ossutil='ossutil'):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('mode', choices=('seed', 'collect', 'check'))
+    parser.add_argument('mode', choices=('seed', 'collect', 'check', 'restore'))
     parser.add_argument('--storage', type=Path, required=True)
     parser.add_argument('--oss')
+    parser.add_argument('--backup', type=Path, help='encrypted backup to restore')
     parser.add_argument('--ossutil', default='ossutil')
     args = parser.parse_args()
+    if args.mode == 'restore':
+        if not args.backup:
+            parser.error('restore requires --backup and a new --storage directory')
+        restore_backup(args.backup, args.storage)
+        return
     if args.mode == 'check':
         release = args.storage / 'releases' / (args.storage / 'current').read_text(encoding='ascii').strip()
         for slug, (name, header, _, fields) in SNAPSHOTS.items():
