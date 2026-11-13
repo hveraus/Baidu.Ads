@@ -10,6 +10,7 @@ from website_traffic import TRAFFIC_FILENAME, load_traffic
 from wecom_snapshot import FILENAME as WECOM_FILENAME, read_encrypted_snapshot as read_wecom_snapshot
 JWT=re.compile(rb'eyJ[A-Za-z0-9_-]{15,}\.[A-Za-z0-9_-]{15,}\.[A-Za-z0-9_-]{15,}')
 FORBIDDEN={'.credentials.json','.backup-key','baidu.sqlite3','status.json','runs.jsonl','dashboard-login.xml'}
+USER_DATABASE='dashboard-users.sqlite3'
 def check():
  root=ROOT
  for db in [root/'data/public.sqlite3',*root.glob('accounts/*/data/public.sqlite3')]:
@@ -36,6 +37,7 @@ def check_files(root):
  paths=list((root/'report').rglob('*.html'))+list((root/'data').rglob('*'))+list((root/'accounts').rglob('*'))
  for p in paths:
   if p.is_file() and p.suffix!='.enc':
+   assert not p.name.startswith(USER_DATABASE),'Viewer database in '+str(p.relative_to(root))
    content=p.read_bytes()
    assert not JWT.search(content),'Token-shaped value in '+str(p.relative_to(root))
    assert b'"private_posthog_cli":' not in content,'Private PostHog data in '+str(p.relative_to(root))
@@ -43,6 +45,7 @@ def check_files(root):
  if (root/'.git').exists():
   files=subprocess.check_output(['git','ls-files','-z'],cwd=root).decode().split('\0')
   for name in filter(None,files):
+   assert not Path(name).name.startswith(USER_DATABASE),'Private tracked file: '+name
    assert (Path(name).name not in FORBIDDEN or '/data/' in '/'+name) and not name.startswith(('csv/','work/','.venv/','.private/')),'Private tracked file: '+name
    if not name.endswith('.enc'):assert not JWT.search((root/name).read_bytes()),'Token-shaped tracked value: '+name
 if __name__=='__main__':check()

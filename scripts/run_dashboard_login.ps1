@@ -7,6 +7,7 @@ $private = Join-Path $env:LOCALAPPDATA 'Baidu.Ads'
 $loginPath = Join-Path $private 'dashboard-login.xml'
 $wecomPath = Join-Path $private 'wecom-consultations.xml'
 $storage = Join-Path $private 'storage'
+$env:BAIDU_ADS_USERS_DB = Join-Path $private 'dashboard-users.sqlite3'
 if (Test-Path -LiteralPath (Join-Path $storage 'use-local') -PathType Leaf) {
     $env:BAIDU_ADS_LOCAL_STORAGE = $storage
 }
@@ -60,8 +61,8 @@ if ($Initialize) {
     if (-not (Test-Path -LiteralPath $wecomPath)) {
         throw 'Run setup under the Windows account that runs the SSW WeCom collector.'
     }
-    $username = (Read-Host 'Dashboard username [ken]').Trim()
-    if (-not $username) { $username = 'ken' }
+    $username = (Read-Host 'Dashboard owner username [kenshi]').Trim()
+    if (-not $username) { $username = 'kenshi' }
     if ($username -cnotmatch '^[A-Za-z0-9_.@-]{1,64}$') {
         throw 'Use up to 64 letters, numbers, dots, underscores, at signs or hyphens.'
     }
