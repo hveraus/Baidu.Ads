@@ -102,16 +102,37 @@ def source_bytes(path, cache_bucket, limit):
     return git_blob(path, revision, limit)
 
 
+def report_source():
+    directory = os.environ.get('BAIDU_ADS_LOCAL_STORAGE')
+    if not directory:
+        bucket = int(time.monotonic() // 180)
+        return lambda path, limit: source_bytes(path, bucket, limit)
+
+    storage = Path(directory)
+    revision = (storage / 'current').read_text(encoding='ascii').strip()
+    if not re.fullmatch(r'[0-9a-f]{32}', revision):
+        raise ValueError('Invalid local report revision')
+    return lambda path, limit: local_blob(storage / 'releases' / revision, path, limit)
+
+
+def local_blob(directory, path, limit):
+    with (directory / path).open('rb') as file:
+        content = file.read(limit + 1)
+    if len(content) > limit:
+        raise ValueError('Report file exceeds size limit')
+    return content
+
+
 def check_upstream():
-    bucket = int(time.monotonic() // 180)
+    read = report_source()
     for slug in ('tinacms', 'yakshaver', 'ssw'):
         path = 'report/index.html' if slug == 'tinacms' else f'report/{slug}/index.html'
-        if not REPORT_DATA.search(source_bytes(path, bucket, 32 * 1024 * 1024)):
+        if not REPORT_DATA.search(read(path, 32 * 1024 * 1024)):
             raise ValueError(f'Missing report data for {slug}')
     for path, header, *_ in SNAPSHOTS.values():
-        if not source_bytes(path, bucket, 16_384).startswith(header):
+        if not read(path, 16_384).startswith(header):
             raise ValueError('Unexpected encrypted snapshot format')
-    print('Git report data and encrypted snapshots are readable.')
+    print('Report data and encrypted snapshots are readable.')
 
 
 def decrypt_snapshot(packed, key, header, fields):
@@ -153,9 +174,9 @@ def report_template(slug, lang):
 
 
 def render_report(slug, lang, keys, csrf):
-    bucket = int(time.monotonic() // 180)
+    read = report_source()
     path = 'report/index.html' if slug == 'tinacms' else f'report/{slug}/index.html'
-    match = REPORT_DATA.search(source_bytes(path, bucket, 32 * 1024 * 1024))
+    match = REPORT_DATA.search(read(path, 32 * 1024 * 1024))
     if not match:
         raise ValueError('Upstream report has no data block')
     data = json.loads(match[1])
@@ -164,7 +185,7 @@ def render_report(slug, lang, keys, csrf):
         data.pop(field, None)
     if slug in SNAPSHOTS:
         snapshot_path, header, field, fields = SNAPSHOTS[slug]
-        packed = source_bytes(snapshot_path, bucket, 16_384)
+        packed = read(snapshot_path, 16_384)
         data[field] = decrypt_snapshot(packed, keys[slug], header, fields)
     packed = json.dumps(data, ensure_ascii=False, separators=(',', ':')).translate({
         ord('<'): r'\u003c', ord('>'): r'\u003e', ord('&'): r'\u0026',
@@ -306,7 +327,7 @@ def create_app(username, password_hash, session_key, keys):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     modes = parser.add_mutually_exclusive_group()
-    modes.add_argument('--check-upstream', action='store_true', help='Check Git report data')
+    modes.add_argument('--check-upstream', action='store_true', help='Check report data and encrypted snapshots')
     modes.add_argument('--check-posthog-key', action='store_true', help='Validate the Tina CLI key from standard input')
     modes.add_argument('--hash-password', action='store_true', help='Hash a UTF-8 password from standard input')
     args = parser.parse_args()
@@ -320,7 +341,7 @@ if __name__ == '__main__':
         try:
             key = key_bytes(sys.stdin.buffer.readline(67).strip().decode('ascii'))
             path, header, _, fields = SNAPSHOTS['tinacms']
-            snapshot = source_bytes(path, int(time.monotonic() // 180), 16_384)
+            snapshot = report_source()(path, 16_384)
             decrypt_snapshot(snapshot, key, header, fields)
         except InvalidTag:
             raise SystemExit('This key does not match the Tina CLI snapshot.')

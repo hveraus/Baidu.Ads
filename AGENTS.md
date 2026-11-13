@@ -51,3 +51,7 @@
 - Follow [deployment and cutover](docs/DASHBOARD_LOGIN.md) to configure the password and Windows startup task `baidu-ads-dashboard-login` under the WeCom collector user. The private configuration lives at `%LOCALAPPDATA%\Baidu.Ads\dashboard-login.xml`. Keep passwords, password hashes and snapshot keys out of Git and workflow logs.
 - On 2026-11-12, the Windows startup task was installed and confirmed running. The saved Tina CLI key was replaced after validation against the snapshot. Safari verified all three reports and both private panels in one authenticated session. Anonymous requests showed the login form, and an incorrect password was rejected. Logout is covered by the test suite.
 - `BAIDU_ADS_REQUIRE_LOGIN=true` makes GitHub Pages publish only redirects to the corresponding pages on `https://ads.ssw.com.cn/`. [Cutover deployment](https://github.com/hveraus/Baidu.Ads/actions/runs/43224682239) succeeded and all nine existing report URLs were verified. The Git repository still contains public advertising aggregates and encrypted private snapshots. Collection schedules remain independent of login.
+
+## Aliyun collection and local report storage
+
+The Windows cutover procedure and rollback are in [docs/ALIYUN_COLLECTION.md](docs/ALIYUN_COLLECTION.md). Keep the live GitHub and WeCom tasks enabled until the first ECS collection, encrypted backup and authenticated dashboard have been verified. After cutover the active data comes from ECS storage. GitHub retains the code, old report history and Pages redirect.
