@@ -54,3 +54,4 @@
 
 - The collection checkout is `%USERPROFILE%\baidu-ads-collector`. The scheduled task `baidu-ads-collect-local` runs all four data feeds daily at 09:00 Beijing time. Check Task Scheduler's last result and `%LOCALAPPDATA%\Baidu.Ads\storage\collection.log`. `scripts\run_local_collection.ps1 -Check` validates the active release and prints coverage dates without exposing credentials.
 - The three accounts' raw SQLite/CSV data and active reports stay on the existing ECS. New data has no scheduled backup or repository publication. GitHub retains code, historical reports and the Pages redirect. See [deployment and rollback](docs/ALIYUN_COLLECTION.md).
+- On 2026-11-13, Windows Task Scheduler started the unified collector at 13:23 Beijing time. It returned `0` and published a new local release covering 2026-11-12. The legacy Windows task `baidu-ads-ssw-wecom` and GitHub Actions `collect.yml` were disabled. `pages.yml` continues to deploy the redirect.
