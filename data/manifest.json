@@ -2,22 +2,22 @@
   "publication": "public",
   "ip_addresses": "omitted; invalid clicks aggregated by date/campaign/device",
   "report_counts": {
-    "account": 36,
-    "account_hour": 57,
-    "adgroup": 321,
-    "campaign": 36,
-    "channels": 36,
-    "creative": 512,
-    "keyword": 842,
-    "keyword_competition": 842,
-    "keyword_conversion": 842,
-    "keyword_device": 981,
-    "keyword_hour": 914,
-    "keyword_match": 1083,
-    "keyword_region": 5078,
-    "landing_page": 338,
-    "search_terms": 344,
-    "invalid_clicks": 50
+    "account": 37,
+    "account_hour": 59,
+    "adgroup": 332,
+    "campaign": 37,
+    "channels": 37,
+    "creative": 530,
+    "keyword": 872,
+    "keyword_competition": 872,
+    "keyword_conversion": 872,
+    "keyword_device": 1019,
+    "keyword_hour": 958,
+    "keyword_match": 1118,
+    "keyword_region": 5294,
+    "landing_page": 344,
+    "search_terms": 350,
+    "invalid_clicks": 52
   },
   "coverage": [
     [
@@ -1359,6 +1359,86 @@
       "invalid_clicks",
       "2026-11-05",
       "2026-11-11"
+    ],
+    [
+      "account",
+      "2026-11-05",
+      "2026-11-12"
+    ],
+    [
+      "campaign",
+      "2026-11-05",
+      "2026-11-12"
+    ],
+    [
+      "adgroup",
+      "2026-11-05",
+      "2026-11-12"
+    ],
+    [
+      "keyword",
+      "2026-11-05",
+      "2026-11-12"
+    ],
+    [
+      "search_terms",
+      "2026-11-05",
+      "2026-11-12"
+    ],
+    [
+      "creative",
+      "2026-11-05",
+      "2026-11-12"
+    ],
+    [
+      "keyword_device",
+      "2026-11-05",
+      "2026-11-12"
+    ],
+    [
+      "keyword_region",
+      "2026-11-05",
+      "2026-11-12"
+    ],
+    [
+      "keyword_match",
+      "2026-11-05",
+      "2026-11-12"
+    ],
+    [
+      "account_hour",
+      "2026-11-05",
+      "2026-11-12"
+    ],
+    [
+      "landing_page",
+      "2026-11-05",
+      "2026-11-12"
+    ],
+    [
+      "channels",
+      "2026-11-05",
+      "2026-11-12"
+    ],
+    [
+      "keyword_conversion",
+      "2026-11-05",
+      "2026-11-12"
+    ],
+    [
+      "keyword_competition",
+      "2026-11-05",
+      "2026-11-12"
+    ],
+    [
+      "keyword_hour",
+      "2026-11-05",
+      "2026-11-12"
+    ],
+    [
+      "invalid_clicks",
+      "2026-11-05",
+      "2026-11-12"
     ]
   ]
 }

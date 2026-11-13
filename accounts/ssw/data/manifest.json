@@ -2,22 +2,22 @@
   "publication": "public",
   "ip_addresses": "omitted; invalid clicks aggregated by date/campaign/device",
   "report_counts": {
-    "account": 20,
-    "account_hour": 148,
-    "adgroup": 322,
-    "campaign": 154,
-    "channels": 20,
-    "creative": 655,
-    "keyword": 1400,
-    "keyword_competition": 1400,
-    "keyword_conversion": 1400,
-    "keyword_device": 1630,
-    "keyword_hour": 4057,
-    "keyword_match": 1835,
-    "keyword_region": 15749,
-    "landing_page": 512,
-    "search_terms": 415,
-    "invalid_clicks": 184
+    "account": 21,
+    "account_hour": 152,
+    "adgroup": 325,
+    "campaign": 156,
+    "channels": 21,
+    "creative": 664,
+    "keyword": 1420,
+    "keyword_competition": 1420,
+    "keyword_conversion": 1420,
+    "keyword_device": 1655,
+    "keyword_hour": 4104,
+    "keyword_match": 1863,
+    "keyword_region": 15881,
+    "landing_page": 516,
+    "search_terms": 419,
+    "invalid_clicks": 189
   },
   "coverage": [
     [
@@ -979,6 +979,86 @@
       "invalid_clicks",
       "2026-11-05",
       "2026-11-11"
+    ],
+    [
+      "account",
+      "2026-11-05",
+      "2026-11-12"
+    ],
+    [
+      "campaign",
+      "2026-11-05",
+      "2026-11-12"
+    ],
+    [
+      "adgroup",
+      "2026-11-05",
+      "2026-11-12"
+    ],
+    [
+      "keyword",
+      "2026-11-05",
+      "2026-11-12"
+    ],
+    [
+      "search_terms",
+      "2026-11-05",
+      "2026-11-12"
+    ],
+    [
+      "creative",
+      "2026-11-05",
+      "2026-11-12"
+    ],
+    [
+      "keyword_device",
+      "2026-11-05",
+      "2026-11-12"
+    ],
+    [
+      "keyword_region",
+      "2026-11-05",
+      "2026-11-12"
+    ],
+    [
+      "keyword_match",
+      "2026-11-05",
+      "2026-11-12"
+    ],
+    [
+      "account_hour",
+      "2026-11-05",
+      "2026-11-12"
+    ],
+    [
+      "landing_page",
+      "2026-11-05",
+      "2026-11-12"
+    ],
+    [
+      "channels",
+      "2026-11-05",
+      "2026-11-12"
+    ],
+    [
+      "keyword_conversion",
+      "2026-11-05",
+      "2026-11-12"
+    ],
+    [
+      "keyword_competition",
+      "2026-11-05",
+      "2026-11-12"
+    ],
+    [
+      "keyword_hour",
+      "2026-11-05",
+      "2026-11-12"
+    ],
+    [
+      "invalid_clicks",
+      "2026-11-05",
+      "2026-11-12"
     ]
   ]
 }

@@ -2,11 +2,11 @@
   "ranges": [
     {
       "start": "2026-11-11",
-      "end": "2026-11-11",
-      "pv_count": 38,
-      "visitor_count": 15,
-      "ip_count": 14,
-      "avg_visit_time": 180,
+      "end": "2026-11-12",
+      "pv_count": 63,
+      "visitor_count": 32,
+      "ip_count": 31,
+      "avg_visit_time": 149,
       "trans_count": 1
     }
   ],
@@ -18,6 +18,14 @@
       "ip_count": 14,
       "avg_visit_time": 180,
       "trans_count": 1
+    },
+    {
+      "date": "2026-11-12",
+      "pv_count": 25,
+      "visitor_count": 17,
+      "ip_count": 17,
+      "avg_visit_time": 120,
+      "trans_count": null
     }
   ]
 }

@@ -3,5 +3,10 @@
     "date": "2026-11-11",
     "paid_sessions": 6,
     "paid_email_click_sessions": null
+  },
+  {
+    "date": "2026-11-12",
+    "paid_sessions": 5,
+    "paid_email_click_sessions": null
   }
 ]

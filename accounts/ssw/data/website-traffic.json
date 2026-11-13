@@ -2,12 +2,12 @@
   "ranges": [
     {
       "start": "2026-11-11",
-      "end": "2026-11-11",
-      "pv_count": 10,
-      "visitor_count": 4,
-      "ip_count": 4,
-      "avg_visit_time": 47,
-      "trans_count": 1
+      "end": "2026-11-12",
+      "pv_count": 85,
+      "visitor_count": 47,
+      "ip_count": 46,
+      "avg_visit_time": 112,
+      "trans_count": 4
     }
   ],
   "days": [
@@ -18,6 +18,14 @@
       "ip_count": 4,
       "avg_visit_time": 47,
       "trans_count": 1
+    },
+    {
+      "date": "2026-11-12",
+      "pv_count": 75,
+      "visitor_count": 43,
+      "ip_count": 42,
+      "avg_visit_time": 118,
+      "trans_count": 3
     }
   ]
 }
