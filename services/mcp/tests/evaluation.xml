@@ -1,0 +1,13 @@
+<!-- Synthetic make_release fixture only. Not a production analytics evaluation. -->
+<evaluation>
+  <qa_pair><question>先核对账号列表与指标单位，三个账号在 2026-11-14 至 2026-11-16 的已观察消费合计是多少 CNY？保留六位小数。</question><answer>0.900000</answer></qa_pair>
+  <qa_pair><question>核对 TinaCMS 状态覆盖和同区间摘要，2026-11-14 至 2026-11-16 中缺失哪个日期？</question><answer>2026-11-15</answer></qa_pair>
+  <qa_pair><question>阅读指标口径后查询 TinaCMS 2026-11-14 至 2026-11-16，按总消费除以总点击得到 CPC 是多少？</question><answer>0.075000</answer></qa_pair>
+  <qa_pair><question>阅读指标口径后查询 SSW 2026-11-14 至 2026-11-16，以小数比例表示 CTR，保留六位小数。</question><answer>0.100000</answer></qa_pair>
+  <qa_pair><question>TinaCMS 2026-11-14 两个同名计划，每页只取一条并遍历所有页，消费较少的计划 ID 是多少？</question><answer>1</answer></qa_pair>
+  <qa_pair><question>SSW 2026-11-14 按每页一条遍历同名计划，消费最大计划与最小计划的消费差是多少 CNY？</question><answer>0.100000</answer></qa_pair>
+  <qa_pair><question>查询 YakShaver 2026-11-14 的关键词和搜索词，原始搜索词对应的关键词 ID 是多少？</question><answer>3</answer></qa_pair>
+  <qa_pair><question>比较 TinaCMS 2026-11-14 关键词报告与 2026-01-01 账号摘要，后者消费是否也是已测量的零？回答 yes/no。</question><answer>no</answer></qa_pair>
+  <qa_pair><question>读取指标目录并核对 SSW 2026-11-14 关键词数据，零点击时 CPC 的 JSON 值是什么？</question><answer>null</answer></qa_pair>
+  <qa_pair><question>核对三个账号能力与数据状态，这个版本可执行预算修改的账号数量是多少？</question><answer>0</answer></qa_pair>
+</evaluation>

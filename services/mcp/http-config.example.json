@@ -1,0 +1,52 @@
+{
+  "base_url": "http://127.0.0.1:8797",
+  "port": 8797,
+  "loopback_development": true,
+  "bridge_url": "http://127.0.0.1:8798",
+  "state_database": "../../work/mcp/control.sqlite3",
+  "cache_directory": "../../work/mcp/cache",
+  "mutations_enabled": false,
+  "automatic_mutations_enabled": false,
+  "clients": [
+    {
+      "client_id": "local-test-client",
+      "client_name": "Explicitly registered local test client",
+      "redirect_uris": [
+        "http://127.0.0.1:9999/callback"
+      ],
+      "grant_types": [
+        "authorization_code",
+        "refresh_token"
+      ],
+      "response_types": [
+        "code"
+      ],
+      "token_endpoint_auth_method": "none",
+      "scope": "analytics:read settings:read changes:propose changes:execute jobs:refresh policies:manage exports:create subscriptions:manage"
+    }
+  ],
+  "grants": {
+    "kenshi": {
+      "role": "owner",
+      "accounts": [
+        "tinacms",
+        "ssw",
+        "yakshaver"
+      ],
+      "scopes": [
+        "analytics:read",
+        "settings:read",
+        "changes:propose",
+        "changes:execute",
+        "jobs:refresh",
+        "policies:manage",
+        "exports:create",
+        "subscriptions:manage"
+      ]
+    }
+  },
+  "auto_refresh": {
+    "enabled": false,
+    "subject": "kenshi"
+  }
+}

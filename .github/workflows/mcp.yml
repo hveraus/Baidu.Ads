@@ -1,0 +1,41 @@
+name: Check isolated MCP services
+on:
+  push:
+    paths: ['services/**', '.github/workflows/mcp.yml']
+  pull_request:
+    paths: ['services/**', '.github/workflows/mcp.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    strategy:
+      matrix:
+        service: [mcp, core-reader]
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: services/${{ matrix.service }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install uv==0.11.26
+      - run: uv sync --frozen
+      - run: uv run --frozen python -m unittest discover -s tests -v
+  package:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python services/package_services.py --output work/mcp-artifacts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: isolated-mcp-services
+          path: work/mcp-artifacts
+          retention-days: 14
