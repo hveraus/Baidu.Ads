@@ -13,8 +13,9 @@ def worker_lock(path):
     """
     path=path.with_suffix(path.suffix+'.worker-lock')
     with path.open('a+b') as stream:
-        stream.seek(0)
-        if not stream.read(1):stream.write(b'0');stream.flush()
+        # Windows denies reads of a byte locked by another handle. Inspect
+        # file size without touching that byte, then attempt the nonblocking lock.
+        if os.fstat(stream.fileno()).st_size == 0:stream.write(b'0');stream.flush()
         stream.seek(0)
         locked=False
         try:

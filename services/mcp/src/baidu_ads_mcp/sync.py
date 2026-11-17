@@ -22,8 +22,9 @@ def cache_writer(cache):
     if path.is_symlink():
         raise QueryError('FOREIGN_CACHE_DIRECTORY')
     with path.open('a+b') as stream:
-        stream.seek(0)
-        if not stream.read(1):
+        # Windows denies reads of a byte locked by another handle. Inspect
+        # file size without touching that byte, then attempt the nonblocking lock.
+        if os.fstat(stream.fileno()).st_size == 0:
             stream.write(b'0');stream.flush()
         stream.seek(0)
         locked=False
