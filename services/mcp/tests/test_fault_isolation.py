@@ -2,6 +2,7 @@
 
 These tests prove file/process boundaries locally, not host-level production SLOs.
 """
+from contextlib import closing
 import ast
 import asyncio
 import hashlib
@@ -52,14 +53,14 @@ class Fixtures:
         self.root=Path(self.tmp.name);self.core=self.root/'synthetic-core'
         self.release=make_release(self.core/'releases')
         (self.core/'current').write_text(self.release.name)
-        with sqlite3.connect(self.core/'users.sqlite3') as db:
+        with closing(sqlite3.connect(self.core/'users.sqlite3')) as db, db:
             db.execute('CREATE TABLE synthetic_health(value TEXT)');db.execute("INSERT INTO synthetic_health VALUES('healthy')")
         self.cache=self.root/'mcp-cache'
         self.bridge=SourceBridge(self.release)
         self.query=ReleaseQuery(self.release)
 
     def core_probe(self):
-        with sqlite3.connect((self.core/'users.sqlite3').as_uri()+'?mode=ro',uri=True) as db:
+        with closing(sqlite3.connect((self.core/'users.sqlite3').as_uri()+'?mode=ro',uri=True)) as db, db:
             self.assertEqual(db.execute('SELECT value FROM synthetic_health').fetchone()[0],'healthy')
         self.assertEqual((self.core/'current').read_text(),self.release.name)
         # This is a synthetic storage/read probe, not a dashboard/login/collector test.
@@ -99,7 +100,7 @@ class ProcessAndStorageFaults(Fixtures,unittest.TestCase):
     def test_incompatible_mcp_schema_fails_locally(self):
         before=hashes(self.core)
         state=self.root/'bad-schema.sqlite3'
-        with sqlite3.connect(state) as db:
+        with closing(sqlite3.connect(state)) as db, db:
             db.execute(f'PRAGMA application_id={ChangeStore.APP_ID}')
             db.execute('CREATE TABLE plans(incompatible_column INTEGER)')
         store=ChangeStore(state,self.query)

@@ -1,7 +1,7 @@
 """MCP-owned proposal store. No provider writes; web approval is a separate path."""
 from __future__ import annotations
 
-from contextlib import contextmanager
+from contextlib import closing, contextmanager
 from dataclasses import dataclass
 from decimal import Decimal,InvalidOperation
 import hashlib
@@ -141,7 +141,7 @@ class ChangeStore:
         self.path, self.query, self.clock = Path(path), query, clock
         if self.path.exists():
             # Reject foreign/core databases before making any write or PRAGMA change.
-            with sqlite3.connect(self.path.resolve().as_uri()+'?mode=ro',uri=True) as db:
+            with closing(sqlite3.connect(self.path.resolve().as_uri()+'?mode=ro',uri=True)) as db, db:
                 if db.execute('PRAGMA application_id').fetchone()[0] != self.APP_ID:
                     raise QueryError('FOREIGN_DATABASE')
         self.path.parent.mkdir(parents=True,exist_ok=True)

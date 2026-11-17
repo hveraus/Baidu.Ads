@@ -1,3 +1,4 @@
+from contextlib import closing
 import json
 from pathlib import Path
 import sqlite3
@@ -148,7 +149,7 @@ class ChangeTests(Base):
 
     def test_foreign_database_untouched(self):
         path=Path(self.tmp.name)/'core.sqlite3'
-        with sqlite3.connect(path) as db:db.execute('CREATE TABLE users(id INTEGER)')
+        with closing(sqlite3.connect(path)) as db, db:db.execute('CREATE TABLE users(id INTEGER)')
         before=path.read_bytes()
         with self.assertRaisesRegex(QueryError,'FOREIGN_DATABASE'):ChangeStore(path,self.query)
         self.assertEqual(before,path.read_bytes())

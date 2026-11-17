@@ -1,3 +1,4 @@
+from contextlib import closing
 import hashlib
 import importlib.util
 import json
@@ -23,7 +24,7 @@ class ReaderTests(unittest.TestCase):
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup)
         self.root=Path(self.tmp.name);self.db=self.root/'users.sqlite3'
-        with sqlite3.connect(self.db) as db:
+        with closing(sqlite3.connect(self.db)) as db, db:
             db.execute('CREATE TABLE users(username TEXT PRIMARY KEY COLLATE NOCASE,password_hash TEXT)')
             db.execute('INSERT INTO users VALUES(?,?)',('alice',self.saved))
         self.rev='a'*32;self.release=self.root/'storage'/'releases'/self.rev
@@ -44,7 +45,7 @@ class ReaderTests(unittest.TestCase):
         before=self.db.read_bytes()
         self.reader.call('identity',self.identity)
         self.assertEqual(before,self.db.read_bytes())
-        with sqlite3.connect(self.db) as db:db.execute('UPDATE users SET password_hash=?',('cd'*16+':'+'ef'*32,))
+        with closing(sqlite3.connect(self.db)) as db, db:db.execute('UPDATE users SET password_hash=?',('cd'*16+':'+'ef'*32,))
         with self.assertRaisesRegex(Rejected,'IDENTITY_CHANGED'):
             self.reader.call('identity',self.identity)
 
@@ -93,7 +94,7 @@ class ReaderTests(unittest.TestCase):
                 self.reader.call('private',{**self.identity,'release_id':self.rev,'source':'cli'})
 
     def test_reserved_owner_name_cannot_resolve_viewer_row(self):
-        with sqlite3.connect(self.db) as db:
+        with closing(sqlite3.connect(self.db)) as db, db:
             db.execute('INSERT INTO users VALUES(?,?)',('KENSHI','cd'*16+':'+'ef'*32))
         owner,_=self.reader.identity('kenshi')
         upper,_=self.reader.identity('KENSHI')

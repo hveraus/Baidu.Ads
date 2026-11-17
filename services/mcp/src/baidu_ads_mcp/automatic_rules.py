@@ -4,6 +4,7 @@ This is deliberately separate from observation and recommendation rules. An
 approval is bound to an entire immutable definition; execution always uses the
 normal queue, capability verification, identity checks and reconciliation.
 """
+from contextlib import closing
 import json
 import secrets
 import sqlite3
@@ -292,7 +293,7 @@ class AutomaticRules:
         if not self.enabled():raise QueryError('AUTOMATIC_MUTATIONS_DISABLED')
         if not isinstance(marker,dict):raise QueryError('AUTOMATIC_RULE_BINDING_INVALID')
         # Guard is also invoked while the queue holds a write transaction.
-        with sqlite3.connect(self.store.path.resolve().as_uri()+'?mode=ro',uri=True) as db:
+        with closing(sqlite3.connect(self.store.path.resolve().as_uri()+'?mode=ro',uri=True)) as db, db:
             db.row_factory=sqlite3.Row
             row=db.execute('SELECT * FROM automatic_rules WHERE id=?',(marker.get('id'),)).fetchone()
             if row is None:raise QueryError('AUTOMATIC_RULE_NOT_FOUND')
