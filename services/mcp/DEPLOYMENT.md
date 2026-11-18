@@ -2,8 +2,13 @@
 
 These are prepared deployment instructions, not a record that production was
 changed. Do not share the MCP process, writable storage, dependency environment or
-startup task with the core dashboard/collector. A separate host and private reader
-ingress remain the planned production boundary.
+startup task with the core dashboard/collector. On 2026-11-18 Ken explicitly approved using the existing ECS host. This shares
+host outage and resource risk; it does not meet the original separate-host failure
+isolation boundary. Independent environments, processes, stores and rollback
+remain required. Set `same_host_reader: true` only for the reader at
+`http://127.0.0.1:8798`; keep `loopback_development: false` and the public base URL
+on HTTPS. The explicit option does not permit remote plaintext reader URLs.
+Production activation and actual acceptance results must be recorded separately.
 
 ## Artifacts and environment
 

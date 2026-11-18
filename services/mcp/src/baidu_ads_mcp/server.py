@@ -719,7 +719,7 @@ def main():
         if parsed.path or parsed.query or parsed.fragment or parsed.username or (parsed.scheme!='https' and not (dev and parsed.scheme=='http' and parsed.hostname=='127.0.0.1')):
             parser.error('HTTPS base URL required outside explicit loopback development')
         store=ChangeStore(config['state_database'],query)
-        bridge=Bridge(config['bridge_url'],os.environ['MCP_BRIDGE_SERVICE_TOKEN'],allow_loopback=dev)
+        bridge=Bridge(config['bridge_url'],os.environ['MCP_BRIDGE_SERVICE_TOKEN'],allow_loopback=dev or config.get('same_host_reader') is True)
         provider=OAuthProvider(store,bridge,base,config['clients'],config['grants'])
         from .runtime import build_execution_queue
         execution=build_execution_queue(store,provider,args.http_config)

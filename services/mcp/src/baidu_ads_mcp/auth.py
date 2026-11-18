@@ -28,7 +28,7 @@ class Bridge:
     def __init__(self,url,service_token,*,allow_loopback=False):
         parsed=urlsplit(url)
         if parsed.scheme!='https' and not (allow_loopback and parsed.scheme=='http' and parsed.hostname=='127.0.0.1'):
-            raise ValueError('Identity bridge requires HTTPS or explicit loopback development mode')
+            raise ValueError('Identity bridge requires HTTPS or explicit loopback reader mode')
         if not parsed.hostname or parsed.username or parsed.password or parsed.query or parsed.fragment:
             raise ValueError('Invalid bridge URL')
         if not isinstance(service_token,str) or not re.fullmatch(r'[A-Za-z0-9_-]{43,256}',service_token):

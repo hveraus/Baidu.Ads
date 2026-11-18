@@ -97,7 +97,7 @@ def main():
         print(json.dumps(simulate()));return
     config=json.loads(args.config.read_text())
     store=ChangeStore(config['state_database'],load_runtime_query(config))
-    bridge=Bridge(config['bridge_url'],os.environ['MCP_BRIDGE_SERVICE_TOKEN'],allow_loopback=config.get('loopback_development') is True)
+    bridge=Bridge(config['bridge_url'],os.environ['MCP_BRIDGE_SERVICE_TOKEN'],allow_loopback=config.get('loopback_development') is True or config.get('same_host_reader') is True)
     provider=OAuthProvider(store,bridge,config['base_url'],config['clients'],config['grants'])
     queue=build_execution_queue(store,provider,args.config)
     print(json.dumps(tick(queue,args.limit)))
