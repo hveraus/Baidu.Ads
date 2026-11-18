@@ -35,6 +35,9 @@ def package(destination):
                 raw = path.read_bytes()
                 files[relative] = hashlib.sha256(raw).hexdigest()
                 output.writestr(relative, raw)
+            raw = (ROOT / 'windows_job.py').read_bytes()
+            files['windows_job.py'] = hashlib.sha256(raw).hexdigest()
+            output.writestr('windows_job.py', raw)
             output.writestr('SHA256SUMS.json', json.dumps(files, indent=2) + '\n')
         manifest[name] = {'artifact': archive.name, 'sha256': hashlib.sha256(archive.read_bytes()).hexdigest(), 'files': len(files)}
     (destination / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
