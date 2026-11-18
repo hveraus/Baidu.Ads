@@ -158,6 +158,17 @@ class WebTests(Setup,unittest.TestCase):
         response=self.client.post('/login',data={'csrf':csrf,'subject':name,'password':'test-password'},headers={'Origin':BASE},follow_redirects=False)
         self.assertEqual(response.status_code,303)
 
+    def test_form_policy_preserves_origin_without_accepting_null(self):
+        response=self.client.get('/login')
+        self.assertEqual(response.headers['referrer-policy'],'same-origin')
+        csrf=re.search('name="csrf" value="([^"]+)"',response.text)[1]
+        data={'csrf':csrf,'subject':'alice','password':'test-password'}
+        for origin in ('null','https://evil.test'):
+            rejected=self.client.post('/login',data=data,headers={'Origin':origin})
+            self.assertEqual(rejected.status_code,403)
+        self.assertEqual(self.client.post('/login',data=data,follow_redirects=False).status_code,403)
+        self.assertEqual(self.client.post('/login',data=data,headers={'Origin':BASE},follow_redirects=False).status_code,303)
+
     def test_web_approval_csrf_xss_and_stale_version(self):
         actor=self.provider.principal({'subject':'alice','version':'v1'})
         plan=self.store.create(actor,'tinacms',[BUDGET],'<script>alert(1)</script>')

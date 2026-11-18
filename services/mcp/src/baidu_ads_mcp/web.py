@@ -20,7 +20,7 @@ def page(title,body):
     return HTMLResponse('<!doctype html><html lang="zh"><meta charset="utf-8"><meta name="viewport" content="width=device-width">'
         '<title>'+escape(title)+'</title><body><main><h1>'+escape(title)+'</h1>'+body+'</main></body></html>',headers={
         'Cache-Control':'no-store','Content-Security-Policy':"default-src 'none'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
-        'Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff'})
+        'Referrer-Policy':'same-origin','X-Content-Type-Options':'nosniff'})
 
 
 def install_routes(server,provider,store,operations=None,execution=None,automatic_rules=None):
