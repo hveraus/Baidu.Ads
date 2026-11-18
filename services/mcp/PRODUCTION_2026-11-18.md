@@ -125,3 +125,10 @@ only after both optional services are stopped and no pending job needs evidence.
 - Deployed `1e1caed`: an omitted OAuth scope now defaults only to the client's registered `analytics:read` / `settings:read` scopes. Explicit invalid scopes, wrong/missing resource, PKCE and user grant checks remain enforced.
 - WorkBuddy 5.11.3 previously returned `invalid_scope` before showing consent. After deployment, a fresh connection from its custom MCP manager opened the production consent page with the two read scopes and its registered loopback callback. User login/token exchange is still pending; this is not full client acceptance.
 - Local regression: 209 discovered, 207 passed, two Windows-only tests skipped. Production HTTPS recovered after restart.
+
+## Browser form Origin repair
+
+- `c0a5c8d` changes form-page Referrer-Policy from `no-referrer` to `same-origin`. Ordinary browser POSTs previously sent a null Origin and were rejected before authentication. Null/cross-origin/missing-origin form requests remain rejected; CSRF remains required.
+- Local suite: 210 discovered, 208 passed, two Windows-only skips. A real browser form reproduced `Invalid origin` before deployment; after deployment the same non-existent test account reached normal credential rejection instead.
+- ECS GitHub pulls failed twice with connection reset. Applied only the tested `web.py` change through Windows App with a pre-write SHA-256 assertion; production file matches `c0a5c8d` (`9d8a1bdf2686632afcb207e0f39c12d9dfdac80f6ba8f547869cae41992940db`). The checkout still has the earlier Git HEAD plus this verified local change. Reconcile this file before the next fast-forward deployment.
+- Live HTTPS `/login` returns `Referrer-Policy: same-origin`. WorkBuddy fresh consent page reopened; successful user login/token exchange remains pending.
