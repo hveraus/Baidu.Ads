@@ -1,7 +1,7 @@
 # Independent MCP deployment and rollback
 
-These are prepared deployment instructions, not a record that production was
-changed. Do not share the MCP process, writable storage, dependency environment or
+This guide describes deployment and rollback. Actual production evidence is
+recorded in [the 2026-11-18 deployment record](PRODUCTION_2026-11-18.md). Do not share the MCP process, writable storage, dependency environment or
 startup task with the core dashboard/collector. On 2026-11-18 Ken explicitly approved using the existing ECS host. This shares
 host outage and resource risk; it does not meet the original separate-host failure
 isolation boundary. Independent environments, processes, stores and rollback
@@ -52,6 +52,29 @@ Git. The launcher supports existing credentials and does not reset any password:
 Paths are explicit examples. Use the actual restricted directories for that host.
 The launcher is source-reviewed here; native DPAPI and ACL behavior need validation
 under the intended Windows service identity before production use.
+
+## Windows process limits
+
+`services/windows_job.py` is included at each artifact root. Launch the service
+through this standard-library supervisor, with its PowerShell launcher as the
+child command. It applies and reads back a Windows Job Object CPU hard cap,
+combined job memory limit and active-process limit before starting any child.
+Failure to apply any limit stops startup. Closing the supervisor kills its child
+processes. Use a dedicated non-administrator account with batch-logon rights;
+deny interactive and remote-interactive logon. Keep launchers and source read-only
+for that account and keep each service's state/config directory private.
+
+For example, from an extracted artifact directory:
+
+```powershell
+python ./windows_job.py --memory-mb 768 --cpu-percent 20 -- powershell.exe -NoProfile -NonInteractive -File ./run_mcp.ps1 -ReleaseCopy '<verified-copy>' -HttpConfig '<private-config>' -SecretConfig '<DPAPI-config>'
+```
+
+The reader can use 512 MiB / 15% CPU; the deployed MCP web service uses 768 MiB /
+20% CPU. Both allow at most six processes including the supervisor. These limits
+reduce contention; they do not provide host-outage or shared-ingress isolation.
+Native Windows tests attempt a 512 MiB allocation in a 128 MiB job and verify that
+child exit status propagates. Run these tests on the target Windows version too.
 
 ## MCP host
 
