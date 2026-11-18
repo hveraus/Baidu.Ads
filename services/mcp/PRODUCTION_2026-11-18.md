@@ -78,9 +78,12 @@ advertising files or private CLI/WeCom counts belong here.
 - Authenticated automatic cache refresh is not yet enabled. The initial cache
   has a one-hour freshness limit; stale data is rejected rather than presented
   as current. Startup alone does not establish a refresh identity.
-- `kenshi` is the only configured MCP grant. Colleague access expansion awaits an
-  explicit decision; existing dashboard access has not been changed. New users
-  are not silently granted MCP permissions.
+- Ken approved existing colleague access in this chat. The one existing viewer
+  was granted `analytics:read` and `settings:read` for all three accounts and their
+  private aggregates; configuration was read back and MCP restarted. No viewer
+  advertising, export or subscription-management permission was added. Dashboard
+  permissions remain unchanged; newly created users still need an explicit MCP
+  grant. Actual viewer sign-in acceptance remains pending.
 - Client-specific Codex/ChatGPT/Claude compatibility,
   authenticated refresh/revocation, post-activation collection and load/P95 checks.
   Do not claim full host/resource/upstream fault isolation from current checks.
@@ -94,3 +97,25 @@ Remove the MCP certificate reload task and Certify managed certificate only when
 retiring the endpoint. Core dashboard/collector source, tasks and publication
 pointer do not need to be changed. Remove dedicated reader ACL grants/accounts
 only after both optional services are stopped and no pending job needs evidence.
+
+## Operation history update
+
+- Deployed runtime revision `89774c4` adds authenticated `/activity`, covering tool
+  calls, login/consent and signed-in management POSTs. Owner sees all records;
+  colleagues see only their own. Retention is 90 days / 100,000 entries.
+- Local suite: 208 discovered tests, 206 passed and two Windows-only tests skipped.
+  Native production Windows suite: all 208 passed, exit 0. GitHub run
+  [44230429850](https://github.com/hveraus/Baidu.Ads/actions/runs/44230429850)
+  passed both services on Windows/Linux and artifact packaging.
+- After restart, discovery returned 200, anonymous `/activity` redirected to login,
+  anonymous `/mcp` returned 401, and a deliberately invalid-CSRF login returned
+  403. Read-only inspection of the production log confirmed an anonymous failed
+  `web_login` event with empty context. No actual password or queried private data
+  was used for that probe. Core dashboard entry remained 200.
+- Production authenticated history rendering and genuine OAuth query records are
+  still pending the owner's real sign-in; synthetic test coverage is not evidence
+  that this acceptance has occurred.
+
+- Certificate reload check ran automatically at 11:28:28 Beijing and returned 0;
+  its next execution remained scheduled. This verifies the check task, not a future
+  certificate issuance/renewal event. Core health again returned 200.
