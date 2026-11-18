@@ -119,3 +119,9 @@ only after both optional services are stopped and no pending job needs evidence.
 - Certificate reload check ran automatically at 11:28:28 Beijing and returned 0;
   its next execution remained scheduled. This verifies the check task, not a future
   certificate issuance/renewal event. Core health again returned 200.
+
+## WorkBuddy omitted-scope compatibility
+
+- Deployed `1e1caed`: an omitted OAuth scope now defaults only to the client's registered `analytics:read` / `settings:read` scopes. Explicit invalid scopes, wrong/missing resource, PKCE and user grant checks remain enforced.
+- WorkBuddy 5.11.3 previously returned `invalid_scope` before showing consent. After deployment, a fresh connection from its custom MCP manager opened the production consent page with the two read scopes and its registered loopback callback. User login/token exchange is still pending; this is not full client acceptance.
+- Local regression: 209 discovered, 207 passed, two Windows-only tests skipped. Production HTTPS recovered after restart.
