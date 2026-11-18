@@ -42,8 +42,10 @@ advertising files or private CLI/WeCom counts belong here.
 ## Verification completed
 
 - 201 MCP tests and 8 reader tests passed locally. The previous native Windows
-  run also passed those suites. Added Windows-only supervisor tests are tracked
-  separately from the earlier suite result.
+  run also passed those suites. Both added Windows-only supervisor tests passed
+  on the production Windows Server 2016 host (memory enforcement and exit status).
+  GitHub run [44229307101](https://github.com/hveraus/Baidu.Ads/actions/runs/44229307101)
+  passed all four Linux/Windows service jobs and artifact packaging at `f0619bc`.
 - Real SDK stdio handshake listed 46 tools. Three-account summary results matched
   independent sums of the selected immutable production HTML reports. This did
   not establish public HTTP OAuth/private-data acceptance.
@@ -58,8 +60,16 @@ advertising files or private CLI/WeCom counts belong here.
 - Core dashboard task was running. The collector's 2026-11-18 09:00 execution
   returned 0; next run remained 2026-11-19 09:00. This collection occurred before
   MCP activation, so a complete post-activation daily cycle remains unobserved.
+- Stopping the MCP web task removed its listening socket while core health
+  remained 200. Both optional tasks restarted with new process IDs; MCP OAuth
+  discovery returned 200 again. Independently stopping the reader removed port
+  8798 while core health remained 200; the reader then recovered its listener.
+- Public anonymous `/mcp` returned 401 with a valid protected-resource discovery
+  URL; that discovery returned 200. An untrusted Origin returned 403. All three
+  existing report entry URLs returned 200 (this alone is not authenticated QA).
 - Temporary machine-scoped bootstrap blobs were consumed and removed after
-  user-scoped DPAPI configuration succeeded; no bootstrap blob remained.
+  user-scoped DPAPI configuration succeeded; no bootstrap blob remained. The
+  two one-time bootstrap tasks were disabled after verification.
 
 ## Pending acceptance and access decisions
 
@@ -71,8 +81,8 @@ advertising files or private CLI/WeCom counts belong here.
 - `kenshi` is the only configured MCP grant. Colleague access expansion awaits an
   explicit decision; existing dashboard access has not been changed. New users
   are not silently granted MCP permissions.
-- Client-specific Codex/ChatGPT/Claude compatibility, process-outage acceptance,
-  restart/refresh/revocation, post-activation collection and load/P95 checks.
+- Client-specific Codex/ChatGPT/Claude compatibility,
+  authenticated refresh/revocation, post-activation collection and load/P95 checks.
   Do not claim full host/resource/upstream fault isolation from current checks.
 
 ## Removal
