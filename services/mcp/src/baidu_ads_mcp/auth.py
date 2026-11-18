@@ -244,8 +244,16 @@ class OAuthProvider:
             raise AuthorizeError('unauthorized_client')
         if str(params.redirect_uri) not in {str(uri) for uri in client.redirect_uris}:
             raise AuthorizeError('invalid_request','Exact registered redirect required')
-        if params.resource!=self.resource or not params.scopes or not set(params.scopes)<=set((client.scope or '').split()):
-            raise AuthorizeError('invalid_scope','Resource and permitted scopes required')
+        if params.resource!=self.resource:
+            raise AuthorizeError('invalid_target','Exact MCP resource required')
+        allowed=set((client.scope or '').split())
+        # OAuth scope is optional. Default only to registered read permissions,
+        # never to all client capabilities; consent still checks the user grant.
+        if params.scopes is None:
+            params=params.model_copy(update={'scopes':[scope for scope in
+                ('analytics:read','settings:read') if scope in allowed]})
+        if not params.scopes or not set(params.scopes)<=allowed:
+            raise AuthorizeError('invalid_scope','Registered permitted scopes required')
         if not re.fullmatch(r'[A-Za-z0-9_-]{43}',params.code_challenge):
             raise AuthorizeError('invalid_request','S256 PKCE required')
         body={'client_id':client.client_id,'params':params.model_dump(mode='json')}

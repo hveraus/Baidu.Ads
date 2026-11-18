@@ -113,6 +113,23 @@ class AuthTests(Setup,unittest.IsolatedAsyncioTestCase):
         for changes in ({'redirect_uri':'http://127.0.0.1:9998/callback'},{'resource':'https://wrong.test/mcp'},{'code_challenge':'bad'}):
             with self.assertRaises(Exception):await self.provider.authorize(client,AuthorizationParams(**{**base,**changes}))
 
+    async def test_omitted_scope_defaults_to_registered_reads_only(self):
+        client=await self.provider.get_client('test-client')
+        params=AuthorizationParams(state='s',scopes=None,code_challenge=CHALLENGE,
+            redirect_uri=CLIENTS[0]['redirect_uris'][0],redirect_uri_provided_explicitly=True,
+            resource=BASE+'/mcp')
+        url=await self.provider.authorize(client,params)
+        from urllib.parse import urlsplit, parse_qs
+        pending=parse_qs(urlsplit(url).query)['request'][0]
+        with self.store.db() as db:
+            saved=self.provider.load(db,pending,'pending')['data']['params']
+        self.assertEqual(saved['scopes'],['analytics:read','settings:read'])
+        self.assertIsNone(params.scopes)
+        with self.assertRaises(Exception):
+            await self.provider.authorize(client,params.model_copy(update={'resource':None}))
+        with self.assertRaises(Exception):
+            await self.provider.authorize(client,params.model_copy(update={'scopes':[]}))
+
     async def test_authorization_code_single_use(self):
         client=await self.provider.get_client('test-client')
         params=AuthorizationParams(state='s',scopes=['analytics:read'],code_challenge=CHALLENGE,redirect_uri=CLIENTS[0]['redirect_uris'][0],redirect_uri_provided_explicitly=True,resource=BASE+'/mcp')
