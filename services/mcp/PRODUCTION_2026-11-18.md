@@ -132,3 +132,37 @@ only after both optional services are stopped and no pending job needs evidence.
 - Local suite: 210 discovered, 208 passed, two Windows-only skips. A real browser form reproduced `Invalid origin` before deployment; after deployment the same non-existent test account reached normal credential rejection instead.
 - ECS GitHub pulls failed twice with connection reset. Applied only the tested `web.py` change through Windows App with a pre-write SHA-256 assertion; production file matches `c0a5c8d` (`9d8a1bdf2686632afcb207e0f39c12d9dfdac80f6ba8f547869cae41992940db`). The checkout still has the earlier Git HEAD plus this verified local change. Reconcile this file before the next fast-forward deployment.
 - Live HTTPS `/login` returns `Referrer-Policy: same-origin`. WorkBuddy fresh consent page reopened; successful user login/token exchange remains pending.
+
+## WorkBuddy authenticated connection follow-up
+
+- WorkBuddy displayed 46/46 enabled tools. Actual `baidu_ads_list_accounts` and
+  `baidu_ads_get_data_status` calls reached the service and returned
+  `SNAPSHOT_EXPIRED`; successful tool discovery is not evidence of current data.
+- Repeated consent submissions were rejected by the one-use browser challenge.
+  Production had already issued authorization codes before those retries.
+  Browser form-action policies can block cross-origin POST redirects; commit
+  `b1c0a81` returns a no-store, no-referrer completion document with an immediate
+  navigation and escaped fallback link to the previously validated callback.
+  The form-action self restriction, origin check, PKCE and one-use codes remain.
+- All 210 MCP tests completed locally (208 passed, two Windows-only skips),
+  including consent, callback state, code exchange and an authenticated tool call.
+  Production initially received the callback change through a narrow CUA patch.
+  GitHub connectivity recovered and the ECS checkout fast-forwarded to
+  `b1c0a81`, replacing temporary diagnostic patches.
+
+- An administrator maintenance import used the currently authenticated identity,
+  reverified it through the existing loopback reader, checked report hashes, and
+  refreshed only MCP-owned cache at 13:00 Beijing. Core release remained
+  `5e941899bc484b3099573ae864313429`. Automatic refresh is still disabled; this
+  one-time operation does not establish ongoing cache freshness.
+- The maintenance import ran under Administrator. Python 3.14's temporary
+  directory ACL made the replaced pointer unreadable to the existing service
+  account; inheritance was restored on that single MCP cache pointer. Future
+  refreshes should run as BaiduMcpWeb. The original dashboard health returned 200.
+- WorkBuddy reran both queries at 13:02 Beijing and returned three accounts and
+  current cache status successfully. Its returned report hashes matched the
+  verified imported manifest. Cache expires at 14:00:01 Beijing; automatic
+  polling remains disabled. Latest returned advertising row dates were
+  2026-11-17 for TinaCMS/SSW and 2026-10-18 for YakShaver; sparse coverage must
+  not be treated as proof of missing collection or zero activity. Authenticated
+  private-metric/dashboard reconciliation remains separate pending acceptance.
