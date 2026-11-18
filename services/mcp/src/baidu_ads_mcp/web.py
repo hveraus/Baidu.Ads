@@ -24,6 +24,12 @@ def page(title,body):
 
 
 def install_routes(server,provider,store,operations=None,execution=None,automatic_rules=None):
+    from .guide import guide_page
+
+    @server.custom_route('/guide', methods=['GET'])
+    async def guide(request):
+        return guide_page()
+
     secure=urlsplit(provider.base).scheme=='https'
     cookie='__Host-mcp_session' if secure else 'mcp_dev_session'
     challenge_cookie='__Host-mcp_challenge' if secure else 'mcp_dev_challenge'
@@ -75,7 +81,7 @@ def install_routes(server,provider,store,operations=None,execution=None,automati
                 csrf=secrets.token_urlsafe(32)
                 with store.db() as db:
                     challenge=provider.put(db,'browser',{'csrf':csrf,'pending':pending},provider.clock()+300)
-                response=page('MCP 登录与授权', '<p>'+text+'</p><form method="post">'
+                response=page('MCP 登录与授权', '<p><a href="/guide">MCP 使用指南与提问实例</a></p><p>'+text+'</p><form method="post">'
                     '<input type="hidden" name="csrf" value="'+csrf+'">'
                     '<label>账号 <input name="subject" required maxlength="64" autocomplete="username"></label>'
                     '<label>密码 <input type="password" name="password" required maxlength="1024" autocomplete="current-password"></label>'
@@ -147,7 +153,7 @@ def install_routes(server,provider,store,operations=None,execution=None,automati
                     rows=db.execute('SELECT id,account,state,version FROM plans WHERE author=? ORDER BY rowid DESC LIMIT 100',(actor.subject,)).fetchall()
             links=''.join('<li><a href="/plans/'+escape(r['id'])+'">'+escape(r['account'])+' · '+escape(r['state'])+' · v'+str(r['version'])+'</a></li>' for r in rows)
             status='已开启，仍须验证操作能力、审批及实时条件' if execution and execution.enabled() else '已关闭'
-            return page('投流变更方案','<p>广告执行总开关：'+status+'。</p><p><a href="/activity">操作历史</a> · <a href="/notifications">站内通知</a> · <a href="/subscriptions">订阅管理</a></p><ul>'+links+'</ul>'
+            return page('投流变更方案','<p>广告执行总开关：'+status+'。</p><p><a href="/guide">使用指南</a> · <a href="/activity">操作历史</a> · <a href="/notifications">站内通知</a> · <a href="/subscriptions">订阅管理</a></p><ul>'+links+'</ul>'
                         '<form method="post" action="/logout"><input type="hidden" name="csrf" value="'+csrf+'"><button>退出登录</button></form>')
         except QueryError:
             return RedirectResponse('/login',status_code=303)
@@ -160,7 +166,7 @@ def install_routes(server,provider,store,operations=None,execution=None,automati
             before = request.query_params.get('before')
             rows = server.activity.list(actor, int(before) if before else None)
             labels = {'started':'已开始（结果尚未记录）','succeeded':'成功','failed':'失败'}
-            body = '<p><a href="/plans">返回管理页</a></p><p>北京时间 · 保留最近 90 天，最多 100,000 条。'
+            body = '<p><a href="/plans">返回管理页</a> · <a href="/guide">使用指南</a></p><p>北京时间 · 保留最近 90 天，最多 100,000 条。'
             body += '管理员可查看所有用户，其他用户仅查看本人记录。仅记录操作信息，不保存密码、令牌、完整参数或查询结果。</p>'
             body += '<table><thead><tr><th>时间</th><th>账号</th><th>操作</th><th>范围</th><th>结果</th><th>耗时</th></tr></thead><tbody>'
             for row in rows:

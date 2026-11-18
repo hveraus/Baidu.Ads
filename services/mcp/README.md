@@ -1,7 +1,8 @@
 # Baidu Ads MCP — development implementation
 
-Independent implementation of [the full plan](../../docs/MCP_PLAN.md). **Not deployed
-or production accepted.** The service now has 46 MCP tools, OAuth-protected
+Independent implementation of [the full plan](../../docs/MCP_PLAN.md). **Deployed on the shared ECS; public OAuth client acceptance is still pending.**
+See [production verification](PRODUCTION_2026-11-18.md) and the
+[colleague usage guide](https://mcp.ads.ssw.com.cn/guide). The service now has 46 MCP tools, OAuth-protected
 Streamable HTTP, an independent human approval site, and a local stdio mode.
 The official [MCP Python SDK v1.26.0](https://github.com/modelcontextprotocol/python-sdk/tree/v1.26.0)
 provides the protocol and OAuth handlers. Custom code checks resource, role,
@@ -9,7 +10,7 @@ account, identity version, proposal version and CSRF boundaries.
 
 Core requirements, imports, login, collector, publication and startup tasks remain
 unchanged. The optional [core-side reader](../core-reader/README.md) is a separate
-process/package/environment. Neither service runs automatically.
+process/package/environment. The deployed services run under separate Windows startup tasks.
 
 ## Implemented and tested locally
 
