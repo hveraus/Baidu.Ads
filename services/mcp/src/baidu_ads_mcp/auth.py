@@ -88,7 +88,7 @@ class UserAccessToken(AccessToken):
 
 
 class OAuthProvider:
-    def __init__(self,store,bridge,base_url,clients,grants,clock=time.time):
+    def __init__(self,store,bridge,base_url,clients,grants,clock=time.time,*,dynamic_registration=False):
         self.store,self.bridge,self.base,self.clock=store,bridge,base_url.rstrip('/'),clock
         self.resource=self.base+'/mcp'
         self.clients={c['client_id']:OAuthClientInformationFull(**c) for c in clients}
@@ -102,6 +102,11 @@ class OAuthProvider:
                 if (parsed.fragment or parsed.username or parsed.password or not parsed.hostname
                     or not (parsed.scheme=='https' or (parsed.scheme=='http' and parsed.hostname in ('127.0.0.1','::1','localhost')))):
                     raise ValueError('HTTPS or loopback redirect required')
+        self.dynamic_registration=dynamic_registration
+        self.registry=None
+        if dynamic_registration:
+            from .client_registry import ClientRegistry
+            self.registry=ClientRegistry(store,bridge.service_token,SCOPES,clock)
         self.grants=grants
         for name,grant in grants.items():
             if grant['role'] not in ('viewer','operator','owner') or (grant['role']=='owner' and name!='kenshi'):
@@ -157,7 +162,7 @@ class OAuthProvider:
 
     async def checked(self,body):
         if 'client_id' in body:
-            client=self.clients.get(body['client_id'])
+            client=self.client(body['client_id'])
             params=body.get('params',{})
             if (client is None or params.get('resource')!=self.resource
                 or params.get('redirect_uri') not in {str(uri) for uri in client.redirect_uris}
@@ -222,14 +227,20 @@ class OAuthProvider:
                 return actor
         raise QueryError('UNAUTHORIZED')
 
+    def client(self,client_id):
+        return self.clients.get(client_id) or (self.registry.get(client_id) if self.registry else None)
+
     async def get_client(self,client_id):
-        return self.clients.get(client_id)
+        return self.client(client_id)
 
     async def register_client(self,client_info):
-        raise NotImplementedError('Static client registration only')
+        from .client_registry import ClientRegistrationError
+        if not self.registry or client_info.client_id in self.clients:
+            raise ClientRegistrationError('invalid_client_metadata','Registration unavailable')
+        self.registry.register(client_info)
 
     async def authorize(self,client,params):
-        if client.client_id not in self.clients or self.clients[client.client_id]!=client:
+        if self.client(client.client_id)!=client:
             raise AuthorizeError('unauthorized_client')
         if str(params.redirect_uri) not in {str(uri) for uri in client.redirect_uris}:
             raise AuthorizeError('invalid_request','Exact registered redirect required')

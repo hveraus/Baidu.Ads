@@ -11,7 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from .query import QueryError, ReleaseQuery, day
 from .analytics import Analytics, daily
 from .changes import ChangeStore, Principal, Operation
-from .auth import OAuthProvider, Bridge, UserAccessToken
+from .auth import OAuthProvider, Bridge, UserAccessToken, SCOPES
 from .policies import RuleInput, PolicyStore
 from .rule_engine import DecisionRuleInput, DecisionRules
 from .automatic_rules import AutomaticRules, AutomaticRuleInput
@@ -260,7 +260,7 @@ def create_server(query: ReleaseQuery, store=None, actor=None, provider=None, ca
     if provider:
         options = {'auth_server_provider':provider, 'auth':AuthSettings(
             issuer_url=provider.base,resource_server_url=provider.resource,
-            client_registration_options=ClientRegistrationOptions(enabled=False),
+            client_registration_options=ClientRegistrationOptions(enabled=provider.dynamic_registration, valid_scopes=sorted(SCOPES), default_scopes=['analytics:read','settings:read']),
             revocation_options=RevocationOptions(enabled=True),required_scopes=[]),
             'stateless_http':True,'json_response':True,
             'transport_security':TransportSecuritySettings(enable_dns_rebinding_protection=True,
@@ -720,7 +720,7 @@ def main():
             parser.error('HTTPS base URL required outside explicit loopback development')
         store=ChangeStore(config['state_database'],query)
         bridge=Bridge(config['bridge_url'],os.environ['MCP_BRIDGE_SERVICE_TOKEN'],allow_loopback=dev or config.get('same_host_reader') is True)
-        provider=OAuthProvider(store,bridge,base,config['clients'],config['grants'])
+        provider=OAuthProvider(store,bridge,base,config.get('clients',[]),config['grants'],dynamic_registration=config.get('dynamic_client_registration') is True)
         from .runtime import build_execution_queue
         execution=build_execution_queue(store,provider,args.http_config)
         server=create_server(query,store=store,provider=provider,cache=config.get('cache_directory'),auto_refresh=config.get('auto_refresh'),execution=execution)

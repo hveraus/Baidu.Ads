@@ -46,6 +46,8 @@ def install_routes(server,provider,store,operations=None,execution=None,automati
                     if not row:
                         raise QueryError('AUTHORIZATION_EXPIRED')
                     text='授权客户端 '+escape(row['data']['client_id'])+' 访问：'+escape(', '.join(row['data']['params']['scopes']))
+                    text+='<br>授权结果将返回：'+escape(row['data']['params']['redirect_uri'])
+                    text+='<br>仅在你刚刚主动连接该客户端时继续。'
                 elif request.url.path=='/consent':
                     raise QueryError('AUTHORIZATION_EXPIRED')
                 csrf=secrets.token_urlsafe(32)

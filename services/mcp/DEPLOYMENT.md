@@ -57,8 +57,18 @@ under the intended Windows service identity before production use.
 
 Create a dedicated writable state/cache directory. Configure a real HTTPS base URL,
 exact Agent client redirects, grants and the private reader URL using
-`http-config.example.json`; disable `loopback_development`. Client registration is
-static. Do not treat a client-supplied role/account as authorization.
+`http-config.example.json`; disable `loopback_development`. Set `dynamic_client_registration: true` to advertise standard OAuth client
+registration for heterogeneous Agent clients. Static registrations remain supported.
+Dynamic registration accepts exact HTTPS or loopback redirects, uses S256 PKCE,
+and does not grant any data access until a dashboard identity consents to its
+authorized scopes. Defaults request only analytics/settings reads. Registrations
+are bounded to 30 per minute and 1,000 total; apply ingress rate/body limits too.
+Client metadata/secrets are encrypted in the MCP-owned database using a
+domain-separated key derived from the private bridge credential. Rotating that
+credential invalidates dynamic registrations; clients must register and authorize
+again. Do not treat a client-supplied role/account as authorization. Actual
+Codex/ChatGPT/Claude compatibility must be verified separately; standard protocol
+support is not evidence that every client has been tested.
 
 Keep a separate DPAPI XML dictionary containing `MCP_BRIDGE_SERVICE_TOKEN` as a
 `SecureString`. Run from the extracted service directory:
