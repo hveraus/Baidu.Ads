@@ -1,6 +1,7 @@
 import asyncio
 import base64
 import hashlib
+import html
 import json
 from pathlib import Path
 import re
@@ -221,8 +222,12 @@ class WebTests(Setup,unittest.TestCase):
         page=self.client.get(consent)
         csrf=re.search('name="csrf" value="([^"]+)"',page.text)[1]
         response=self.client.post(consent,data={'csrf':csrf,'subject':'alice','password':'test-password'},headers={'Origin':BASE},follow_redirects=False)
-        self.assertEqual(response.status_code,303)
-        params=parse_qs(urlsplit(response.headers['location']).query)
+        self.assertEqual(response.status_code,200)
+        self.assertIn("form-action 'self';",response.headers['content-security-policy'])
+        self.assertEqual(response.headers['referrer-policy'],'no-referrer')
+        callback=html.unescape(re.search(r'<a href="([^"]+)">',response.text)[1])
+        self.assertIn('content="0;url='+html.escape(callback,quote=True)+'"',response.text)
+        params=parse_qs(urlsplit(callback).query)
         self.assertEqual(params['state'],['saved-state'])
         token_data={'grant_type':'authorization_code','client_id':'test-client','code':params['code'][0],
                     'redirect_uri':CLIENTS[0]['redirect_uris'][0],'code_verifier':VERIFIER,'resource':BASE+'/mcp'}

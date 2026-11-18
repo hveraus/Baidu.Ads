@@ -96,18 +96,27 @@ def install_routes(server,provider,store,operations=None,execution=None,automati
                 db.execute('UPDATE tokens SET used=1 WHERE hash=?',(row['hash'],))
             if pending:
                 redirect=await provider.consent(pending,data.get('subject'),data.get('password'))
-                response=RedirectResponse(redirect,status_code=303)
+                # A cross-origin redirect after a form POST is blocked by form-action
+                # 'self' in some browsers. Navigate from a fresh document instead.
+                response=page('授权完成', '<meta http-equiv="refresh" content="0;url='+escape(redirect)+'">'
+                    '<p>正在返回客户端。若未自动跳转，请点击 <a href="'+escape(redirect)+'">返回客户端</a>。</p>')
             else:
                 session=await provider.login_web(data.get('subject'),data.get('password'))
                 response=RedirectResponse('/plans',status_code=303)
                 response.set_cookie(cookie,session,secure=secure,httponly=True,samesite='lax',max_age=3600,path='/')
             event = server.activity.begin(data.get('subject','').strip().lower(), 'oauth_consent' if pending else 'web_login')
             server.activity.finish(event, 'succeeded', 0)
-            response.delete_cookie(challenge_cookie,path='/')
+            response.delete_cookie(challenge_cookie,path='/',secure=secure,httponly=True,samesite='lax')
             response.headers['Cache-Control']='no-store'
             response.headers['Referrer-Policy']='no-referrer'
             return response
-        except (QueryError,ValueError,TypeError):
+        except (QueryError,ValueError,TypeError) as error:
+            import logging, traceback
+            frame=traceback.extract_tb(error.__traceback__)[-1]
+            reason=str(error) if isinstance(error,QueryError) and str(error) in {
+                'INVALID_CSRF','AUTHORIZATION_EXPIRED','UNAUTHORIZED','INSUFFICIENT_SCOPE',
+                'IDENTITY_BRIDGE_UNAVAILABLE','INVALID_BRIDGE_RESPONSE'} else type(error).__name__
+            logging.getLogger(__name__).warning('MCP login failed: %s at %s:%s',reason,frame.name,frame.lineno)
             event = server.activity.begin('anonymous', 'oauth_consent' if pending else 'web_login')
             server.activity.finish(event, 'failed', 0)
             return PlainTextResponse('登录或授权失败，请重新打开登录页面。',status_code=403,headers={'Cache-Control':'no-store'})
@@ -325,7 +334,7 @@ def install_routes(server,provider,store,operations=None,execution=None,automati
             with store.db() as db:
                 db.execute('UPDATE tokens SET used=1 WHERE hash=? AND kind=\'web\'',(token_hash(request.cookies[cookie]),))
             response=RedirectResponse('/login',status_code=303)
-            response.delete_cookie(cookie,path='/')
+            response.delete_cookie(cookie,path='/',secure=secure,httponly=True,samesite='lax')
             return response
         except QueryError:
             return PlainTextResponse('拒绝请求',status_code=403)
