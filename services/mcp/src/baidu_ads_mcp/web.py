@@ -28,6 +28,28 @@ def install_routes(server,provider,store,operations=None,execution=None,automati
     cookie='__Host-mcp_session' if secure else 'mcp_dev_session'
     challenge_cookie='__Host-mcp_challenge' if secure else 'mcp_dev_challenge'
 
+    def audited_route(path, methods):
+        def decorate(handler):
+            async def wrapped(request):
+                import time
+                if request.method != 'POST':
+                    return await handler(request)
+                try:
+                    actor,_ = await provider.web_session(request.cookies.get(cookie,''))
+                except QueryError:
+                    return await handler(request)
+                seq = server.activity.begin(actor.subject, 'web:'+path, {'params':dict(request.path_params)})
+                started = time.monotonic()
+                try:
+                    response = await handler(request)
+                except BaseException:
+                    server.activity.finish(seq, 'failed', (time.monotonic()-started)*1000)
+                    raise
+                server.activity.finish(seq, 'succeeded' if response.status_code < 400 else 'failed', (time.monotonic()-started)*1000)
+                return response
+            return server.custom_route(path, methods=methods)(wrapped)
+        return decorate
+
     async def form(request):
         if request.headers.get('origin')!=provider.base:
             raise QueryError('INVALID_ORIGIN')
@@ -73,17 +95,21 @@ def install_routes(server,provider,store,operations=None,execution=None,automati
                 session=await provider.login_web(data.get('subject'),data.get('password'))
                 response=RedirectResponse('/plans',status_code=303)
                 response.set_cookie(cookie,session,secure=secure,httponly=True,samesite='lax',max_age=3600,path='/')
+            event = server.activity.begin(data.get('subject','').strip().lower(), 'oauth_consent' if pending else 'web_login')
+            server.activity.finish(event, 'succeeded', 0)
             response.delete_cookie(challenge_cookie,path='/')
             response.headers['Cache-Control']='no-store'
             response.headers['Referrer-Policy']='no-referrer'
             return response
         except (QueryError,ValueError,TypeError):
+            event = server.activity.begin('anonymous', 'oauth_consent' if pending else 'web_login')
+            server.activity.finish(event, 'failed', 0)
             return PlainTextResponse('登录或授权失败，请重新打开登录页面。',status_code=403,headers={'Cache-Control':'no-store'})
 
     server.custom_route('/login',methods=['GET','POST'])(entry)
     server.custom_route('/consent',methods=['GET','POST'])(entry)
 
-    @server.custom_route('/automatic-rules/{rule_id}',methods=['GET','POST'])
+    @audited_route('/automatic-rules/{rule_id}',methods=['GET','POST'])
     async def automatic_rule(request):
         try:
             if automatic_rules is None:raise QueryError('POLICY_STORE_NOT_CONFIGURED')
@@ -110,7 +136,7 @@ def install_routes(server,provider,store,operations=None,execution=None,automati
         except (QueryError,ValueError,TypeError):
             return PlainTextResponse('无法审批或读取规则。请核对权限、版本和登录状态。',status_code=403,headers={'Cache-Control':'no-store'})
 
-    @server.custom_route('/plans',methods=['GET'])
+    @audited_route('/plans',methods=['GET'])
     async def plans(request):
         try:
             actor,csrf=await provider.web_session(request.cookies.get(cookie,''))
@@ -121,12 +147,35 @@ def install_routes(server,provider,store,operations=None,execution=None,automati
                     rows=db.execute('SELECT id,account,state,version FROM plans WHERE author=? ORDER BY rowid DESC LIMIT 100',(actor.subject,)).fetchall()
             links=''.join('<li><a href="/plans/'+escape(r['id'])+'">'+escape(r['account'])+' · '+escape(r['state'])+' · v'+str(r['version'])+'</a></li>' for r in rows)
             status='已开启，仍须验证操作能力、审批及实时条件' if execution and execution.enabled() else '已关闭'
-            return page('投流变更方案','<p>广告执行总开关：'+status+'。</p><p><a href="/notifications">站内通知</a> · <a href="/subscriptions">订阅管理</a></p><ul>'+links+'</ul>'
+            return page('投流变更方案','<p>广告执行总开关：'+status+'。</p><p><a href="/activity">操作历史</a> · <a href="/notifications">站内通知</a> · <a href="/subscriptions">订阅管理</a></p><ul>'+links+'</ul>'
                         '<form method="post" action="/logout"><input type="hidden" name="csrf" value="'+csrf+'"><button>退出登录</button></form>')
         except QueryError:
             return RedirectResponse('/login',status_code=303)
 
-    @server.custom_route('/plans/{plan_id}',methods=['GET','POST'])
+    @audited_route('/activity',methods=['GET'])
+    async def activity(request):
+        from datetime import datetime, timezone, timedelta
+        try:
+            actor,_ = await provider.web_session(request.cookies.get(cookie,''))
+            before = request.query_params.get('before')
+            rows = server.activity.list(actor, int(before) if before else None)
+            labels = {'started':'已开始（结果尚未记录）','succeeded':'成功','failed':'失败'}
+            body = '<p><a href="/plans">返回管理页</a></p><p>北京时间 · 保留最近 90 天，最多 100,000 条。'
+            body += '管理员可查看所有用户，其他用户仅查看本人记录。仅记录操作信息，不保存密码、令牌、完整参数或查询结果。</p>'
+            body += '<table><thead><tr><th>时间</th><th>账号</th><th>操作</th><th>范围</th><th>结果</th><th>耗时</th></tr></thead><tbody>'
+            for row in rows:
+                at = datetime.fromtimestamp(row['at'], timezone(timedelta(hours=8))).isoformat(timespec='seconds')
+                values = (at,row['subject'],row['action'],row['context'],labels.get(row['status'],row['status']),
+                          str(row['duration_ms'])+' ms' if row['duration_ms'] is not None else '—')
+                body += '<tr>'+''.join('<td>'+escape(v)+'</td>' for v in values)+'</tr>'
+            body += '</tbody></table>'
+            if not rows: body += '<p>暂无操作记录。</p>'
+            if len(rows)==50: body += '<p><a href="/activity?before='+str(rows[-1]['seq'])+'">更早记录</a></p>'
+            return page('操作历史',body)
+        except (QueryError,ValueError):
+            return RedirectResponse('/login',status_code=303)
+
+    @audited_route('/plans/{plan_id}',methods=['GET','POST'])
     async def plan(request):
         try:
             actor,csrf=await provider.web_session(request.cookies.get(cookie,''))
@@ -165,7 +214,7 @@ def install_routes(server,provider,store,operations=None,execution=None,automati
         except (QueryError,ValueError):
             return PlainTextResponse('身份、权限或方案版本校验失败。',status_code=403,headers={'Cache-Control':'no-store'})
 
-    @server.custom_route('/exports/{export_id}',methods=['GET'])
+    @audited_route('/exports/{export_id}',methods=['GET'])
     async def download_export(request):
         try:
             actor,_=await provider.web_session(request.cookies.get(cookie,''))
@@ -179,7 +228,7 @@ def install_routes(server,provider,store,operations=None,execution=None,automati
         except QueryError:
             return PlainTextResponse('导出不存在、已过期或无权下载。',status_code=403,headers={'Cache-Control':'no-store'})
 
-    @server.custom_route('/notifications',methods=['GET','POST'])
+    @audited_route('/notifications',methods=['GET','POST'])
     async def notifications(request):
         try:
             actor,csrf=await provider.web_session(request.cookies.get(cookie,''))
@@ -202,7 +251,7 @@ def install_routes(server,provider,store,operations=None,execution=None,automati
         except QueryError:
             return PlainTextResponse('请登录具有订阅权限的账号。',status_code=403,headers={'Cache-Control':'no-store'})
 
-    @server.custom_route('/subscriptions',methods=['GET','POST'])
+    @audited_route('/subscriptions',methods=['GET','POST'])
     async def subscriptions(request):
         try:
             actor,csrf=await provider.web_session(request.cookies.get(cookie,''))
@@ -228,7 +277,7 @@ def install_routes(server,provider,store,operations=None,execution=None,automati
         except QueryError:
             return PlainTextResponse('请登录具有订阅权限的账号。',status_code=403,headers={'Cache-Control':'no-store'})
 
-    @server.custom_route('/execution/{job_id}',methods=['GET','POST'])
+    @audited_route('/execution/{job_id}',methods=['GET','POST'])
     async def execution_job(request):
         import asyncio
         try:
@@ -260,7 +309,7 @@ def install_routes(server,provider,store,operations=None,execution=None,automati
         except (QueryError,ValueError):
             return PlainTextResponse('执行记录或核对权限校验失败。',status_code=403,headers={'Cache-Control':'no-store'})
 
-    @server.custom_route('/logout',methods=['POST'])
+    @audited_route('/logout',methods=['POST'])
     async def logout(request):
         try:
             _,csrf=await provider.web_session(request.cookies.get(cookie,''))

@@ -33,6 +33,24 @@ class OperationsServer(FastMCP):
     auto_refresh = None
     automatic_rules = None
 
+    async def call_tool(self, name, arguments):
+        import time
+        log = getattr(self, 'activity', None)
+        if log is None:
+            return await super().call_tool(name, arguments)
+        token = get_access_token()
+        subject = token.subject if isinstance(token, UserAccessToken) else 'local-reader'
+        action = name if self._tool_manager.get_tool(name) else 'unknown_tool'
+        seq = log.begin(subject, action, arguments)
+        started = time.monotonic()
+        try:
+            result = await super().call_tool(name, arguments)
+        except BaseException:
+            log.finish(seq, 'failed', (time.monotonic()-started)*1000)
+            raise
+        log.finish(seq, 'succeeded', (time.monotonic()-started)*1000)
+        return result
+
     def streamable_http_app(self):
         app=super().streamable_http_app()
         previous=app.router.lifespan_context
@@ -266,6 +284,8 @@ def create_server(query: ReleaseQuery, store=None, actor=None, provider=None, ca
             'transport_security':TransportSecuritySettings(enable_dns_rebinding_protection=True,
                 allowed_hosts=[urlsplit(provider.base).netloc],allowed_origins=[provider.base])}
     server = OperationsServer('baidu_ads_mcp', instructions='Versioned report queries and reviewed proposals. Execution requires explicitly enabled runtime switches, verified capabilities and current owner approval. Check get_capabilities for current status; default configuration disables writes.', **options)
+    from .activity import ActivityLog
+    server.activity = ActivityLog(store) if store is not None else None
     analytics = Analytics(query)
     policies = PolicyStore(store) if store is not None else None
     decision_rules = DecisionRules(store) if store is not None else None

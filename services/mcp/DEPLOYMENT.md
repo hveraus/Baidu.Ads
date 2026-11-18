@@ -151,3 +151,24 @@ artifact, and retain its compatible control database. Never silently downgrade a
 incompatible state schema. Stop/remove the reader and revoke its ingress/credential
 only after MCP is disabled. Core code, databases, login task, collector task and
 publication pointer require no rollback and must not be changed for MCP removal.
+
+## Operation history
+
+Authenticated `/activity` shows MCP tool calls, login/consent outcomes and signed-in
+management POST actions. Owners see all users; other users see only their own
+records. The page uses 50-row cursor pagination and Beijing timestamps. Metadata
+contains authenticated actor, fixed operation name, allowlisted account/date or
+plan/job identifier, outcome and duration. It never stores passwords, OAuth
+secrets, submitted free text, complete parameters, query result counts or IPs.
+Failed sign-ins use the `anonymous` actor rather than an unverified account name.
+
+Records live in the MCP-owned control database, bounded to the latest 90 days and
+100,000 entries; maintenance runs on new log writes. Started-but-unfinished calls
+remain marked as such after a crash; they must not be read as successful. A log
+write failure fails the MCP operation rather than silently losing tracking. Core
+services do not import or wait for this optional log. Existing versioned change
+plan audit events remain separate and unchanged. This is operation tracking, not
+a tamper-proof external audit archive; administrators still control the local disk.
+Browser GETs, requests rejected before MCP authentication, and background execution
+steps are not a complete web access log. Durable job state and existing plan events
+remain the evidence for actual background completion or advertising execution.
