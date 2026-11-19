@@ -94,6 +94,12 @@ class AuthTests(Setup,unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(await self.provider.load_refresh_token(client,tokens.refresh_token))
         self.assertIsNone(await self.provider.load_access_token(second.access_token))
 
+    async def test_consent_grants_only_requested_scopes_allowed_for_viewer(self):
+        token = await self.grant('bob',['analytics:read','settings:read','changes:execute'])
+        self.assertEqual(token.scope,'analytics:read settings:read')
+        access = await self.provider.load_access_token(token.access_token)
+        self.assertEqual(set(access.scopes),{'analytics:read','settings:read'})
+
     async def test_scope_escalation_rejected(self):
         with self.assertRaisesRegex(QueryError,'INSUFFICIENT_SCOPE'):
             await self.grant('bob',['changes:execute'])

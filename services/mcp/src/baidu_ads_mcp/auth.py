@@ -268,9 +268,14 @@ class OAuthProvider:
             if not row:
                 raise QueryError('AUTHORIZATION_EXPIRED')
             params=row['data']['params']
-            actor=self.principal(identity,params['scopes'])
+            actor = self.principal(identity)
+            # Clients may request all advertised scopes. Issue only the
+            # intersection with this account's current grant.
+            granted = [scope for scope in params['scopes'] if scope in actor.scopes]
+            if not granted:
+                raise QueryError('INSUFFICIENT_SCOPE')
             body={'identity':identity,'version':actor.version,'client_id':row['data']['client_id'],
-                  'scopes':params['scopes'],'params':params}
+                  'scopes':granted,'params':params}
             code=self.put(db,'code',body,self.clock()+60)
             db.execute('UPDATE tokens SET used=1 WHERE hash=?',(row['hash'],))
         return construct_redirect_uri(params['redirect_uri'],code=code,state=params.get('state'))
