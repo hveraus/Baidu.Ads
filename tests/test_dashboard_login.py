@@ -37,11 +37,11 @@ class DashboardLoginTests(unittest.TestCase):
         self.assertIn('__Host-baidu_ads_session=', response.headers['Set-Cookie'])
         return re.search(rb'name="csrf" value="([^"]+)"', response.data)[1].decode()
 
-    def finish_login(self, csrf, path='/ssw/en.html', username='ken', password=None):
+    def finish_login(self, csrf, path='/ssw/en.html', username='ken', password=None, **kwargs):
         return self.client.post('/login', base_url=login.BASE_URL, data={
             'page': path, 'csrf': csrf, 'username': username,
             'password': self.password if password is None else password,
-        })
+        }, **kwargs)
 
     def test_protected_routes_do_not_read_any_data_before_sign_in(self):
         with patch.object(login, 'source_bytes') as source:
@@ -78,6 +78,36 @@ class DashboardLoginTests(unittest.TestCase):
         for _ in range(login.LOGIN_ATTEMPT_LIMIT):
             self.assertEqual(self.finish_login(csrf, username='someone').status_code, 401)
         self.assertEqual(self.finish_login(csrf).status_code, 303)
+
+    @patch.dict(os.environ, {'BAIDU_ADS_TRUST_PROXY_IP': '1'})
+    @patch.object(login, 'LOGIN_SOURCE_LIMIT', 1)
+    def test_local_proxy_separates_client_addresses(self):
+        csrf = self.start_login()
+        peer = {'REMOTE_ADDR': '127.0.0.1'}
+        first = {'X-Real-IP': '192.0.2.1'}
+        second = {'X-Real-IP': '192.0.2.2'}
+        self.assertEqual(self.finish_login(csrf, username='unknown', environ_overrides=peer,
+                                           headers=first).status_code, 401)
+        self.assertEqual(self.finish_login(csrf, environ_overrides=peer, headers=first).status_code, 429)
+        self.assertEqual(self.finish_login(csrf, environ_overrides=peer, headers=second).status_code, 303)
+
+    @patch.dict(os.environ, {'BAIDU_ADS_TRUST_PROXY_IP': '1'})
+    @patch.object(login, 'LOGIN_SOURCE_LIMIT', 1)
+    def test_direct_connection_uses_its_own_address(self):
+        csrf = self.start_login()
+        peer = {'REMOTE_ADDR': '192.0.2.3'}
+        self.assertEqual(self.finish_login(csrf, username='unknown', environ_overrides=peer,
+                                           headers={'X-Real-IP': '192.0.2.1'}).status_code, 401)
+        self.assertEqual(self.finish_login(csrf, environ_overrides=peer,
+                                           headers={'X-Real-IP': '192.0.2.2'}).status_code, 429)
+
+    @patch.object(login, 'LOGIN_GLOBAL_LIMIT', 2)
+    def test_global_limit_combines_failures_across_accounts_and_sources(self):
+        csrf = self.start_login()
+        for i in (1, 2):
+            self.assertEqual(self.finish_login(csrf, username=f'unknown{i}',
+                             environ_overrides={'REMOTE_ADDR': f'192.0.2.{i}'}).status_code, 401)
+        self.assertEqual(self.finish_login(csrf, environ_overrides={'REMOTE_ADDR': '192.0.2.3'}).status_code, 429)
 
     def test_owner_session_renders_reports_and_private_aggregates_until_logout(self):
         response = self.finish_login(self.start_login())
