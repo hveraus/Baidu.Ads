@@ -7,6 +7,7 @@ sys.path.insert(0,str(ROOT))
 from website_conversions import FILENAME, SSW_FIELDS, SSW_FILENAME, HOMEPAGE_FIELDS, HOMEPAGE_FILENAME, TINA_PAID_FIELDS, TINA_PAID_FILENAME, load_rows
 from scripts.sync_posthog_cli import ENCRYPTED_SNAPSHOT, read_encrypted_snapshot
 from website_traffic import TRAFFIC_FILENAME, load_traffic
+from contact_attribution import FILENAME as CONTACT_FILENAME, load_snapshot as load_contact_snapshot
 from wecom_snapshot import FILENAME as WECOM_FILENAME, read_encrypted_snapshot as read_wecom_snapshot
 JWT=re.compile(rb'eyJ[A-Za-z0-9_-]{15,}\.[A-Za-z0-9_-]{15,}\.[A-Za-z0-9_-]{15,}')
 FORBIDDEN={'.credentials.json','.backup-key','baidu.sqlite3','status.json','runs.jsonl','dashboard-login.xml'}
@@ -21,6 +22,7 @@ def check():
  for data_dir in (root/'data',root/'accounts'/'ssw'/'data'):
   load_rows(data_dir/HOMEPAGE_FILENAME,HOMEPAGE_FIELDS)
   load_traffic(data_dir/TRAFFIC_FILENAME)
+ load_contact_snapshot(root/'accounts'/'ssw'/'data'/CONTACT_FILENAME)
  read_encrypted_snapshot(root/'data'/ENCRYPTED_SNAPSHOT)
  read_wecom_snapshot(root/'accounts'/'ssw'/'data'/WECOM_FILENAME)
  check_files(root)

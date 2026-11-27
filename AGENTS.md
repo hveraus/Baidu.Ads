@@ -32,7 +32,7 @@
 
 - The Baidu Tongji site **SSW 中国站** uses site ID `23684705` under 智鹏瑞尔. The **联系我们点击** goal uses ID `1557094` and counts visits to the virtual path `/__analytics/conversion/contact-click` on both `ssw.com.cn` and `www.ssw.com.cn`, once per session. The website source is `ZPREHZ/ssw.com.cn`. [Baidu Tongji goal settings](https://tongji.baidu.com/main/setting/90172887/home/trans/basicsetting?flag=page&siteId=23684705).
 - The SSW conversion step reuses the ECS collector's `BAIDU_TONGJI_CREDENTIALS_JSON` read credentials. `BAIDU_TONGJI_SSW_SITE_JSON` supplies `site_id`, `contact_click_target`, and `start_date`. The task queries through yesterday.
-- The SSW overview card counts Baidu paid sessions with a contact click over the selected Beijing dates across all campaigns. A reported zero displays as 0, and missing goal data displays as —. The collector reads daily totals from Baidu Tongji's promotion trends report (`pro/hour/a`, all Baidu promotion types), and applies the SSW contact goal to the conversion count. The paid snapshot is `accounts/ssw/data/website-paid-conversions.json`. Compare it with the SSW promotion trends report for the same dates and goal. [SSW overview](https://ads.ssw.com.cn/ssw/).
+- The SSW overview counts paid search sessions that reached the contact goal across campaigns for the selected Beijing dates. Prefer validated daily attribution from the Tongji All Sources report (source/all/a, searchBaiduProFc). A confirmed zero displays as 0. If Promotion Trends returns no numeric visits for yesterday, log it and check attribution coverage. Stale attribution still raises an alert. See [collection and alerts](docs/ALIYUN_COLLECTION.md).
 
 ## SSW WeChat Customer Service consultations
 

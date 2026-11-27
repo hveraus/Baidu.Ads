@@ -63,8 +63,17 @@ if ($InstallTask) {
     exit 0
 }
 
-$login = Import-Clixml -LiteralPath (Join-Path $private 'dashboard-login.xml')
-$wecom = Import-Clixml -LiteralPath (Join-Path $private 'wecom-consultations.xml')
+function Read-SourceConfig([string]$FileName) {
+    try {
+        return Import-Clixml -LiteralPath (Join-Path $private $FileName)
+    } catch {
+        if ($Seed -or $Check) { throw }
+        Write-Warning "Could not load $FileName. Affected sources will report a collection failure."
+        return @{}
+    }
+}
+$login = Read-SourceConfig 'dashboard-login.xml'
+$wecom = Read-SourceConfig 'wecom-consultations.xml'
 $settings = @{
     POSTHOG_CLI_SNAPSHOT_KEY = $login.POSTHOG_CLI_SNAPSHOT_KEY
     WECOM_SNAPSHOT_KEY = $wecom.WECOM_SNAPSHOT_KEY
@@ -77,7 +86,7 @@ $mode = if ($Check) { 'check' } else { 'seed' }
 $argsForPython = @('--storage', $storage)
 if (-not ($Seed -or $Check)) {
     $mode = 'collect'
-    $config = Import-Clixml -LiteralPath $configPath
+    $config = Read-SourceConfig 'collection.xml'
     foreach ($name in @('DATA_BACKUP_KEY', 'BAIDU_TONGJI_CREDENTIALS_JSON', 'POSTHOG_CLI_QUERY_KEY', 'BAIDU_TONGJI_SSW_SITE_JSON')) {
         $settings[$name] = $config[$name]
     }

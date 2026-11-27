@@ -8,10 +8,11 @@ from vault import encrypt,restore,key_bytes
 from verify_data import verify
 from website_conversions import FILENAME,SSW_FILENAME,HOMEPAGE_FILENAME
 from website_traffic import TRAFFIC_FILENAME
+from contact_attribution import FILENAME as CONTACT_FILENAME
 from wecom_snapshot import FILENAME as WECOM_FILENAME
 PROFILES={'yakshaver':{'slug':'yakshaver','name':'YakShaver','user_name':'智鹏瑞尔-1','user_id':91119162,'app_id':'94f6d7c3dc7ed96fc1984fd505d99666','website':'http://yakshaver.com.cn/','token_expires':'2027-02-01','secret':'BAIDU_YAKSHAVER_CREDENTIALS_JSON'}}
 PROFILES['ssw']={'slug':'ssw','name':'SSW','user_name':'智鹏瑞尔-2','user_id':91119163,'app_id':'301ac6829851c4cccb2d8363d17bd623','website':'https://ssw.cn','token_expires':'2027-02-01','secret':'BAIDU_SSW_CREDENTIALS_JSON'}
-FILES=['tracker.py','dashboard.py','dashboard.template.html','i18n.py','i18n.en.json','publication.py','account_ui.py','config.json','website_conversions.py','website_traffic.py','wecom_snapshot.py']
+FILES=['tracker.py','dashboard.py','dashboard.template.html','i18n.py','i18n.en.json','publication.py','account_ui.py','config.json','website_conversions.py','website_traffic.py','wecom_snapshot.py','contact_attribution.py']
 def prepare(slug):
  profile=PROFILES[slug];runtime=ROOT/'.private'/slug;runtime.mkdir(parents=True,exist_ok=True,mode=0o700)
  for name in FILES:shutil.copy2(ROOT/name,runtime/name)
@@ -43,7 +44,7 @@ def collect(slug,backfill=False,save_backup=True):
 def publish(slug):
  profile,runtime=prepare(slug);verify(runtime/'baidu.sqlite3');export(runtime)
  out=ROOT/'accounts'/slug/'data';out.parent.mkdir(parents=True,exist_ok=True)
- shutil.copytree(runtime/'data',out,dirs_exist_ok=True,ignore=shutil.ignore_patterns(FILENAME,SSW_FILENAME,HOMEPAGE_FILENAME,TRAFFIC_FILENAME,WECOM_FILENAME))
+ shutil.copytree(runtime/'data',out,dirs_exist_ok=True,ignore=shutil.ignore_patterns(FILENAME,SSW_FILENAME,HOMEPAGE_FILENAME,TRAFFIC_FILENAME,WECOM_FILENAME,CONTACT_FILENAME))
  build_one(slug)
 
 def build_one(slug):

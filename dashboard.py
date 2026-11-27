@@ -1,7 +1,8 @@
 """Generate a standalone, offline analysis page from the local database."""
-import base64,datetime as dt,json,sqlite3
+import base64,datetime as dt,json,os,sqlite3
 from pathlib import Path
 from i18n import english_template
+from contact_attribution import FILENAME as CONTACT_FILENAME, load_snapshot as load_contact_snapshot
 from website_conversions import FILENAME, SSW_FIELDS, SSW_FILENAME, TINA_PAID_FIELDS, TINA_PAID_FILENAME, load_rows
 from website_traffic import TRAFFIC_FILENAME, load_traffic
 from wecom_snapshot import FILENAME as WECOM_FILENAME, read_encrypted_snapshot as read_wecom_snapshot
@@ -28,22 +29,28 @@ def build_dashboard(public=False):
  status=json.loads((ROOT/('data/status.json' if public else 'status.json')).read_text())
  profile=json.loads((ROOT/'profile.json').read_text()) if (ROOT/'profile.json').exists() else {'slug':'tinacms','name':'TinaCMS'}
  data={'reports':reports,'inventory':inventory,'coverage':coverage,'status':status,'generated':dt.datetime.now().isoformat(),'record_counts':record_counts,'website':json.loads((ROOT/'website-audit.json').read_text()) if (ROOT/'website-audit.json').exists() else {}}
- if profile['slug']=='tinacms':
-  data['website_conversions']=load_rows(ROOT/'data'/FILENAME)
-  data['tina_paid_website_conversions']=load_rows(ROOT/'data'/TINA_PAID_FILENAME,TINA_PAID_FIELDS)
-  if public:
-   from scripts.sync_posthog_cli import ENCRYPTED_SNAPSHOT, read_encrypted_snapshot
-   encrypted=read_encrypted_snapshot(ROOT/'data'/ENCRYPTED_SNAPSHOT)
-   if encrypted:
-    data['encrypted_posthog_cli']=base64.b64encode(encrypted).decode('ascii')
- elif profile['slug']=='ssw':
-  data['ssw_paid_website_conversions']=load_rows(ROOT/'data'/SSW_FILENAME,SSW_FIELDS)
-  if public:
-   encrypted=read_wecom_snapshot(ROOT/'data'/WECOM_FILENAME)
-   if encrypted:
-    data['encrypted_wecom_consultations']=base64.b64encode(encrypted).decode('ascii')
- if profile['slug'] in ('tinacms','ssw'):
-  data['website_traffic']=load_traffic(ROOT/'data'/TRAFFIC_FILENAME)
+ if os.environ.get('BAIDU_ADS_COLLECT_ADS_ONLY') != '1':
+  if profile['slug']=='tinacms':
+   data['website_conversions']=load_rows(ROOT/'data'/FILENAME)
+   data['tina_paid_website_conversions']=load_rows(ROOT/'data'/TINA_PAID_FILENAME,TINA_PAID_FIELDS)
+   if public:
+    from scripts.sync_posthog_cli import ENCRYPTED_SNAPSHOT, read_encrypted_snapshot
+    encrypted=read_encrypted_snapshot(ROOT/'data'/ENCRYPTED_SNAPSHOT)
+    if encrypted:
+     data['encrypted_posthog_cli']=base64.b64encode(encrypted).decode('ascii')
+  elif profile['slug']=='ssw':
+   data['ssw_paid_website_conversions']=load_rows(ROOT/'data'/SSW_FILENAME,SSW_FIELDS)
+   contact=load_contact_snapshot(ROOT/'data'/CONTACT_FILENAME)
+   if contact:
+    data['ssw_contact_attribution']=contact['rows']
+    data['ssw_contact_attribution_status']={k:contact[k] for k in ('source','paid_source','generated_at','through')}
+    data['ssw_paid_website_conversions']=[{k:r[k] for k in ('date','paid_sessions','paid_contact_click_sessions')} for r in contact['rows']]
+   if public:
+    encrypted=read_wecom_snapshot(ROOT/'data'/WECOM_FILENAME)
+    if encrypted:
+     data['encrypted_wecom_consultations']=base64.b64encode(encrypted).decode('ascii')
+  if profile['slug'] in ('tinacms','ssw'):
+   data['website_traffic']=load_traffic(ROOT/'data'/TRAFFIC_FILENAME)
  template=(ROOT/'dashboard.template.html').read_text()
  if public:
   from publication import public_template
