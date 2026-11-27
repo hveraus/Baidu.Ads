@@ -8,6 +8,7 @@ from functools import lru_cache
 import hashlib
 import hmac
 import html
+import ipaddress
 import json
 import logging
 import os
@@ -42,6 +43,8 @@ PASSWORD_HASH = re.compile(r'([0-9a-f]{32}):([0-9a-f]{64})')
 MAX_PASSWORD_BYTES = 1024
 LOGIN_ATTEMPT_LIMIT = 5
 LOGIN_ATTEMPT_WINDOW = 60
+LOGIN_SOURCE_LIMIT = 25
+LOGIN_GLOBAL_LIMIT = 100
 GIT_REFRESH_LOCK = threading.Lock()
 INLINE_HANDLER = re.compile(r'\son[a-z]+="([^"\n]+)"')
 REPORT_DATA = re.compile(rb'<script id="report-data" type="application/json">(.*?)</script>', re.DOTALL)
@@ -315,18 +318,24 @@ def create_app(username, password_hash, session_key, keys, users_db=None):
         password = request.form.get('password', '').encode()
         with attempts_lock:
             now = time.monotonic()
-            while attempts and now - attempts[0] >= LOGIN_ATTEMPT_WINDOW:
+            while attempts and now - attempts[0][0] >= LOGIN_ATTEMPT_WINDOW:
                 attempts.popleft()
-            if len(attempts) >= LOGIN_ATTEMPT_LIMIT:
+            source = request.remote_addr
+            if source in ('127.0.0.1', '::1') and os.environ.get('BAIDU_ADS_TRUST_PROXY_IP') == '1':
+                try:
+                    source = str(ipaddress.ip_address(request.headers.get('X-Real-IP', '')))
+                except ValueError:
+                    pass
+            if (len(attempts) >= LOGIN_GLOBAL_LIMIT
+                    or sum(user == name for _, user, _ in attempts) >= LOGIN_ATTEMPT_LIMIT
+                    or sum(peer == source for _, _, peer in attempts) >= LOGIN_SOURCE_LIMIT):
                 message = 'Too many attempts. Try again in a minute.' if english else '尝试次数过多，请稍后再试。'
                 return login_page(page, message), 429, {'Retry-After': str(LOGIN_ATTEMPT_WINDOW)}
             saved_hash = account_hash(name)
             salt, expected_digest = map(bytes.fromhex, (saved_hash or password_hash).split(':'))
-            if (len(password) <= MAX_PASSWORD_BYTES and
-                    hmac.compare_digest(password_digest(password, salt), expected_digest) and saved_hash):
-                attempts.clear()
-            else:
-                attempts.append(now)
+            if (len(password) > MAX_PASSWORD_BYTES or
+                    not hmac.compare_digest(password_digest(password, salt), expected_digest) or not saved_hash):
+                attempts.append((now, name[:65], source))
                 message = 'Incorrect username or password.' if english else '账号或密码有误。'
                 return login_page(page, message), 401
         session.clear()

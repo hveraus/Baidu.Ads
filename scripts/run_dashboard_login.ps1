@@ -154,6 +154,8 @@ try {
             [Environment]::SetEnvironmentVariable($name, $value, 'Process')
         }
     }
+    # The production Nginx site overwrites X-Real-IP before proxying to loopback.
+    $env:BAIDU_ADS_TRUST_PROXY_IP = '1'
     & $python $appPath
     $exitCode = $LASTEXITCODE
 } finally {

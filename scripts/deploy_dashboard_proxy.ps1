@@ -55,6 +55,7 @@ server {
     location / {
         proxy_pass http://127.0.0.1:8765;
         proxy_set_header Host ads.ssw.com.cn;
+        proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header Connection "";
         error_page 502 504 =503 @starting;
     }
