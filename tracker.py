@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Read-only Baidu Marketing collector. Python standard library only."""
+import errno
 import argparse, csv, datetime as dt, hashlib, json, os, sqlite3, sys, time
 try:
  import fcntl
@@ -154,6 +155,27 @@ def summary(db,inventory,start,end,output_dir=None):
  write_csv((output_dir or ROOT/'csv')/'keyword_summary.csv',ordered)
  return {'date_start':start,'date_end':end,'keywords_in_summary':len(ordered),'keywords_with_report':sum(x.get('report_records',0)>0 for x in ordered),'impression':sum(x.get('impression',0) for x in ordered),'click':sum(x.get('click',0) for x in ordered),'cost':round(sum(x.get('cost',0) for x in ordered),2)}
 
+def acquire_lock(file):
+ if fcntl:
+  try:
+   fcntl.flock(file,fcntl.LOCK_EX|fcntl.LOCK_NB)
+  except BlockingIOError as error:
+   if error.errno==errno.EAGAIN: return False
+   raise
+ else:
+  import ctypes, msvcrt
+  from ctypes import wintypes
+  class Overlapped(ctypes.Structure):
+   _fields_=[('internal',ctypes.c_size_t),('internal_high',ctypes.c_size_t),('offset',wintypes.DWORD),('offset_high',wintypes.DWORD),('event',wintypes.HANDLE)]
+  kernel=ctypes.WinDLL('kernel32',use_last_error=True)
+  lock_file=kernel.LockFileEx
+  lock_file.argtypes=[wintypes.HANDLE,wintypes.DWORD,wintypes.DWORD,wintypes.DWORD,wintypes.DWORD,ctypes.POINTER(Overlapped)]
+  if not lock_file(msvcrt.get_osfhandle(file.fileno()),3,0,1,0,ctypes.byref(Overlapped())):
+   code=ctypes.get_last_error()
+   if code==33: return False  # ERROR_LOCK_VIOLATION
+   raise ctypes.WinError(code)
+ return True
+
 def main():
  os.umask(0o077)
  parser=argparse.ArgumentParser(); parser.add_argument('--start'); parser.add_argument('--end'); parser.add_argument('--backfill',action='store_true'); parser.add_argument('--export-only',action='store_true'); parser.add_argument('--reports',help='Comma-separated report names; default all'); args=parser.parse_args()
@@ -170,18 +192,18 @@ def main():
  if start>end: parser.error('start must be <= end')
  expiry_text=c.get('token_expires')
  if not expiry_text and (ROOT/'status.json').exists(): expiry_text=json.loads((ROOT/'status.json').read_text()).get('token_expires')
- expiry=dt.date.fromisoformat(expiry_text or str(today)); remaining=(expiry-today).days
- status={'run_at':dt.datetime.now(ZoneInfo(config['timezone'])).isoformat(),'start':str(start),'end':str(end),'token_expires':str(expiry),'token_days_remaining':remaining,'reports':{},'errors':[]}
+ expiry=dt.date.fromisoformat(expiry_text) if expiry_text else None
+ remaining=(expiry-today).days if expiry else None
+ status={'run_at':dt.datetime.now(ZoneInfo(config['timezone'])).isoformat(),'start':str(start),'end':str(end),'token_expires':expiry_text,'token_days_remaining':remaining,'reports':{},'errors':[]}
  if args.reports and (ROOT/'status.json').exists(): status['reports']=json.loads((ROOT/'status.json').read_text()).get('reports',{})
  if args.export_only and (ROOT/'status.json').exists(): status=json.loads((ROOT/'status.json').read_text())
- if remaining<=14: status['warning']='自授权令牌将在14天内到期；请在百度应用详情续期并更新本机凭据'
- lock=(ROOT/'.sync.lock').open('a')
- try:
-  if fcntl: fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
-  else:
-   import msvcrt
-   lock.seek(0); lock.write('0'); lock.flush(); lock.seek(0); msvcrt.locking(lock.fileno(),msvcrt.LK_NBLCK,1)
- except (BlockingIOError,OSError): print('另一个采集任务正在运行'); return 0
+ if remaining is not None and 0<remaining<=14: status['warning']='自授权令牌将在14天内到期；请在百度应用详情续期并更新本机凭据'
+ lock=(ROOT/'.sync.lock').open('a+b')
+ if not acquire_lock(lock):
+  lock.close()
+  print('另一个采集任务正在运行',file=sys.stderr); return 75
+ if not args.export_only and remaining is None:
+  status['ok']=False; status['errors'].append('缺少自授权令牌到期日，请补齐 token_expires 配置'); dump(ROOT/'status.json',status); lock.close(); return 1
  db=sqlite3.connect(ROOT/'baidu.sqlite3')
  db.execute('CREATE TABLE IF NOT EXISTS report_rows(report TEXT,row_key TEXT,date TEXT,payload TEXT,fetched_at TEXT,PRIMARY KEY(report,row_key))')
  db.execute('CREATE INDEX IF NOT EXISTS report_date ON report_rows(report,date)')

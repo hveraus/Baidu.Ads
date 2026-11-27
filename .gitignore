@@ -28,3 +28,6 @@ work/
 !accounts/*/data/status.json
 !accounts/*/data/csv/
 !accounts/*/data/csv/**
+
+# ECS-only contact attribution aggregates
+accounts/ssw/data/website-contact-attribution.json
