@@ -67,11 +67,17 @@ class DashboardLoginTests(unittest.TestCase):
         csrf = self.start_login()
         with patch.object(login.time, 'monotonic', return_value=100):
             self.assertEqual(self.finish_login(csrf, username='someone').status_code, 401)
-            for _ in range(login.LOGIN_ATTEMPT_LIMIT - 1):
+            for _ in range(login.LOGIN_ATTEMPT_LIMIT):
                 self.assertEqual(self.finish_login(csrf, password='wrong').status_code, 401)
             self.assertEqual(self.finish_login(csrf).status_code, 429)
         with patch.object(login.time, 'monotonic', return_value=100 + login.LOGIN_ATTEMPT_WINDOW):
             self.assertEqual(self.finish_login(csrf).status_code, 303)
+
+    def test_other_account_can_log_in_after_five_failures_on_same_connection(self):
+        csrf = self.start_login()
+        for _ in range(login.LOGIN_ATTEMPT_LIMIT):
+            self.assertEqual(self.finish_login(csrf, username='someone').status_code, 401)
+        self.assertEqual(self.finish_login(csrf).status_code, 303)
 
     def test_owner_session_renders_reports_and_private_aggregates_until_logout(self):
         response = self.finish_login(self.start_login())
